@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot name="bin">
+  <material name="bin_white">
+    <color rgba="0.9 0.9 0.9 1.0"/>
+    <specular value="0.0"/>
+  </material>
+  <link name="link_base">
+    <inertial>
+      <mass value="0.996000610489489"/>
+      <inertia ixx="2.03143682018537E-04" ixy="2.97574717919547E-17" ixz="-1.60618819281112E-11"
+               iyy="2.03143682017841E-04" iyz="3.76359533360768E-10" izz="6.98542435546414E-16"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="3obj/link_bin.3obj.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="bin_white"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_bin_vhacd.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+</robot>

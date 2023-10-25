@@ -6,6 +6,8 @@ import numpy as np
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.utils.visualization.cv2_utils import OpenCVViewer
 from mani_skill2.utils.wrappers import RecordEpisode
+from mani_skill2.utils.sapien_utils import look_at
+from mani_skill2.sensors.camera import CameraConfig, parse_camera_cfgs
 
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
@@ -14,7 +16,7 @@ MS1_ENV_IDS = [
     "MoveBucket-v1",
 ]
 
-
+# python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose robot google_robot_static
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)
@@ -44,6 +46,12 @@ def main():
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
 
+    if 'robot' in args.env_kwargs and 'google_robot' in args.env_kwargs['robot']:
+        pose = look_at([1.0, 1.0, 2.0], [0.0, 0.0, 0.7])
+        args.env_kwargs['render_camera_cfgs'] = {
+            "render_camera": dict(p=pose.p, q=pose.q)
+        }
+        
     env: BaseEnv = gym.make(
         args.env_id,
         obs_mode=args.obs_mode,
@@ -83,7 +91,15 @@ def main():
     has_base = "base" in env.agent.controller.configs
     num_arms = sum("arm" in x for x in env.agent.controller.configs)
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
+    has_gripper_finger = any("gripper_finger" in x for x in env.agent.controller.configs)
+    has_gripper_finger_tip = any("gripper_finger_tip" in x for x in env.agent.controller.configs)
+    
+    assert has_gripper_finger == has_gripper_finger_tip
+    is_google_robot = (has_gripper and has_gripper_finger and has_gripper_finger_tip)
+    
     gripper_action = 1
+    gripper_finger_action = -1 # google robot
+    gripper_finger_tip_action = -1 # google robot
     EE_ACTION = 0.1
 
     while True:
@@ -109,7 +125,6 @@ def main():
         key = opencv_viewer.imshow(render_frame)
 
         if has_base:
-            assert args.control_mode in ["base_pd_joint_vel_arm_pd_ee_delta_pose"]
             base_action = np.zeros([4])  # hardcoded
         else:
             base_action = np.zeros([0])
@@ -138,13 +153,13 @@ def main():
                 base_action[1] = 1
             elif key == "d":  # right
                 base_action[1] = -1
-            elif key == "q":  # rotate counter
+            elif key == "q" and len(base_action > 2):  # rotate counter
                 base_action[2] = 1
-            elif key == "e":  # rotate clockwise
+            elif key == "e" and len(base_action > 2):  # rotate clockwise
                 base_action[2] = -1
-            elif key == "z":  # lift
+            elif key == "z" and len(base_action > 2):  # lift
                 base_action[3] = 1
-            elif key == "x":  # lower
+            elif key == "x" and len(base_action > 2):  # lower
                 base_action[3] = -1
 
         # End-effector
@@ -179,10 +194,20 @@ def main():
 
         # Gripper
         if has_gripper:
-            if key == "f":  # open gripper
-                gripper_action = 1
-            elif key == "g":  # close gripper
-                gripper_action = -1
+            if not is_google_robot:
+                if key == "f":  # open gripper
+                    gripper_action = 1
+                elif key == "g":  # close gripper
+                    gripper_action = -1
+            else:
+                if key == "f":  # open gripper
+                    gripper_finger_action = -1
+                elif key == "g":  # close gripper
+                    gripper_finger_action = 1
+                if key == "c":  # open gripper
+                    gripper_finger_tip_action = -1
+                elif key == "b":  # close gripper
+                    gripper_finger_tip_action = 1
 
         # Other functions
         if key == "0":  # switch to SAPIEN viewer
@@ -190,6 +215,8 @@ def main():
         elif key == "r":  # reset env
             obs, _ = env.reset()
             gripper_action = 1
+            gripper_finger_action = -1
+            gripper_finger_tip_action = -1
             after_reset = True
             continue
         elif key == None:  # exit
@@ -225,6 +252,8 @@ def main():
         # Post-process action
         # -------------------------------------------------------------------------- #
         if args.env_id in MS1_ENV_IDS:
+            if is_google_robot:
+                raise NotImplementedError()
             action_dict = dict(
                 base=base_action,
                 right_arm=ee_action,
@@ -234,10 +263,17 @@ def main():
             )
             action = env.agent.controller.from_action_dict(action_dict)
         else:
-            action_dict = dict(base=base_action, arm=ee_action, gripper=gripper_action)
+            action_dict = dict(base=base_action, arm=ee_action)
+            if has_gripper:
+                if not is_google_robot:
+                    action_dict['gripper'] = gripper_action
+                else:
+                    action_dict['gripper_finger'] = gripper_finger_action
+                    action_dict['gripper_finger_tip'] = gripper_finger_tip_action
             action = env.agent.controller.from_action_dict(action_dict)
 
         obs, reward, terminated, truncated, info = env.step(action)
+        print(env.agent.robot.get_qpos())
         print("reward", reward)
         print("terminated", terminated, "truncated", truncated)
         print("info", info)
