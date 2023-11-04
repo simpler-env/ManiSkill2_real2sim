@@ -23,22 +23,47 @@ This file has been manually updated on <03/12/2019>.
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="3obj/link_base.3obj.obj"/>
+        <mesh filename="3obj/link_base.glb"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
+
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="coarse_meshes/link_base_part_0_vhacd.obj"/>
+        <mesh filename="coarse_meshes/link_base_0.glb"/>
       </geometry>
     </collision>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="coarse_meshes/link_base_part_1_vhacd.obj"/>
+        <mesh filename="coarse_meshes/link_base_1.glb"/>
       </geometry>
     </collision>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_base_2.glb"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_base_3.glb"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_base_4.glb"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_base_5.glb"/>
+      </geometry>
+    </collision>
+
   </link>
   <link name="link_wheel_left">
     <contact>
@@ -56,7 +81,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_wheel.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -81,7 +105,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_wheel.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -90,6 +113,36 @@ This file has been manually updated on <03/12/2019>.
       </geometry>
     </collision>
   </link>
+
+  <link name="link_rear_wheel_left">
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_rear_wheel.glb"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_rear_wheel.glb"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="link_rear_wheel_right">
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_rear_wheel.glb"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="coarse_meshes/link_rear_wheel.glb"/>
+      </geometry>
+    </visual>
+  </link>
+
   <link name="link_torso">
     <inertial>
       <mass value="1.8957478141399"/>
@@ -101,7 +154,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_torso.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -121,7 +173,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_shoulder.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -141,7 +192,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_bicep.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -161,7 +211,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_elbow.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -181,7 +230,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_forearm.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -201,7 +249,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_wrist.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -221,7 +268,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_gripper.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 -1.57079632679"/>
@@ -242,7 +288,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_finger_base_simplified.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -268,7 +313,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_finger_tip_simplified.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -292,7 +336,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_finger_nail.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -313,7 +356,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_finger_base_simplified.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -339,7 +381,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_finger_tip_simplified.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -363,7 +404,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_finger_nail.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -384,7 +424,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_head_pan.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -404,7 +443,6 @@ This file has been manually updated on <03/12/2019>.
       <geometry>
         <mesh filename="3obj/link_head_tilt.3obj.obj"/>
       </geometry>
-      <material name="white_material"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -436,18 +474,38 @@ This file has been manually updated on <03/12/2019>.
   <link name="time_of_flight.left_back_2"/>
   <link name="cliff.rear_right"/>
   <link name="cliff.rear_left"/>
+
   <joint name="joint_wheel_left" type="fixed">
     <parent link="link_base"/>
     <child link="link_wheel_left"/>
     <axis xyz="0 1 0"/>
     <origin xyz="3.71218357702654E-16 0.18333 1.19551044043431E-16" rpy="0 0 0"/>
+    <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
   </joint>
   <joint name="joint_wheel_right" type="fixed">
     <parent link="link_base"/>
     <child link="link_wheel_right"/>
     <axis xyz="0 1 0"/>
     <origin xyz="-1.38753859997836E-04 -0.18333 2.48991201407227E-16" rpy="0 0 0"/>
+    <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
   </joint>
+
+  <joint name="joint_rear_wheel_left" type="fixed">
+    <parent link="link_base"/>
+    <child link="link_rear_wheel_left"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="-0.338371 0.094989 -0.029296" rpy="0 0 0"/>
+    <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
+  </joint>
+
+  <joint name="joint_rear_wheel_right" type="fixed">
+    <parent link="link_base"/>
+    <child link="link_rear_wheel_right"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="-0.338371 -0.094989 -0.029296" rpy="0 0 0"/>
+    <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
+  </joint>
+
   <joint name="joint_torso" type="revolute">
     <parent link="link_base"/>
     <child link="link_torso"/>
