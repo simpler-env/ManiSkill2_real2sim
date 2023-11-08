@@ -93,12 +93,23 @@ class StationaryManipulationEnv(BaseEnv):
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
         elif self.robot_uid == "google_robot_static":
-            qpos = np.zeros(13)
-            qpos[:-6] += self._episode_rng.normal(
-                0, self.robot_init_qpos_noise, len(qpos) - 6
-            ) # add noise to all joints except the gripper and the head
+            # qpos = np.zeros(13)
+            # qpos[:-6] += self._episode_rng.normal(
+            #     0, self.robot_init_qpos_noise, len(qpos) - 6
+            # ) # add noise to all joints except the gripper and the head
+            qpos = np.array(
+                [-0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0, 0, 0, 0,
+                -0.00285961, 0.7851361]
+            )
             self.agent.reset(qpos)
-            self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
+            self.agent.robot.set_pose(Pose([0, 0, 0]))
         else:
             raise NotImplementedError(self.robot_uid)
 
@@ -122,6 +133,20 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
+        elif self.robot_uid == "google_robot_static":
+            qpos = np.array(
+                [-0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0, 0, 0, 0,
+                -0.00285961, 0.7851361]
+            )
+            self.agent.reset(qpos)
+            self.agent.robot.set_pose(Pose([0, 0, 0]))
         else:
             raise NotImplementedError(self.robot_uid)
 

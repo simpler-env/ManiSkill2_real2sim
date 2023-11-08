@@ -20,6 +20,7 @@ class CameraConfig:
         near: float,
         far: float,
         actor_uid: str = None,
+        intrinsic: np.ndarray = None,
         hide_link: bool = False,
         texture_names: Sequence[str] = ("Color", "Position"),
     ):
@@ -35,6 +36,7 @@ class CameraConfig:
             near (float): near plane of the camera
             far (float): far plane of the camera
             actor_uid (str, optional): unique id of the actor to mount the camera. Defaults to None.
+            intrinsic: (np.ndarray, optional): intrinsic matrix of the camera. If given, it overrides the fov argument. Defaults to None.
             hide_link (bool, optional): whether to hide the link to mount the camera. Defaults to False.
             texture_names (Sequence[str], optional): texture names to render. Defaults to ("Color", "Position").
         """
@@ -46,6 +48,7 @@ class CameraConfig:
         self.fov = fov
         self.near = near
         self.far = far
+        self.intrinsic = intrinsic
 
         self.actor_uid = actor_uid
         self.hide_link = hide_link
@@ -160,6 +163,9 @@ class Camera:
                 camera_cfg.near,
                 camera_cfg.far,
             )
+        if camera_cfg.intrinsic is not None:
+            self.camera.set_focal_lengths(camera_cfg.intrinsic[0,0], camera_cfg.intrinsic[1,1])
+            self.camera.set_principal_point(camera_cfg.intrinsic[0,2], camera_cfg.intrinsic[1,2])
 
         if camera_cfg.hide_link:
             self.actor.hide_visual()

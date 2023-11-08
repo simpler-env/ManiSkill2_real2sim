@@ -22,8 +22,11 @@ class StereoDepthCameraConfig(CameraConfig):
 
     @property
     def rgb_intrinsic(self):
-        fy = (self.height / 2) / np.tan(self.fov / 2)
-        return np.array([[fy, 0, self.width / 2], [0, fy, self.height / 2], [0, 0, 1]])
+        if self.intrinsic is not None:
+            return self.intrinsic
+        else:
+            fy = (self.height / 2) / np.tan(self.fov / 2)
+            return np.array([[fy, 0, self.width / 2], [0, fy, self.height / 2], [0, 0, 1]])
 
     @classmethod
     def fromCameraConfig(cls, cfg: CameraConfig):

@@ -85,6 +85,7 @@ class BaseAgent:
     def _load_articulation(self):
         loader = self.scene.create_urdf_loader()
         loader.fix_root_link = self.fix_root_link
+        loader.load_multiple_collisions_from_file = True
 
         urdf_path = format_path(str(self.urdf_path))
 

@@ -102,7 +102,7 @@ class PDEEPosController(PDJointPosController):
         self._target_qpos = self.compute_ik(self._target_pose)
         if self._target_qpos is None:
             self._target_qpos = self._start_qpos
-
+        
         if self.config.interpolate:
             self._step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
         else:

@@ -16,7 +16,7 @@ MS1_ENV_IDS = [
     "MoveBucket-v1",
 ]
 
-# python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose robot google_robot_static
+# python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose robot google_robot_static
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)
@@ -101,7 +101,10 @@ def main():
     gripper_finger_action = -1 # google robot
     gripper_finger_tip_action = -1 # google robot
     EE_ACTION = 0.1
-
+    
+    print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
+    print("qpos", env.agent.robot.get_qpos())
+    
     while True:
         # -------------------------------------------------------------------------- #
         # Visualization
@@ -272,8 +275,10 @@ def main():
                     action_dict['gripper_finger_tip'] = gripper_finger_tip_action
             action = env.agent.controller.from_action_dict(action_dict)
 
+        print("action", action)
         obs, reward, terminated, truncated, info = env.step(action)
-        print(env.agent.robot.get_qpos())
+        print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
+        print("qpos", env.agent.robot.get_qpos())
         print("reward", reward)
         print("terminated", terminated, "truncated", truncated)
         print("info", info)
