@@ -105,7 +105,7 @@ class StationaryManipulationEnv(BaseEnv):
                 0.028583671314766423,
                 1.592598203487462,
                 -1.080652960128774,
-                0, 0, 0, 0,
+                0, 0,
                 -0.00285961, 0.7851361]
             )
             self.agent.reset(qpos)
@@ -142,7 +142,7 @@ class StationaryManipulationEnv(BaseEnv):
                 0.028583671314766423,
                 1.592598203487462,
                 -1.080652960128774,
-                0, 0, 0, 0,
+                0, 0, 
                 -0.00285961, 0.7851361]
             )
             self.agent.reset(qpos)

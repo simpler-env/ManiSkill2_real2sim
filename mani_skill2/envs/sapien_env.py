@@ -606,6 +606,7 @@ class BaseEnv(gym.Env):
         scene_config.contact_offset = 0.02
         scene_config.enable_pcm = False
         scene_config.solver_iterations = 25
+        scene_config.enable_tgs = True # **This is crucial for preventing mesh penetration for google robot**
         # NOTE(fanbo): solver_velocity_iterations=0 is undefined in PhysX
         scene_config.solver_velocity_iterations = 1
         if self._renderer_type == "client":

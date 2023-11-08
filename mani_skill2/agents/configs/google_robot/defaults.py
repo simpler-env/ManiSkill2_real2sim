@@ -8,12 +8,13 @@ from mani_skill2.sensors.camera import CameraConfig
 class GoogleRobotDefaultConfig:
     def __init__(self, mobile_base=False) -> None:
         if mobile_base:
-            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/meta_sim.urdf"
+            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_fingertip.urdf"
         else:
-            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/meta_sim_fix_wheel.urdf"
+            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_wheel_fix_fingertip.urdf"
         # standard urdf does not support <contact> tag, so we manually define friction here
         self.urdf_config = dict(
             _materials=dict(
+                finger_mat=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0),
                 finger_tip_mat=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0),
                 finger_nail_mat=dict(static_friction=0.1, dynamic_friction=0.1, restitution=0.0),
                 base_mat=dict(static_friction=0.1, dynamic_friction=0.0, restitution=0.0),
@@ -29,17 +30,23 @@ class GoogleRobotDefaultConfig:
                 link_wheel_right=dict(
                     material="wheel_mat", patch_radius=0.1, min_patch_radius=0.1
                 ),
+                link_finger_left=dict(
+                    material="finger_mat", patch_radius=0.1, min_patch_radius=0.1
+                ),
+                link_finger_right=dict(
+                    material="finger_mat", patch_radius=0.1, min_patch_radius=0.1
+                ),
                 link_finger_tip_left=dict(
-                    material="finger_tip_mat", patch_radius=0.05, min_patch_radius=0.05
+                    material="finger_tip_mat", patch_radius=0.1, min_patch_radius=0.1
                 ),
                 link_finger_tip_right=dict(
-                    material="finger_tip_mat", patch_radius=0.05, min_patch_radius=0.05
+                    material="finger_tip_mat", patch_radius=0.1, min_patch_radius=0.1
                 ),
                 link_finger_nail_left=dict(
-                    material="finger_nail_mat", patch_radius=0.05, min_patch_radius=0.05
+                    material="finger_nail_mat", patch_radius=0.1, min_patch_radius=0.1
                 ),
                 link_finger_nail_right=dict(
-                    material="finger_nail_mat", patch_radius=0.05, min_patch_radius=0.05
+                    material="finger_nail_mat", patch_radius=0.1, min_patch_radius=0.1
                 ),
             ),
         )
@@ -142,28 +149,33 @@ class GoogleRobotDefaultConfig:
             self.gripper_finger_damping,
             self.gripper_finger_force_limit,
         )
-        gripper_finger_tip_pd_joint_pos = PDJointPosMimicControllerConfig(
-            self.gripper_finger_tip_joint_names,
-            0,
-            1.2,
-            self.gripper_finger_tip_stiffness,
-            self.gripper_finger_tip_damping,
-            self.gripper_finger_tip_force_limit,
+        gripper_finger_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
+            self.gripper_finger_joint_names,
+            -1.0,
+            1.0,
+            self.gripper_finger_stiffness,
+            self.gripper_finger_damping,
+            self.gripper_finger_force_limit,
+            use_delta=True,
+        )
+        _C["gripper_finger"] = dict(
+            gripper_finger_pd_joint_pos=gripper_finger_pd_joint_pos,
+            gripper_finger_pd_joint_delta_pos=gripper_finger_pd_joint_delta_pos,
         )
 
         controller_configs = {}
         for base_controller_name in _C["base"]:
             for arm_controller_name in _C["arm"]:
-                c = {}
-                if base_controller_name is not None:
-                    c = {"base": _C["base"][base_controller_name]}
-                c["arm"] = _C["arm"][arm_controller_name]
-                c["gripper_finger"] = gripper_finger_pd_joint_pos
-                c["gripper_finger_tip"] = gripper_finger_tip_pd_joint_pos
-                combined_name = arm_controller_name
-                if base_controller_name is not None:
-                    combined_name = base_controller_name + "_" + combined_name
-                controller_configs[combined_name] = c
+                for gripper_controller_name in _C["gripper_finger"]:
+                    c = {}
+                    if base_controller_name is not None:
+                        c = {"base": _C["base"][base_controller_name]}
+                    c["arm"] = _C["arm"][arm_controller_name]
+                    c["gripper_finger"] = _C["gripper_finger"][gripper_controller_name]
+                    combined_name = arm_controller_name + "_" + gripper_controller_name
+                    if base_controller_name is not None:
+                        combined_name = base_controller_name + "_" + combined_name
+                    controller_configs[combined_name] = c
 
         # Make a deepcopy in case users modify any config
         return deepcopy_dict(controller_configs)

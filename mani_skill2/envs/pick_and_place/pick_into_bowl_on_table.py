@@ -344,6 +344,9 @@ class PickSingleYCBIntoBowlEnv(PickSingleIntoTargetEnv):
             self._scene,
             scale=self.model_scale,
             density=density,
+            physical_material=self._scene.create_physical_material(
+                static_friction=1.0, dynamic_friction=1.0, restitution=0.0
+            ),
             root_dir=self.asset_root,
         )
         self.obj.name = self.model_id
@@ -371,7 +374,7 @@ class PickSingleYCBIntoBowlEnv(PickSingleIntoTargetEnv):
                 0.028583671314766423,
                 1.592598203487462,
                 -1.080652960128774,
-                0, 0, 0, 0,
+                0, 0,
                 -0.00285961, 0.7851361]
             )
             self.agent.reset(qpos)

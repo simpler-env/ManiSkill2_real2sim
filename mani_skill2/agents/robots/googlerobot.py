@@ -14,12 +14,15 @@ from mani_skill2.utils.sapien_utils import (
 class GoogleRobot(BaseAgent):
     
     """
-        Google Robot
-        robot.qpos is 15-dimensional if the robot is mobile, 13-dimensional if the robot is static
-        When the robot is mobile, robot.get_active_joints() returns a list of 15 joints:
+        Google Robot w/ the following modifications:
+            - Left / right finger tip joints are set as fixed joints w/ a fixed rotation from the finger link (see urdf)
+            - Manually-specified friction on the finger, finger tip and finger nail (see defaults.py)
+            - Wheels are fixed if the robot is static (see urdf)
+        robot.qpos is 13-dimensional if the robot is mobile, 11-dimensional if the robot is static
+        When the robot is mobile, robot.get_active_joints() returns a list of 13 joints:
             ['joint_wheel_left', 'joint_wheel_right', 'joint_torso', 'joint_shoulder', 
             'joint_bicep', 'joint_elbow', 'joint_forearm', 'joint_wrist', 'joint_gripper', 
-            'joint_finger_right', 'joint_finger_tip_right', 'joint_finger_left', 'joint_finger_tip_left', 
+            'joint_finger_right', 'joint_finger_left', 
             'joint_head_pan', 'joint_head_tilt']
         If robot is static, the first two joints are removed from the list of active joints.
     """
@@ -30,8 +33,6 @@ class GoogleRobot(BaseAgent):
         self.base_link = self.robot.get_links()[0] # "link_base"
         self.finger_right_joint = get_entity_by_name(self.robot.get_joints(), "joint_finger_right")
         self.finger_left_joint = get_entity_by_name(self.robot.get_joints(), "joint_finger_left")
-        self.finger_right_tip_joint = get_entity_by_name(self.robot.get_joints(), "joint_finger_tip_right")
-        self.finger_left_tip_joint = get_entity_by_name(self.robot.get_joints(), "joint_finger_tip_left")
         
         self.finger_right_link = get_entity_by_name(self.robot.get_links(), "link_finger_right")
         self.finger_right_tip_link = get_entity_by_name(self.robot.get_links(), "link_finger_tip_right")
@@ -161,7 +162,7 @@ class GoogleRobotStaticBase(GoogleRobot):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "arm_pd_ee_delta_pose_base"
+            control_mode = "arm_pd_ee_delta_pose_base_gripper_finger_pd_joint_pos"
         super().__init__(
             scene,
             control_freq,
@@ -189,7 +190,7 @@ class GoogleRobotMobileBase(GoogleRobot):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "base_pd_joint_vel_arm_pd_ee_delta_pose_base"
+            control_mode = "base_pd_joint_vel_arm_pd_ee_delta_pose_base_gripper_finger_pd_joint_pos"
         super().__init__(
             scene,
             control_freq,

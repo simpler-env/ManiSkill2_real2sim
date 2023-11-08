@@ -475,14 +475,14 @@ This file has been manually updated on <03/12/2019>.
   <link name="cliff.rear_right"/>
   <link name="cliff.rear_left"/>
 
-  <joint name="joint_wheel_left" type="continuous">
+  <joint name="joint_wheel_left" type="fixed">
     <parent link="link_base"/>
     <child link="link_wheel_left"/>
     <axis xyz="0 1 0"/>
     <origin xyz="3.71218357702654E-16 0.18333 1.19551044043431E-16" rpy="0 0 0"/>
     <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
   </joint>
-  <joint name="joint_wheel_right" type="continuous">
+  <joint name="joint_wheel_right" type="fixed">
     <parent link="link_base"/>
     <child link="link_wheel_right"/>
     <axis xyz="0 1 0"/>
@@ -490,7 +490,7 @@ This file has been manually updated on <03/12/2019>.
     <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
   </joint>
 
-  <joint name="joint_rear_wheel_left" type="continuous">
+  <joint name="joint_rear_wheel_left" type="fixed">
     <parent link="link_base"/>
     <child link="link_rear_wheel_left"/>
     <axis xyz="0 1 0"/>
@@ -498,7 +498,7 @@ This file has been manually updated on <03/12/2019>.
     <limit upper="inf" lower="-inf" velocity="12.9" acceleration="121" jerk="601" effort="10.0"/>
   </joint>
 
-  <joint name="joint_rear_wheel_right" type="continuous">
+  <joint name="joint_rear_wheel_right" type="fixed">
     <parent link="link_base"/>
     <child link="link_rear_wheel_right"/>
     <axis xyz="0 1 0"/>
@@ -562,13 +562,11 @@ This file has been manually updated on <03/12/2019>.
     <origin xyz="9.99200722162641E-16 -0.025 5.86100000000001E-02" rpy="-1.15 0 3.14159265359"/>
     <limit lower="-0.0001" upper="1.3" velocity="1.3" acceleration="7.0" jerk="60" effort="10.0"/>
   </joint>
-  <joint name="joint_finger_tip_right" type="revolute">
+  <joint name="joint_finger_tip_right" type="fixed">
     <parent link="link_finger_right"/>
     <child link="link_finger_tip_right"/>
-    <axis xyz="1 0 0"/>
     <origin xyz="8.68878191722553E-19 -1.03567252152576E-02 6.41556076619853E-02"
-            rpy="0 0 0"/>
-    <limit lower="0.0" upper="1.2"/>
+            rpy="0.6 0 0"/>
   </joint>
   <joint name="joint_finger_nail_right" type="fixed">
     <parent link="link_finger_tip_right"/>
@@ -582,13 +580,11 @@ This file has been manually updated on <03/12/2019>.
     <origin xyz="9.43689570931383E-16 0.025 5.86100000000001E-02" rpy="-1.15 0 0"/>
     <limit lower="-0.0001" upper="1.3" velocity="1.3" acceleration="7.0" jerk="60" effort="10.0"/>
   </joint>
-  <joint name="joint_finger_tip_left" type="revolute">
+  <joint name="joint_finger_tip_left" type="fixed">
     <parent link="link_finger_left"/>
     <child link="link_finger_tip_left"/>
-    <axis xyz="1 0 0"/>
     <origin xyz="8.68878191722553E-19 -1.03567252152576E-02 6.41556076619853E-02"
-            rpy="0 0 0"/>
-    <limit lower="0.0" upper="1.2"/>
+            rpy="0.6 0 0"/>
   </joint>
   <joint name="joint_finger_nail_left" type="fixed">
     <parent link="link_finger_tip_left"/>

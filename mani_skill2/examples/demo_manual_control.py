@@ -16,7 +16,7 @@ MS1_ENV_IDS = [
     "MoveBucket-v1",
 ]
 
-# python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose robot google_robot_static
+# python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_finger_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)
@@ -71,7 +71,7 @@ def main():
     print("Control mode", env.control_mode)
     print("Reward mode", env.reward_mode)
 
-    obs, _ = env.reset()
+    obs, _ = env.reset() # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution
     after_reset = True
 
     # Viewer
@@ -92,14 +92,10 @@ def main():
     num_arms = sum("arm" in x for x in env.agent.controller.configs)
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
     has_gripper_finger = any("gripper_finger" in x for x in env.agent.controller.configs)
-    has_gripper_finger_tip = any("gripper_finger_tip" in x for x in env.agent.controller.configs)
-    
-    assert has_gripper_finger == has_gripper_finger_tip
-    is_google_robot = (has_gripper and has_gripper_finger and has_gripper_finger_tip)
+    is_google_robot = 'google_robot' in env.agent.robot.name
     
     gripper_action = 1
     gripper_finger_action = -1 # google robot
-    gripper_finger_tip_action = -1 # google robot
     EE_ACTION = 0.1
     
     print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
@@ -207,10 +203,6 @@ def main():
                     gripper_finger_action = -1
                 elif key == "g":  # close gripper
                     gripper_finger_action = 1
-                if key == "c":  # open gripper
-                    gripper_finger_tip_action = -1
-                elif key == "b":  # close gripper
-                    gripper_finger_tip_action = 1
 
         # Other functions
         if key == "0":  # switch to SAPIEN viewer
@@ -219,7 +211,6 @@ def main():
             obs, _ = env.reset()
             gripper_action = 1
             gripper_finger_action = -1
-            gripper_finger_tip_action = -1
             after_reset = True
             continue
         elif key == None:  # exit
@@ -272,7 +263,6 @@ def main():
                     action_dict['gripper'] = gripper_action
                 else:
                     action_dict['gripper_finger'] = gripper_finger_action
-                    action_dict['gripper_finger_tip'] = gripper_finger_tip_action
             action = env.agent.controller.from_action_dict(action_dict)
 
         print("action", action)
