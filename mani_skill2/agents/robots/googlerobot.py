@@ -26,7 +26,7 @@ class GoogleRobot(BaseAgent):
             'joint_head_pan', 'joint_head_tilt']
         If robot is static, the first two joints are removed from the list of active joints.
     """
-    
+        
     def _after_init(self):
         super()._after_init()
 
@@ -129,13 +129,16 @@ class GoogleRobot(BaseAgent):
     def get_proprioception(self):
         state_dict = super().get_proprioception()
         qpos, qvel = state_dict["qpos"], state_dict["qvel"]
-        base_pos, arm_qpos = qpos[:2], qpos[3:]
-        base_vel, arm_qvel = qvel[:2], qvel[3:]
-
-        state_dict["qpos"] = arm_qpos
-        state_dict["qvel"] = arm_qvel
-        state_dict["base_pos"] = base_pos
-        state_dict["base_vel"] = base_vel
+        if self.config.mobile_base:
+            base_pos, arm_qpos = qpos[:2], qpos[3:]
+            base_vel, arm_qvel = qvel[:2], qvel[3:]
+            state_dict["qpos"] = arm_qpos
+            state_dict["qvel"] = arm_qvel
+            state_dict["base_pos"] = base_pos
+            state_dict["base_vel"] = base_vel
+        else:
+            state_dict["qpos"] = qpos
+            state_dict["qvel"] = qvel
         return state_dict
 
     @property

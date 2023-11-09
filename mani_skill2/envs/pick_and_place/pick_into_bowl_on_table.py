@@ -23,6 +23,7 @@ from .base_env import StationaryManipulationEnv
 
 class PickSingleIntoTargetEnv(StationaryManipulationEnv):
     DEFAULT_ASSET_ROOT: str
+    DEFAULT_SCENE_ROOT: str
     DEFAULT_MODEL_JSON: str
 
     obj: sapien.Actor  # target object
@@ -30,6 +31,7 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
     def __init__(
         self,
         asset_root: str = None,
+        scene_root: str = None,
         model_json: str = None,
         model_ids: List[str] = (),
         obj_init_rot_z=True,
@@ -40,6 +42,10 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
         if asset_root is None:
             asset_root = self.DEFAULT_ASSET_ROOT
         self.asset_root = Path(format_path(asset_root))
+        
+        if scene_root is None:
+            scene_root = self.DEFAULT_SCENE_ROOT
+        self.scene_root = Path(format_path(scene_root))
 
         if model_json is None:
             model_json = self.DEFAULT_MODEL_JSON
@@ -85,7 +91,7 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
 
     def _load_actors(self):
         builder = self._scene.create_actor_builder()
-        scene_path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
+        scene_path = str(self.scene_root / "stages/Baked_sc1_staging_00.glb") # hardcoded for now
         scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
@@ -317,6 +323,7 @@ def build_actor_ycb(
 @register_env("PickSingleYCBIntoBowl-v0", max_episode_steps=200)
 class PickSingleYCBIntoBowlEnv(PickSingleIntoTargetEnv):
     DEFAULT_ASSET_ROOT = "{ASSET_DIR}/mani_skill2_ycb"
+    DEFAULT_SCENE_ROOT = "{ASSET_DIR}/hab2_bench_assets"
     DEFAULT_MODEL_JSON = "info_pickintobowl_v0.json"
 
     def _check_assets(self):

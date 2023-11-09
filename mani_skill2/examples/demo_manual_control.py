@@ -96,7 +96,8 @@ def main():
     
     gripper_action = 1
     gripper_finger_action = -1 # google robot
-    EE_ACTION = 0.1
+    EE_ACTION = 0.1 if not is_google_robot else 0.01 # google robot uses unnormalized action space
+    EE_ROT_ACTION = 1.0 if not is_google_robot else 0.1 # google robot uses unnormalized action space
     
     print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
     print("qpos", env.agent.robot.get_qpos())
@@ -179,17 +180,17 @@ def main():
 
             # Rotation (axis-angle)
             if key == "1":
-                ee_action[3:6] = (1, 0, 0)
+                ee_action[3:6] = (EE_ROT_ACTION, 0, 0)
             elif key == "2":
-                ee_action[3:6] = (-1, 0, 0)
+                ee_action[3:6] = (-EE_ROT_ACTION, 0, 0)
             elif key == "3":
-                ee_action[3:6] = (0, 1, 0)
+                ee_action[3:6] = (0, EE_ROT_ACTION, 0)
             elif key == "4":
-                ee_action[3:6] = (0, -1, 0)
+                ee_action[3:6] = (0, -EE_ROT_ACTION, 0)
             elif key == "5":
-                ee_action[3:6] = (0, 0, 1)
+                ee_action[3:6] = (0, 0, EE_ROT_ACTION)
             elif key == "6":
-                ee_action[3:6] = (0, 0, -1)
+                ee_action[3:6] = (0, 0, -EE_ROT_ACTION)
 
         # Gripper
         if has_gripper:

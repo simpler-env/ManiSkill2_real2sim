@@ -100,37 +100,40 @@ class GoogleRobotDefaultConfig:
         # -------------------------------------------------------------------------- #
         arm_pd_ee_delta_pose = PDEEPoseControllerConfig(
             self.arm_joint_names,
-            -0.1,
-            0.1,
-            0.1,
+            -1.0, # dummy limit, which is unused since normalize_action=False
+            1.0,
+            np.pi / 2,
             self.arm_stiffness,
             self.arm_damping,
             self.arm_force_limit,
             ee_link=self.ee_link_name,
             frame="ee",
+            normalize_action=False,
         )
         arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
-            -0.1,
-            0.1,
-            0.1,
+            -1.0,
+            1.0,
+            np.pi / 2,
             self.arm_stiffness,
             self.arm_damping,
             self.arm_force_limit,
             ee_link=self.ee_link_name,
             frame="base",
+            normalize_action=False,
         )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
-            -0.1,
-            0.1,
-            0.1,
+            -1.0,
+            1.0,
+            np.pi / 2,
             self.arm_stiffness,
             self.arm_damping,
             self.arm_force_limit,
             ee_link=self.ee_link_name,
             frame="base",
             use_target=True,
+            normalize_action=False,
         )
         _C["arm"] = dict(
             arm_pd_ee_delta_pose=arm_pd_ee_delta_pose,
