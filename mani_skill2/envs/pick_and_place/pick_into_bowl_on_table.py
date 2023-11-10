@@ -91,7 +91,8 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
 
     def _load_actors(self):
         builder = self._scene.create_actor_builder()
-        scene_path = str(self.scene_root / "stages/Baked_sc1_staging_00.glb") # hardcoded for now
+        scene_path = str(self.scene_root / "stages/Baked_sc1_staging_00.glb")
+        # scene_path = str(self.scene_root / "stages/Baked_sc1_staging_table85cm.glb") # hardcoded for now
         scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
@@ -101,6 +102,7 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
         scene_offset = np.array([-1.6616, -3.0337, 0.0])
         self.arena.set_pose(sapien.Pose(-scene_offset))
         self.obj_init_z = 0.66467 + 0.5 # table height + 0.5
+        # self.obj_init_z = 0.85 + 0.5 # table height + 0.5
         self.obj_init_xy_center = np.array([-0.2, 0.0])
         
         self._load_model()
@@ -352,7 +354,7 @@ class PickSingleYCBIntoBowlEnv(PickSingleIntoTargetEnv):
             scale=self.model_scale,
             density=density,
             physical_material=self._scene.create_physical_material(
-                static_friction=1.0, dynamic_friction=1.0, restitution=0.0
+                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
             ),
             root_dir=self.asset_root,
         )
@@ -385,7 +387,7 @@ class PickSingleYCBIntoBowlEnv(PickSingleIntoTargetEnv):
                 -0.00285961, 0.7851361]
             )
             self.agent.reset(qpos)
-            init_x = self._episode_rng.uniform(0.25, 0.35)
+            init_x = self._episode_rng.uniform(0.30, 0.40)
             init_y = self._episode_rng.uniform(0.0, 0.1)
             self.agent.robot.set_pose(Pose([init_x, init_y, 0], [0, 0, 0, 1]))
         else:

@@ -14,9 +14,12 @@ class GoogleRobotDefaultConfig:
         # standard urdf does not support <contact> tag, so we manually define friction here
         self.urdf_config = dict(
             _materials=dict(
-                finger_mat=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0),
-                finger_tip_mat=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0),
-                finger_nail_mat=dict(static_friction=0.1, dynamic_friction=0.1, restitution=0.0),
+                # finger_mat=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0),
+                # finger_tip_mat=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0),
+                # finger_nail_mat=dict(static_friction=0.1, dynamic_friction=0.1, restitution=0.0),
+                finger_mat=dict(static_friction=4.0, dynamic_friction=4.0, restitution=0.0),
+                finger_tip_mat=dict(static_friction=4.0, dynamic_friction=4.0, restitution=0.0),
+                finger_nail_mat=dict(static_friction=0.4, dynamic_friction=0.4, restitution=0.0),
                 base_mat=dict(static_friction=0.1, dynamic_friction=0.0, restitution=0.0),
                 wheel_mat=dict(static_friction=1.0, dynamic_friction=0.0, restitution=0.0),
             ),
@@ -67,10 +70,10 @@ class GoogleRobotDefaultConfig:
         self.gripper_finger_damping = 1e2
         self.gripper_finger_force_limit = 100
         
-        self.gripper_finger_tip_joint_names = ['joint_finger_tip_right', 'joint_finger_tip_left']
-        self.gripper_finger_tip_stiffness = 1e3 # TODO: arm and gripper both need system identification
-        self.gripper_finger_tip_damping = 1e2
-        self.gripper_finger_tip_force_limit = 100
+        # self.gripper_finger_tip_joint_names = ['joint_finger_tip_right', 'joint_finger_tip_left']
+        # self.gripper_finger_tip_stiffness = 1e3 # TODO: arm and gripper both need system identification
+        # self.gripper_finger_tip_damping = 1e2
+        # self.gripper_finger_tip_force_limit = 100
 
         self.ee_link_name = "link_gripper_tcp"
 
@@ -122,6 +125,19 @@ class GoogleRobotDefaultConfig:
             frame="base",
             normalize_action=False,
         )
+        arm_pd_ee_target_delta_pose = PDEEPoseControllerConfig(
+            self.arm_joint_names,
+            -1.0,
+            1.0,
+            np.pi / 2,
+            self.arm_stiffness,
+            self.arm_damping,
+            self.arm_force_limit,
+            ee_link=self.ee_link_name,
+            frame="ee",
+            use_target=True,
+            normalize_action=False,
+        )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
             -1.0,
@@ -138,6 +154,7 @@ class GoogleRobotDefaultConfig:
         _C["arm"] = dict(
             arm_pd_ee_delta_pose=arm_pd_ee_delta_pose,
             arm_pd_ee_delta_pose_base=arm_pd_ee_delta_pose_base,
+            arm_pd_ee_target_delta_pose=arm_pd_ee_target_delta_pose,
             arm_pd_ee_target_delta_pose_base=arm_pd_ee_target_delta_pose_base,
         )
 
