@@ -30,7 +30,9 @@ class GoogleRobot(BaseAgent):
     def _after_init(self):
         super()._after_init()
 
-        self.base_link = self.robot.get_links()[0] # "link_base"
+        self.base_link = [x for x in self.robot.get_links() if x.name == 'link_base'][0]
+        self.base_inertial_link = [x for x in self.robot.get_links() if x.name == 'link_base_inertial'][0]
+        
         self.finger_right_joint = get_entity_by_name(self.robot.get_joints(), "joint_finger_right")
         self.finger_left_joint = get_entity_by_name(self.robot.get_joints(), "joint_finger_left")
         

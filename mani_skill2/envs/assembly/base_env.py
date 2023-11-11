@@ -88,7 +88,7 @@ class StationaryManipulationEnv(BaseEnv):
                 0, 0,
                 -0.00285961, 0.7851361]
             )
-            self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
+            self.agent.robot.set_pose(Pose([-0.615, 0, 0.06205]))
         else:
             raise NotImplementedError(self.robot_uid)
 

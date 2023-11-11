@@ -389,6 +389,6 @@ class PickSingleYCBIntoBowlEnv(PickSingleIntoTargetEnv):
             self.agent.reset(qpos)
             init_x = self._episode_rng.uniform(0.30, 0.40)
             init_y = self._episode_rng.uniform(0.0, 0.1)
-            self.agent.robot.set_pose(Pose([init_x, init_y, 0], [0, 0, 0, 1]))
+            self.agent.robot.set_pose(Pose([init_x, init_y, 0.06205], [0, 0, 0, 1]))
         else:
             raise NotImplementedError(self.robot_uid)

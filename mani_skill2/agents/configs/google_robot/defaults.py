@@ -61,14 +61,15 @@ class GoogleRobotDefaultConfig:
         
         self.arm_joint_names = ['joint_torso', 'joint_shoulder', 'joint_bicep', 'joint_elbow', 
                                 'joint_forearm', 'joint_wrist', 'joint_gripper', 'joint_head_pan', 'joint_head_tilt']
-        self.arm_stiffness = 1e3 # TODO: arm and gripper both need system identification
-        self.arm_damping = 1e2
-        self.arm_force_limit = 100
+        # Parameters obtained from https://github.com/google-deepmind/mujoco_menagerie/blob/main/google_robot/robot.xml
+        self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
+        self.arm_damping = 10
+        self.arm_force_limit = [150, 150, 30, 30, 30, 30, 30, 30, 30]
 
         self.gripper_finger_joint_names = ['joint_finger_right', 'joint_finger_left']
-        self.gripper_finger_stiffness = 1e3 # TODO: arm and gripper both need system identification
-        self.gripper_finger_damping = 1e2
-        self.gripper_finger_force_limit = 100
+        self.gripper_finger_stiffness = 20 # TODO: arm and gripper both need system identification
+        self.gripper_finger_damping = 2
+        self.gripper_finger_force_limit = 30
         
         # self.gripper_finger_tip_joint_names = ['joint_finger_tip_right', 'joint_finger_tip_left']
         # self.gripper_finger_tip_stiffness = 1e3 # TODO: arm and gripper both need system identification
@@ -163,24 +164,38 @@ class GoogleRobotDefaultConfig:
         # -------------------------------------------------------------------------- #
         gripper_finger_pd_joint_pos = PDJointPosMimicControllerConfig(
             self.gripper_finger_joint_names,
-            -1e-4,
-            1.3,
+            0.0, 
+            1.3 + 0.01, # a trick to have force when grasping
             self.gripper_finger_stiffness,
             self.gripper_finger_damping,
             self.gripper_finger_force_limit,
+            normalize_action=True,
         )
         gripper_finger_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_finger_joint_names,
-            -1.0,
-            1.0,
+            -1.3 - 0.01, 
+            1.3 + 0.01, # a trick to have force when grasping
             self.gripper_finger_stiffness,
             self.gripper_finger_damping,
             self.gripper_finger_force_limit,
             use_delta=True,
+            normalize_action=True,
+        )
+        gripper_finger_pd_joint_target_delta_pos = PDJointPosMimicControllerConfig(
+            self.gripper_finger_joint_names,
+            -1.3 - 0.01, 
+            1.3 + 0.01, # a trick to have force when grasping
+            self.gripper_finger_stiffness,
+            self.gripper_finger_damping,
+            self.gripper_finger_force_limit,
+            use_delta=True,
+            use_target=True,
+            normalize_action=True,
         )
         _C["gripper_finger"] = dict(
             gripper_finger_pd_joint_pos=gripper_finger_pd_joint_pos,
             gripper_finger_pd_joint_delta_pos=gripper_finger_pd_joint_delta_pos,
+            gripper_finger_pd_joint_target_delta_pos=gripper_finger_pd_joint_target_delta_pos,
         )
 
         controller_configs = {}

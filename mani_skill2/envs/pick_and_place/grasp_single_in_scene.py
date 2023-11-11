@@ -84,6 +84,10 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         self._check_assets()
         super().__init__(**kwargs)
 
+    # def _setup_lighting(self):
+    #     super()._setup_lighting()
+    #     self._scene.add_directional_light([-1, 1, -1], [1, 1, 1])
+        
     def _check_assets(self):
         """Check whether the assets exist."""
         pass
@@ -325,7 +329,7 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
             self.agent.reset(qpos)
             init_x = self._episode_rng.uniform(0.30, 0.40)
             init_y = self._episode_rng.uniform(0.0, 0.2)
-            self.agent.robot.set_pose(Pose([init_x, init_y, 0], [0, 0, 0, 1]))
+            self.agent.robot.set_pose(Pose([init_x, init_y, 0.06205], [0, 0, 0, 1]))
         else:
             raise NotImplementedError(self.robot_uid)
         
@@ -337,6 +341,20 @@ class GraspSingleYCBCanInSceneEnv(GraspSingleYCBInSceneEnv):
 class GraspSingleYCBBoxInSceneEnv(GraspSingleYCBInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pick_box_v0.json"
     
+    def _load_model(self):
+        density = 500 # override by hand
+        self.obj = build_actor_ycb(
+            self.model_id,
+            self._scene,
+            scale=self.model_scale,
+            density=density,
+            physical_material=self._scene.create_physical_material(
+                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
+            ),
+            root_dir=self.asset_root,
+        )
+        self.obj.name = self.model_id
+    
 @register_env("GraspSingleYCBFruitInScene-v0", max_episode_steps=200)
 class GraspSingleYCBFruitInSceneEnv(GraspSingleYCBInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pick_fruit_v0.json"
@@ -344,3 +362,9 @@ class GraspSingleYCBFruitInSceneEnv(GraspSingleYCBInSceneEnv):
 @register_env("GraspSingleYCBSomeInScene-v0", max_episode_steps=200)
 class GraspSingleYCBSomeInSceneEnv(GraspSingleYCBInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pickintobowl_v0.json"
+    
+
+@register_env("KnockSingleYCBBoxOverInScene-v0", max_episode_steps=200)
+class KnockSingleYCBBoxOverInSceneEnv(GraspSingleYCBInSceneEnv):
+    DEFAULT_MODEL_JSON = "info_knock_box_v0.json"
+    # TODO: override success condition

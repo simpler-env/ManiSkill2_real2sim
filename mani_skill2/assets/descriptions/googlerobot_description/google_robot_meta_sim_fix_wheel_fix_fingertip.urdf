@@ -451,10 +451,19 @@ This file has been manually updated on <03/12/2019>.
       </geometry>
     </collision>
   </link>
+  <link name="link_base_inertial"/>
+  <joint name="link_base_inertial_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.142542994624505 2.33339305547787E-03 0.130110970092973"/>
+    <parent link="link_base"/>
+    <child link="link_base_inertial"/>
+  </joint>
+
   <!-- Added dummy tcp frame -->
   <link name="link_gripper_tcp"/>
   <joint name="gripper_tcp_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0.15"/>
+    <!-- <origin rpy="0 0 0" xyz="4.2266E-04 1.1761E-04 0.03790068"/> -->
+    <!-- <origin rpy="0 0 0" xyz="4.2266E-04 1.1761E-04 0.18790068"/> -->
+    <origin rpy="-0.001328879239766479 -0.00443973089771006 -0.0008686511567993004" xyz="4.3374896E-03 1.8852949E-03 1.6353297E-01"/>
     <parent link="link_gripper"/>
     <child link="link_gripper_tcp"/>
   </joint>
@@ -566,7 +575,7 @@ This file has been manually updated on <03/12/2019>.
     <parent link="link_finger_right"/>
     <child link="link_finger_tip_right"/>
     <origin xyz="8.68878191722553E-19 -1.03567252152576E-02 6.41556076619853E-02"
-            rpy="0.6 0 0"/>
+            rpy="0.45 0 0"/>
   </joint>
   <joint name="joint_finger_nail_right" type="fixed">
     <parent link="link_finger_tip_right"/>
@@ -584,7 +593,7 @@ This file has been manually updated on <03/12/2019>.
     <parent link="link_finger_left"/>
     <child link="link_finger_tip_left"/>
     <origin xyz="8.68878191722553E-19 -1.03567252152576E-02 6.41556076619853E-02"
-            rpy="0.6 0 0"/>
+            rpy="0.45 0 0"/>
   </joint>
   <joint name="joint_finger_nail_left" type="fixed">
     <parent link="link_finger_tip_left"/>
