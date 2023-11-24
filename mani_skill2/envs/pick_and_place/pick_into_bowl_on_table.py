@@ -91,8 +91,9 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
 
     def _load_actors(self):
         builder = self._scene.create_actor_builder()
-        scene_path = str(self.scene_root / "stages/Baked_sc1_staging_00.glb")
-        # scene_path = str(self.scene_root / "stages/Baked_sc1_staging_table85cm.glb") # hardcoded for now
+        # scene_path = str(self.scene_root / "stages/Baked_sc1_staging_00.glb")
+        scene_path = str(self.scene_root / "stages/Baked_sc1_staging_table83_82cm.glb") # hardcoded for now
+        # scene_path = str(self.scene_root / "stages/Baked_sc1_staging_table_small_83_82cm.glb") # hardcoded for now
         scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
@@ -101,8 +102,8 @@ class PickSingleIntoTargetEnv(StationaryManipulationEnv):
         # Add offset so that the workspace is next to the table
         scene_offset = np.array([-1.6616, -3.0337, 0.0])
         self.arena.set_pose(sapien.Pose(-scene_offset))
-        self.obj_init_z = 0.66467 + 0.5 # table height + 0.5
-        # self.obj_init_z = 0.85 + 0.5 # table height + 0.5
+        # self.obj_init_z = 0.66467 + 0.5 # table height + 0.5
+        self.obj_init_z = 0.8382 + 0.5 # table height + 0.5
         self.obj_init_xy_center = np.array([-0.2, 0.0])
         
         self._load_model()

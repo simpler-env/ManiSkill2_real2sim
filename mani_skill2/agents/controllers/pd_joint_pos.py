@@ -56,6 +56,13 @@ class PDJointPosController(BaseController):
         if self.config.use_delta:
             if self.config.use_target:
                 self._target_qpos = self._target_qpos + action
+                if self.config.clip_target:
+                    joint_limits = self.articulation.get_qlimits()[self.joint_indices]
+                    self._target_qpos = np.clip(
+                        self._target_qpos,
+                        joint_limits[:, 0],
+                        joint_limits[:, 1],
+                    )
             else:
                 self._target_qpos = self._start_qpos + action
         else:
@@ -95,6 +102,7 @@ class PDJointPosControllerConfig(ControllerConfig):
     friction: Union[float, Sequence[float]] = 0.0
     use_delta: bool = False
     use_target: bool = False
+    clip_target: bool = False
     interpolate: bool = False
     normalize_action: bool = True
     controller_cls = PDJointPosController

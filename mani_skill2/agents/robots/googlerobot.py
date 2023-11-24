@@ -96,6 +96,7 @@ class GoogleRobot(BaseAgent):
             (max(np.linalg.norm(rimpulse_tip), np.linalg.norm(rimpulse_finger)) >= min_impulse) 
             and np.rad2deg(rangle) <= max_angle
         )
+        # print(np.linalg.norm(limpulse_tip), np.linalg.norm(limpulse_finger), np.linalg.norm(rimpulse_tip), np.linalg.norm(rimpulse_finger), langle, rangle)
 
         return all([lflag, rflag])
 
@@ -167,7 +168,7 @@ class GoogleRobotStaticBase(GoogleRobot):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "arm_pd_ee_delta_pose_base_gripper_finger_pd_joint_pos"
+            control_mode = "arm_pd_ee_delta_pose_base_gripper_pd_joint_pos"
         super().__init__(
             scene,
             control_freq,
@@ -195,7 +196,7 @@ class GoogleRobotMobileBase(GoogleRobot):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "base_pd_joint_vel_arm_pd_ee_delta_pose_base_gripper_finger_pd_joint_pos"
+            control_mode = "base_pd_joint_vel_arm_pd_ee_delta_pose_base_gripper_pd_joint_pos"
         super().__init__(
             scene,
             control_freq,

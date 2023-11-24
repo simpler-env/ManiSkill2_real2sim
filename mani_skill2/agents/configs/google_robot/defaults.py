@@ -62,19 +62,18 @@ class GoogleRobotDefaultConfig:
         self.arm_joint_names = ['joint_torso', 'joint_shoulder', 'joint_bicep', 'joint_elbow', 
                                 'joint_forearm', 'joint_wrist', 'joint_gripper', 'joint_head_pan', 'joint_head_tilt']
         # Parameters obtained from https://github.com/google-deepmind/mujoco_menagerie/blob/main/google_robot/robot.xml
-        self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
-        self.arm_damping = 10
+        # self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
+        # self.arm_damping = 10
+        self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
+        self.arm_damping = 500
         self.arm_force_limit = [150, 150, 30, 30, 30, 30, 30, 30, 30]
 
-        self.gripper_finger_joint_names = ['joint_finger_right', 'joint_finger_left']
-        self.gripper_finger_stiffness = 20 # TODO: arm and gripper both need system identification
-        self.gripper_finger_damping = 2
-        self.gripper_finger_force_limit = 30
-        
-        # self.gripper_finger_tip_joint_names = ['joint_finger_tip_right', 'joint_finger_tip_left']
-        # self.gripper_finger_tip_stiffness = 1e3 # TODO: arm and gripper both need system identification
-        # self.gripper_finger_tip_damping = 1e2
-        # self.gripper_finger_tip_force_limit = 100
+        self.gripper_joint_names = ['joint_finger_right', 'joint_finger_left']
+        # self.gripper_stiffness = 20 # TODO: arm and gripper both need system identification
+        # self.gripper_damping = 2
+        self.gripper_stiffness = 2000
+        self.gripper_damping = 300
+        self.gripper_force_limit = 30
 
         self.ee_link_name = "link_gripper_tcp"
 
@@ -162,51 +161,52 @@ class GoogleRobotDefaultConfig:
         # -------------------------------------------------------------------------- #
         # Gripper
         # -------------------------------------------------------------------------- #
-        gripper_finger_pd_joint_pos = PDJointPosMimicControllerConfig(
-            self.gripper_finger_joint_names,
+        gripper_pd_joint_pos = PDJointPosMimicControllerConfig(
+            self.gripper_joint_names,
             0.0, 
             1.3 + 0.01, # a trick to have force when grasping
-            self.gripper_finger_stiffness,
-            self.gripper_finger_damping,
-            self.gripper_finger_force_limit,
+            self.gripper_stiffness,
+            self.gripper_damping,
+            self.gripper_force_limit,
             normalize_action=True,
         )
-        gripper_finger_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
-            self.gripper_finger_joint_names,
+        gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
+            self.gripper_joint_names,
             -1.3 - 0.01, 
             1.3 + 0.01, # a trick to have force when grasping
-            self.gripper_finger_stiffness,
-            self.gripper_finger_damping,
-            self.gripper_finger_force_limit,
+            self.gripper_stiffness,
+            self.gripper_damping,
+            self.gripper_force_limit,
             use_delta=True,
             normalize_action=True,
         )
-        gripper_finger_pd_joint_target_delta_pos = PDJointPosMimicControllerConfig(
-            self.gripper_finger_joint_names,
+        gripper_pd_joint_target_delta_pos = PDJointPosMimicControllerConfig(
+            self.gripper_joint_names,
             -1.3 - 0.01, 
             1.3 + 0.01, # a trick to have force when grasping
-            self.gripper_finger_stiffness,
-            self.gripper_finger_damping,
-            self.gripper_finger_force_limit,
+            self.gripper_stiffness,
+            self.gripper_damping,
+            self.gripper_force_limit,
             use_delta=True,
             use_target=True,
+            clip_target=True,
             normalize_action=True,
         )
-        _C["gripper_finger"] = dict(
-            gripper_finger_pd_joint_pos=gripper_finger_pd_joint_pos,
-            gripper_finger_pd_joint_delta_pos=gripper_finger_pd_joint_delta_pos,
-            gripper_finger_pd_joint_target_delta_pos=gripper_finger_pd_joint_target_delta_pos,
+        _C["gripper"] = dict(
+            gripper_pd_joint_pos=gripper_pd_joint_pos,
+            gripper_pd_joint_delta_pos=gripper_pd_joint_delta_pos,
+            gripper_pd_joint_target_delta_pos=gripper_pd_joint_target_delta_pos,
         )
 
         controller_configs = {}
         for base_controller_name in _C["base"]:
             for arm_controller_name in _C["arm"]:
-                for gripper_controller_name in _C["gripper_finger"]:
+                for gripper_controller_name in _C["gripper"]:
                     c = {}
                     if base_controller_name is not None:
                         c = {"base": _C["base"][base_controller_name]}
                     c["arm"] = _C["arm"][arm_controller_name]
-                    c["gripper_finger"] = _C["gripper_finger"][gripper_controller_name]
+                    c["gripper"] = _C["gripper"][gripper_controller_name]
                     combined_name = arm_controller_name + "_" + gripper_controller_name
                     if base_controller_name is not None:
                         combined_name = base_controller_name + "_" + combined_name

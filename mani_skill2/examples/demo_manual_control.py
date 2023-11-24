@@ -16,7 +16,8 @@ MS1_ENV_IDS = [
     "MoveBucket-v1",
 ]
 
-# python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_finger_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
+# python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleYCBCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)
@@ -83,6 +84,7 @@ def main():
         if not args.enable_sapien_viewer:
             return
         while True:
+            env.render_human()
             sapien_viewer = env.viewer
             if sapien_viewer.window.key_down("0"):
                 break
@@ -91,11 +93,15 @@ def main():
     has_base = "base" in env.agent.controller.configs
     num_arms = sum("arm" in x for x in env.agent.controller.configs)
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
-    has_gripper_finger = any("gripper_finger" in x for x in env.agent.controller.configs)
     is_google_robot = 'google_robot' in env.agent.robot.name
+    is_google_robot_gripper_target_control = is_google_robot and env.agent.controller.controllers['gripper'].config.use_target
     
-    gripper_action = 1
-    gripper_finger_action = -1 # google robot
+    # open gripper at initialization
+    if not is_google_robot:
+        gripper_action = 1
+    else:
+        gripper_action = -1 if not is_google_robot_gripper_target_control else 0
+    
     EE_ACTION = 0.1 if not is_google_robot else 0.01 # google robot uses unnormalized action space
     EE_ROT_ACTION = 1.0 if not is_google_robot else 0.1 # google robot uses unnormalized action space
     
@@ -201,17 +207,19 @@ def main():
                     gripper_action = -1
             else:
                 if key == "f":  # open gripper
-                    gripper_finger_action = -1
+                    gripper_action = -1
                 elif key == "g":  # close gripper
-                    gripper_finger_action = 1
+                    gripper_action = 1
 
         # Other functions
         if key == "0":  # switch to SAPIEN viewer
             render_wait()
         elif key == "r":  # reset env
             obs, _ = env.reset()
-            gripper_action = 1
-            gripper_finger_action = -1
+            if not is_google_robot:
+                gripper_action = 1
+            else:
+                gripper_action = -1 if not is_google_robot_gripper_target_control else 0
             after_reset = True
             continue
         elif key == None:  # exit
@@ -260,14 +268,13 @@ def main():
         else:
             action_dict = dict(base=base_action, arm=ee_action)
             if has_gripper:
-                if not is_google_robot:
-                    action_dict['gripper'] = gripper_action
-                else:
-                    action_dict['gripper_finger'] = gripper_finger_action
+                action_dict['gripper'] = gripper_action
             action = env.agent.controller.from_action_dict(action_dict)
 
         print("action", action)
         obs, reward, terminated, truncated, info = env.step(action)
+        if is_google_robot_gripper_target_control:
+            gripper_action = 0 # set gripper target delta pos to 0 after each env step
         print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
         print("qpos", env.agent.robot.get_qpos())
         print("reward", reward)
