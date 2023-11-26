@@ -33,7 +33,7 @@ class PDJointPosController(BaseController):
 
         for i, joint in enumerate(self.joints):
             joint.set_drive_property(
-                stiffness[i], damping[i], force_limit=force_limit[i]
+                stiffness[i], damping[i], force_limit=force_limit[i], mode=self.config.drive_mode
             )
             joint.set_friction(friction[i])
 
@@ -60,8 +60,8 @@ class PDJointPosController(BaseController):
                     joint_limits = self.articulation.get_qlimits()[self.joint_indices]
                     self._target_qpos = np.clip(
                         self._target_qpos,
-                        joint_limits[:, 0],
-                        joint_limits[:, 1],
+                        joint_limits[:, 0] - self.config.clip_target_thres,
+                        joint_limits[:, 1] + self.config.clip_target_thres,
                     )
             else:
                 self._target_qpos = self._start_qpos + action
@@ -100,9 +100,11 @@ class PDJointPosControllerConfig(ControllerConfig):
     damping: Union[float, Sequence[float]]
     force_limit: Union[float, Sequence[float]] = 1e10
     friction: Union[float, Sequence[float]] = 0.0
+    drive_mode: str = "force"
     use_delta: bool = False
     use_target: bool = False
     clip_target: bool = False
+    clip_target_thres: float = 0.01
     interpolate: bool = False
     normalize_action: bool = True
     controller_cls = PDJointPosController

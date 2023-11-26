@@ -40,6 +40,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         obj_init_fixed_xy_pos=None,
         obj_init_fixed_z_rot=None,
         robot_init_fixed_xy_pos=None,
+        robot_init_fixed_rot_quat=None,
         **kwargs,
     ):
         if asset_root is None:
@@ -78,15 +79,16 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         self.obj_init_rand_rot_z_enabled = obj_init_rand_rot_z_enabled # whether to randomize the z rotation of target object upon environment reset
         self.obj_init_rand_rot_range = obj_init_rand_rot_range # the range to rotate the target object along a random axis by a small angle upon environment reset
         self.obj_init_fixed_xy_pos = obj_init_fixed_xy_pos # the xy position to fix the target object upon environment reset
-        self.robot_init_fixed_xy_pos = robot_init_fixed_xy_pos # the xy position to fix the robot upon environment reset
         self.obj_init_fixed_z_rot = obj_init_fixed_z_rot # the z rotation to fix the target object upon environment reset
+        self.robot_init_fixed_xy_pos = robot_init_fixed_xy_pos # the xy position to fix the robot upon environment reset
+        self.robot_init_fixed_rot_quat = robot_init_fixed_rot_quat # the rotation quaternion to fix the robot upon environment reset
         
         self.arena = None
         self.obj_init_actual_z = None # actual target object z position at env reset
         self.obj_init_actual_xy_center = None # actual target object xy position at env reset
         
         self.obj = None
-
+        
         self._check_assets()
         super().__init__(**kwargs)
 
@@ -140,6 +142,11 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         options["reconfigure"] = reconfigure
         return super().reset(seed=self._episode_seed, options=options)
 
+    # def _setup_lighting(self):
+    #     super()._setup_lighting()
+    #     # self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
+    #     self._scene.add_point_light([-0.2, 0.0, 1.4], [1, 1, 1])
+        
     def _set_model(self, model_id, model_scale):
         """Set the model id and scale. If not provided, choose one randomly."""
         reconfigure = False
@@ -347,7 +354,11 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
                 init_x = self._episode_rng.uniform(0.30, 0.40)
                 init_y = self._episode_rng.uniform(0.0, 0.2)
                 robot_init_xyz = [init_x, init_y, 0.06205]
-            self.agent.robot.set_pose(Pose(robot_init_xyz, [0, 0, 0, 1]))
+            if self.robot_init_fixed_rot_quat is not None:
+                robot_init_rot_quat = self.robot_init_fixed_rot_quat
+            else:
+                robot_init_rot_quat = [0, 0, 0, 1]
+            self.agent.robot.set_pose(Pose(robot_init_xyz, robot_init_rot_quat))
         else:
             raise NotImplementedError(self.robot_uid)
         

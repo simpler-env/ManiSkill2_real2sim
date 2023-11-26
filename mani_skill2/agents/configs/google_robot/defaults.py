@@ -6,7 +6,7 @@ from mani_skill2.sensors.camera import CameraConfig
 
 
 class GoogleRobotDefaultConfig:
-    def __init__(self, mobile_base=False) -> None:
+    def __init__(self, mobile_base=False, base_arm_drive_mode='force') -> None:
         if mobile_base:
             self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_fingertip.urdf"
         else:
@@ -58,22 +58,33 @@ class GoogleRobotDefaultConfig:
         self.base_damping = 1e3
         self.base_force_limit = 500
         self.mobile_base = mobile_base # whether the robot base is mobile
+        self.base_arm_drive_mode = base_arm_drive_mode # 'force' or 'acceleration'
         
         self.arm_joint_names = ['joint_torso', 'joint_shoulder', 'joint_bicep', 'joint_elbow', 
                                 'joint_forearm', 'joint_wrist', 'joint_gripper', 'joint_head_pan', 'joint_head_tilt']
-        # Parameters obtained from https://github.com/google-deepmind/mujoco_menagerie/blob/main/google_robot/robot.xml
-        # self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
-        # self.arm_damping = 10
-        self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-        self.arm_damping = 500
-        self.arm_force_limit = [150, 150, 30, 30, 30, 30, 30, 30, 30]
-
         self.gripper_joint_names = ['joint_finger_right', 'joint_finger_left']
+        
+        if self.base_arm_drive_mode == 'acceleration':
+            # Parameters obtained from https://github.com/google-deepmind/mujoco_menagerie/blob/main/google_robot/robot.xml
+            self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
+            self.arm_damping = 500
+            # self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
+            # self.arm_damping = 10
+        elif self.base_arm_drive_mode == 'force':
+            self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
+            self.arm_damping = 500
+        else:
+            raise NotImplementedError()
+        
         # self.gripper_stiffness = 20 # TODO: arm and gripper both need system identification
         # self.gripper_damping = 2
         self.gripper_stiffness = 2000
         self.gripper_damping = 300
+        
+        self.arm_force_limit = [150, 150, 30, 30, 30, 30, 30, 30, 30]
         self.gripper_force_limit = 30
+        self.arm_force_limit = [x * 10 for x in self.arm_force_limit]
+        self.gripper_force_limit = self.gripper_force_limit * 10
 
         self.ee_link_name = "link_gripper_tcp"
 
@@ -93,6 +104,7 @@ class GoogleRobotDefaultConfig:
                     upper=[0.5, 0.5],
                     damping=self.base_damping,
                     force_limit=self.base_force_limit,
+                    drive_mode=self.base_arm_drive_mode,
                 )
             )
         else:
@@ -112,6 +124,7 @@ class GoogleRobotDefaultConfig:
             ee_link=self.ee_link_name,
             frame="ee",
             normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
         )
         arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
@@ -124,6 +137,7 @@ class GoogleRobotDefaultConfig:
             ee_link=self.ee_link_name,
             frame="base",
             normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
         )
         arm_pd_ee_target_delta_pose = PDEEPoseControllerConfig(
             self.arm_joint_names,
@@ -137,6 +151,7 @@ class GoogleRobotDefaultConfig:
             frame="ee",
             use_target=True,
             normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
         )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
@@ -150,6 +165,7 @@ class GoogleRobotDefaultConfig:
             frame="base",
             use_target=True,
             normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
         )
         _C["arm"] = dict(
             arm_pd_ee_delta_pose=arm_pd_ee_delta_pose,
@@ -169,6 +185,7 @@ class GoogleRobotDefaultConfig:
             self.gripper_damping,
             self.gripper_force_limit,
             normalize_action=True,
+            drive_mode="force",
         )
         gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
@@ -179,18 +196,21 @@ class GoogleRobotDefaultConfig:
             self.gripper_force_limit,
             use_delta=True,
             normalize_action=True,
+            drive_mode="force",
         )
         gripper_pd_joint_target_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            -1.3 - 0.01, 
-            1.3 + 0.01, # a trick to have force when grasping
+            -1.3 - 0.1, 
+            1.3 + 0.1, # a trick to have force when grasping
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
             use_delta=True,
             use_target=True,
             clip_target=True,
+            clip_target_thres=0.1,
             normalize_action=True,
+            drive_mode="force",
         )
         _C["gripper"] = dict(
             gripper_pd_joint_pos=gripper_pd_joint_pos,

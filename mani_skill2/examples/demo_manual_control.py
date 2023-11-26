@@ -18,6 +18,7 @@ MS1_ENV_IDS = [
 
 # python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleYCBCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleCustomInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos robot google_robot_static sim_freq @500 control_freq @3 scene_name Baked_sc1_staging_objaverse_cabinet1
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)

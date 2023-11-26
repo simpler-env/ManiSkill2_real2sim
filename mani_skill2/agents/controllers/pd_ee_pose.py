@@ -204,6 +204,7 @@ class PDEEPoseControllerConfig(ControllerConfig):
     damping: Union[float, Sequence[float]]
     force_limit: Union[float, Sequence[float]] = 1e10
     friction: Union[float, Sequence[float]] = 0.0
+    drive_mode: str = "force"
     ee_link: str = None
     frame: str = "ee"  # [base, ee, ee_align]
     use_delta: bool = True

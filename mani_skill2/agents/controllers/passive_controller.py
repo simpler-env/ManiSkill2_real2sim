@@ -17,7 +17,7 @@ class PassiveController(BaseController):
         friction = np.broadcast_to(self.config.friction, n)
 
         for i, joint in enumerate(self.joints):
-            joint.set_drive_property(0, damping[i], force_limit=force_limit[i])
+            joint.set_drive_property(0, damping[i], force_limit=force_limit[i], mode=self.config.drive_mode)
             joint.set_friction(friction[i])
 
     def _initialize_action_space(self):
@@ -36,4 +36,5 @@ class PassiveControllerConfig(ControllerConfig):
     damping: Union[float, Sequence[float]]
     force_limit: Union[float, Sequence[float]] = 1e10
     friction: Union[float, Sequence[float]] = 0.0
+    drive_mode: str = "force"
     controller_cls = PassiveController

@@ -4,6 +4,8 @@ import numpy as np
 import sapien.core as sapien
 from sapien.core import Pose
 
+import cv2
+
 from mani_skill2.agents.base_agent import BaseAgent
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.agents.robots.xmate3 import Xmate3Robotiq
@@ -22,9 +24,15 @@ class StationaryManipulationEnv(BaseEnv):
     SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, "google_robot_static": GoogleRobotStaticBase}
     agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase]
 
-    def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, 
+                 rgb_overlay_path=None, rgb_overlay_cameras=[], **kwargs):
         self.robot_uid = robot
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        if rgb_overlay_path is not None:
+            self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
+        else:
+            self.rgb_overlay_img = None
+        self.rgb_overlay_cameras = rgb_overlay_cameras
         super().__init__(*args, **kwargs)
 
     def _build_cube(
@@ -171,4 +179,29 @@ class StationaryManipulationEnv(BaseEnv):
     def _get_obs_agent(self):
         obs = self.agent.get_proprioception()
         obs["base_pose"] = vectorize_pose(self.agent.robot.pose)
+        return obs
+    
+    def get_obs(self):
+        obs = super().get_obs()
+        if self._obs_mode == "image" and self.rgb_overlay_img is not None:
+            # get the actor ids of objects to manipulate; note that objects here are not articulated
+            target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '']]
+            target_object_actor_ids = np.array(target_object_actor_ids, dtype=np.int32)
+
+            # get the robot link ids (links are subclass of actors)
+            robot_links = self.agent.robot.get_links() # e.g., [Actor(name="root", id="1"), Actor(name="root_arm_1_link_1", id="2"), Actor(name="root_arm_1_link_2", id="3"), ...]
+            robot_link_ids = np.array([x.id for x in robot_links], dtype=np.int32)
+
+            # obtain segmentations of the target object(s) and the robot
+            for camera_name in self.rgb_overlay_cameras:
+                assert 'Segmentation' in obs['image'][camera_name].keys(), 'Image overlay requires segment info in the observation!'
+                seg = obs['image'][camera_name]['Segmentation'] # (H, W, 4); [..., 0] is mesh-level; [..., 1] is actor-level; [..., 2:] is zero (unused)
+                actor_seg = seg[..., 1]
+                mask = np.ones_like(actor_seg, dtype=np.float32)
+                mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids]))] = 0.0
+                mask = mask[..., np.newaxis]
+                
+                rgb_overlay_img = cv2.resize(self.rgb_overlay_img, (obs['image'][camera_name]['Color'].shape[1], obs['image'][camera_name]['Color'].shape[0]))
+                obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
+                # obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * 0.5 + rgb_overlay_img * 0.5
         return obs
