@@ -464,6 +464,7 @@ This file has been manually updated on <03/12/2019>.
     <!-- <origin rpy="0 0 0" xyz="4.2266E-04 1.1761E-04 0.03790068"/> -->
     <!-- <origin rpy="0 0 0" xyz="4.2266E-04 1.1761E-04 0.18790068"/> -->
     <origin rpy="-0.001328879239766479 -0.00443973089771006 -0.0008686511567993004" xyz="4.3374896E-03 1.8852949E-03 1.6353297E-01"/>
+    <!-- <origin rpy="0 0 0" xyz="0 0 0.15"/> -->
     <parent link="link_gripper"/>
     <child link="link_gripper_tcp"/>
   </joint>

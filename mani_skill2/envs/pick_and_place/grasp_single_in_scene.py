@@ -39,6 +39,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         obj_init_rand_rot_range=0,
         obj_init_fixed_xy_pos=None,
         obj_init_fixed_z_rot=None,
+        obj_init_rot_quat=None,
         robot_init_fixed_xy_pos=None,
         robot_init_fixed_rot_quat=None,
         **kwargs,
@@ -76,6 +77,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         self.model_scale = None
         self.model_bbox_size = None
 
+        self.obj_init_rot_quat = obj_init_rot_quat # the rotation quaternion to initialize the target object, before random perturbation below
         self.obj_init_rand_rot_z_enabled = obj_init_rand_rot_z_enabled # whether to randomize the z rotation of target object upon environment reset
         self.obj_init_rand_rot_range = obj_init_rand_rot_range # the range to rotate the target object along a random axis by a small angle upon environment reset
         self.obj_init_fixed_xy_pos = obj_init_fixed_xy_pos # the xy position to fix the target object upon environment reset
@@ -185,15 +187,15 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
     def _initialize_actors(self):
         # The object will fall from a certain initial height
         p = np.hstack([self.obj_init_actual_xy_center, self.obj_init_actual_z])
-        q = [1, 0, 0, 0]
+        q = [1, 0, 0, 0] if self.obj_init_rot_quat is None else self.obj_init_rot_quat
 
         # Rotate along z-axis
         if self.obj_init_rand_rot_z_enabled:
             ori = self._episode_rng.uniform(0, 2 * np.pi)
-            q = euler2quat(0, 0, ori)
+            q = qmult(euler2quat(0, 0, ori), q)
         if self.obj_init_fixed_z_rot is not None:
             ori = self.obj_init_fixed_z_rot
-            q = euler2quat(0, 0, ori)
+            q = qmult(euler2quat(0, 0, ori), q)
 
         # Rotate along a random axis by a small angle
         if self.obj_init_rand_rot_range > 0 and self.obj_init_fixed_z_rot is None:
@@ -421,7 +423,7 @@ class GraspSingleCustomInSceneEnv(GraspSingleYCBInSceneEnv):
             scale=self.model_scale,
             density=density,
             physical_material=self._scene.create_physical_material(
-                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
+                static_friction=0.5, dynamic_friction=0.5, restitution=0.0
             ),
             root_dir=self.asset_root,
         )
@@ -476,39 +478,85 @@ class KnockSingleYCBBoxOverInSceneEnv(GraspSingleYCBInSceneEnv):
     
     
     
+"""
+Custom Assets
+"""
     
-    
+class GraspSingleCanInSceneEnv(GraspSingleCustomInSceneEnv):
+    def __init__(self, upright=False, **kwargs):
+        if upright:
+            kwargs['obj_init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
+            kwargs['obj_init_rand_rot_z_enabled'] = False
+            kwargs['obj_init_rand_rot_range'] = 0
+        super().__init__(**kwargs)
     
 @register_env("GraspSingleCokeCanInScene-v0", max_episode_steps=200)
-class GraspSingleCokeCanInSceneEnv(GraspSingleCustomInSceneEnv):
+class GraspSingleCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["coke_can"]
         super().__init__(**kwargs)
+        
+@register_env("GraspSingleUpRightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(upright=True, **kwargs)
+        
+@register_env("GraspSingleLightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleLightCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["coke_can"]
+        super().__init__(**kwargs)
+        
+        for model_id in self.model_ids:
+            self.model_db[model_id]["density"] = 100
+            
+@register_env("GraspSingleUpRightLightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightLightCokeCanInSceneEnv(GraspSingleLightCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(upright=True, **kwargs)
+        
+@register_env("GraspSingleOpenedCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["opened_coke_can"]
+        super().__init__(**kwargs)
+        
+@register_env("GraspSingleUpRightOpenedCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightOpenedCokeCanInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(upright=True, **kwargs)
     
 @register_env("GraspSinglePepsiCanInScene-v0", max_episode_steps=200)
-class GraspSinglePepsiCanInSceneEnv(GraspSingleCustomInSceneEnv):
+class GraspSinglePepsiCanInSceneEnv(GraspSingleCanInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["pepsi_can"]
         super().__init__(**kwargs)
-    
+        
+@register_env("GraspSingleUpRightPepsiCanInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightPepsiCanInSceneEnv(GraspSinglePepsiCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(upright=True, **kwargs)
+        
 @register_env("GraspSingle7upCanInScene-v0", max_episode_steps=200)
-class GraspSingle7upCanInSceneEnv(GraspSingleCustomInSceneEnv):
+class GraspSingle7upCanInSceneEnv(GraspSingleCanInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["7up_can"]
         super().__init__(**kwargs)
     
 @register_env("GraspSingleSpriteCanInScene-v0", max_episode_steps=200)
-class GraspSingleSpriteCanInSceneEnv(GraspSingleCustomInSceneEnv):
+class GraspSingleSpriteCanInSceneEnv(GraspSingleCanInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["sprite_can"]
         super().__init__(**kwargs)
         
 @register_env("GraspSingleFantaCanInScene-v0", max_episode_steps=200)
-class GraspSingleFantaCanInSceneEnv(GraspSingleCustomInSceneEnv):
+class GraspSingleFantaCanInSceneEnv(GraspSingleCanInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["fanta_can"]

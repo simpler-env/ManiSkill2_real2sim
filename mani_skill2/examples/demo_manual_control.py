@@ -103,7 +103,7 @@ def main():
     else:
         gripper_action = -1 if not is_google_robot_gripper_target_control else 0
     
-    EE_ACTION = 0.1 if not is_google_robot else 0.01 # google robot uses unnormalized action space
+    EE_ACTION = 0.1 if not is_google_robot else 0.03 # google robot uses unnormalized action space
     EE_ROT_ACTION = 1.0 if not is_google_robot else 0.1 # google robot uses unnormalized action space
     
     print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
@@ -276,7 +276,8 @@ def main():
         obs, reward, terminated, truncated, info = env.step(action)
         if is_google_robot_gripper_target_control:
             gripper_action = 0 # set gripper target delta pos to 0 after each env step
-        print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
+        print("obj pos", env.obj.pose.p, "tcp pose", env.tcp.pose)
+        print("tcp pose wrt robot base", env.agent.robot.pose.inv() * env.tcp.pose)
         print("qpos", env.agent.robot.get_qpos())
         print("reward", reward)
         print("terminated", terminated, "truncated", truncated)

@@ -35,6 +35,12 @@
     ],
     "density": 1000
   },
+  "opened_coke_can": {
+    "scales": [
+      1.0
+    ],
+    "density": 1000
+  },
   "sprite_can": {
     "bbox": {
       "min": [
