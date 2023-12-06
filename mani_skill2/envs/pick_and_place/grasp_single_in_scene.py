@@ -339,7 +339,7 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
     def _initialize_agent(self):
         if self.robot_uid == "google_robot_static":
             qpos = np.array(
-                [-0.2639457174606611,
+                [-0.2639457174606611, # -0.1639457174606611
                 0.0831913360274175,
                 0.5017611504652179,
                 1.156859026208673,
@@ -349,6 +349,8 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
                 0, 0,
                 -0.00285961, 0.7851361]
             )
+            # qpos = np.array([-0.168, -0.001, 0.596, 1.211, 0.011, 1.591, -0.98, 0, 0, 0.003, 0.785])
+            # qpos = np.array([0.225, 0.381, 0.396, 0.895, -0.141, 1.611, -0.921, 0., 0., -0.003, 0.785])
             self.agent.reset(qpos)
             if self.robot_init_fixed_xy_pos is not None:
                 robot_init_xyz = [self.robot_init_fixed_xy_pos[0], self.robot_init_fixed_xy_pos[1], 0.06205]
@@ -481,6 +483,69 @@ class KnockSingleYCBBoxOverInSceneEnv(GraspSingleYCBInSceneEnv):
 """
 Custom Assets
 """
+class GraspSingleWithDistractorInSceneEnv(GraspSingleCustomInSceneEnv):
+    distractor_model_ids = []
+    distractor_obj = None
+    
+    def _initialize_actors(self):
+        super()._initialize_actors()
+        
+        assert len(self.distractor_model_ids) > 0
+        # The object will fall from a certain initial height
+        distractor_model_id = random_choice(self.distractor_model_ids, self._episode_rng)
+        distractor_model_scales = self.model_db[distractor_model_id].get("scales")
+        if distractor_model_scales is None:
+            distractor_model_scale = 1.0
+        else:
+            distractor_model_scale = random_choice(distractor_model_scales, self._episode_rng)
+        self.distractor_obj = build_actor_custom(
+            distractor_model_id,
+            self._scene,
+            scale=distractor_model_scale,
+            density=self.model_db[distractor_model_id].get("density", 1000),
+            physical_material=self._scene.create_physical_material(
+                static_friction=0.5, dynamic_friction=0.5, restitution=0.0
+            ),
+            root_dir=self.asset_root,
+        )
+        self.distractor_obj.name = distractor_model_id
+        
+        while True:
+            distractor_rand_xy_center = self.obj_init_actual_xy_center + self._episode_rng.uniform(-0.3, 0.3, [2]) # hardcoded for now
+            distractor_rand_xy_center = np.clip(distractor_rand_xy_center, [-0.35, 0.0], [-0.1, 0.4])
+            if np.linalg.norm(distractor_rand_xy_center - self.obj_init_actual_xy_center) > 0.2:
+                break
+        # distractor_rand_xy_center = [-0.1, 0.2]
+            
+        p = np.hstack([distractor_rand_xy_center, self.obj_init_actual_z])
+        q = [1, 0, 0, 0] if self.obj_init_rot_quat is None else np.array(self.obj_init_rot_quat)
+        self.distractor_obj.set_pose(Pose(p, q))
+
+        # Move the robot far away to avoid collision
+        # The robot should be initialized later
+        self.agent.robot.set_pose(Pose([-10, 0, 0]))
+
+        # Lock rotation around x and y
+        self.distractor_obj.lock_motion(0, 0, 0, 1, 1, 0)
+        self._settle(0.5)
+        # Unlock motion
+        self.distractor_obj.lock_motion(0, 0, 0, 0, 0, 0)
+        # NOTE(jigu): Explicit set pose to ensure the actor does not sleep
+        self.distractor_obj.set_pose(self.distractor_obj.pose)
+        self.distractor_obj.set_velocity(np.zeros(3))
+        self.distractor_obj.set_angular_velocity(np.zeros(3))
+        self._settle(0.5)
+
+        # Some objects need longer time to settle
+        lin_vel = np.linalg.norm(self.distractor_obj.velocity)
+        ang_vel = np.linalg.norm(self.distractor_obj.angular_velocity)
+        if lin_vel > 1e-3 or ang_vel > 1e-2:
+            self._settle(0.5)
+            
+    def reset(self, *args, **kwargs):
+        if self.distractor_obj is not None:
+            self._scene.remove_actor(self.distractor_obj)
+        return super().reset(*args, **kwargs)
     
 class GraspSingleCanInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, upright=False, **kwargs):
@@ -497,10 +562,18 @@ class GraspSingleCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
         kwargs['model_ids'] = ["coke_can"]
         super().__init__(**kwargs)
         
+@register_env("GraspSingleCokeCanWithDistractorInScene-v0", max_episode_steps=200)
+class GraspSingleCokeCanWithDistractorInSceneEnv(GraspSingleCokeCanInSceneEnv, GraspSingleWithDistractorInSceneEnv):
+    distractor_model_ids = ['7up_can']
+        
 @register_env("GraspSingleUpRightCokeCanInScene-v0", max_episode_steps=200)
 class GraspSingleUpRightCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):
     def __init__(self, **kwargs):
         super().__init__(upright=True, **kwargs)
+        
+@register_env("GraspSingleUpRightCokeCanWithDistractorInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightCokeCanWithDistractorInSceneEnv(GraspSingleUpRightCokeCanInSceneEnv, GraspSingleWithDistractorInSceneEnv):
+    distractor_model_ids = ['7up_can']
         
 @register_env("GraspSingleLightCokeCanInScene-v0", max_episode_steps=200)
 class GraspSingleLightCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
@@ -528,6 +601,10 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
 class GraspSingleUpRightOpenedCokeCanInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
     def __init__(self, **kwargs):
         super().__init__(upright=True, **kwargs)
+        
+@register_env("GraspSingleUpRightOpenedCokeCanWithDistractorInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightOpenedCokeCanWithDistractorInSceneEnv(GraspSingleUpRightOpenedCokeCanInSceneEnv, GraspSingleWithDistractorInSceneEnv):
+    distractor_model_ids = ['7up_can']
     
 @register_env("GraspSinglePepsiCanInScene-v0", max_episode_steps=200)
 class GraspSinglePepsiCanInSceneEnv(GraspSingleCanInSceneEnv):
