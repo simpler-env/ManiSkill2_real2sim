@@ -32,6 +32,8 @@ class StationaryManipulationEnv(BaseEnv):
             self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
         else:
             self.rgb_overlay_img = None
+        if not isinstance(rgb_overlay_cameras, list):
+            rgb_overlay_cameras = [rgb_overlay_cameras]
         self.rgb_overlay_cameras = rgb_overlay_cameras
         super().__init__(*args, **kwargs)
 

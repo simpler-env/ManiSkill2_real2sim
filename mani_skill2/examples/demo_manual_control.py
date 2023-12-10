@@ -19,6 +19,9 @@ MS1_ENV_IDS = [
 # python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleYCBCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleCustomInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos robot google_robot_static sim_freq @500 control_freq @3 scene_name Baked_sc1_staging_objaverse_cabinet1
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleUpRightOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616380  rgb_overlay_path /home/xuanlin/Downloads/805_0_cleanup_no_coke_can.png rgb_overlay_cameras "overhead_camera"
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)
@@ -26,6 +29,7 @@ def parse_args():
     parser.add_argument("--reward-mode", type=str)
     parser.add_argument("-c", "--control-mode", type=str, default="pd_ee_delta_pose")
     parser.add_argument("--render-mode", type=str, default="cameras")
+    parser.add_argument("--add-segmentation", action="store_true")
     parser.add_argument("--enable-sapien-viewer", action="store_true")
     parser.add_argument("--record-dir", type=str)
     args, opts = parser.parse_known_args()
@@ -60,6 +64,8 @@ def main():
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
         render_mode=args.render_mode,
+        camera_cfgs={'add_segmentation': args.add_segmentation},
+        # robot_init_fixed_xy_pos=np.array([0.30, 0.188]),
         **args.env_kwargs
     )
 
@@ -117,6 +123,7 @@ def main():
             env.render_human()
 
         render_frame = env.render()
+        # render_frame = (env.get_obs()["image"]["overhead_camera"]['Color'][..., :3] * 255).astype(np.uint8)
 
         if after_reset:
             after_reset = False
