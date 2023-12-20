@@ -90,8 +90,11 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         self.obj_init_actual_xy_center = None # actual target object xy position at env reset
         
         self.obj = None
-        
+                
         self._check_assets()
+        
+        self.consecutive_grasp = 0
+        
         super().__init__(**kwargs)
 
     # def _setup_lighting(self):
@@ -142,6 +145,9 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         _reconfigure = self._set_model(model_id, model_scale)
         reconfigure = _reconfigure or reconfigure
         options["reconfigure"] = reconfigure
+        
+        self.consecutive_grasp = 0
+        
         return super().reset(seed=self._episode_seed, options=options)
 
     # def _setup_lighting(self):
@@ -249,10 +255,14 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         return np.max(np.abs(qvel)) <= thresh
 
     def evaluate(self, **kwargs):
-        is_grasped = self.agent.check_grasp(self.obj, max_angle=85)
+        is_grasped = self.agent.check_grasp(self.obj, max_angle=60)
+        if is_grasped:
+            self.consecutive_grasp += 1
+        else:
+            self.consecutive_grasp = 0
         return dict(
             is_grasped=is_grasped,
-            success=is_grasped
+            success=(self.consecutive_grasp >= 10),
         )
 
     def compute_dense_reward(self, info, **kwargs):
@@ -548,9 +558,13 @@ class GraspSingleWithDistractorInSceneEnv(GraspSingleCustomInSceneEnv):
         return super().reset(*args, **kwargs)
     
 class GraspSingleCanInSceneEnv(GraspSingleCustomInSceneEnv):
-    def __init__(self, upright=False, **kwargs):
+    def __init__(self, upright=False, laid_vertically=False, **kwargs):
         if upright:
             kwargs['obj_init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
+            kwargs['obj_init_rand_rot_z_enabled'] = False
+            kwargs['obj_init_rand_rot_range'] = 0
+        elif laid_vertically:
+            kwargs['obj_init_rot_quat'] = euler2quat(0, 0, np.pi/2)
             kwargs['obj_init_rand_rot_z_enabled'] = False
             kwargs['obj_init_rand_rot_range'] = 0
         super().__init__(**kwargs)
@@ -561,10 +575,15 @@ class GraspSingleCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["coke_can"]
         super().__init__(**kwargs)
-        
+                
 @register_env("GraspSingleCokeCanWithDistractorInScene-v0", max_episode_steps=200)
 class GraspSingleCokeCanWithDistractorInSceneEnv(GraspSingleCokeCanInSceneEnv, GraspSingleWithDistractorInSceneEnv):
     distractor_model_ids = ['7up_can']
+        
+@register_env("GraspSingleVerticalCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleVerticalCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(laid_vertically=True, **kwargs)
         
 @register_env("GraspSingleUpRightCokeCanInScene-v0", max_episode_steps=200)
 class GraspSingleUpRightCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):

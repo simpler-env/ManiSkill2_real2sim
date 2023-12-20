@@ -58,6 +58,7 @@ def main():
             "render_camera": dict(p=pose.p, q=pose.q)
         }
         
+    from transforms3d.euler import euler2quat
     env: BaseEnv = gym.make(
         args.env_id,
         obs_mode=args.obs_mode,
@@ -65,7 +66,10 @@ def main():
         control_mode=args.control_mode,
         render_mode=args.render_mode,
         camera_cfgs={'add_segmentation': args.add_segmentation},
-        # robot_init_fixed_xy_pos=np.array([0.30, 0.188]),
+        # robot_init_fixed_xy_pos=np.array([0.05, 0.188]),
+        # obj_init_fixed_xy_pos = np.array([-0.02, 0.2]),
+        # obj_init_rot_quat=euler2quat(0, 0, np.pi / 2),
+        # obj_init_rand_rot_z_enabled=False,
         **args.env_kwargs
     )
 

@@ -67,17 +67,18 @@ class GoogleRobotDefaultConfig:
         if self.base_arm_drive_mode == 'acceleration':
             self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
             self.arm_damping = 500
+            raise NotImplementedError('Not yet tuned')
         elif self.base_arm_drive_mode == 'force':
-            self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-            self.arm_damping = 500
+            self.arm_stiffness = [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+            self.arm_damping = [850, 810, 500, 480, 460, 190, 250, 900, 900]
         else:
             raise NotImplementedError()
         
         self.arm_friction = 0.0
-        self.arm_force_limit = [1500, 1500, 300, 300, 300, 300, 300, 300, 300]
-
+        self.arm_force_limit = [400, 400, 300, 300, 200, 200, 100, 100, 100]
+        
         self.gripper_stiffness = 200
-        self.gripper_damping = 15
+        self.gripper_damping = 80
         self.gripper_force_limit = 60
 
 
@@ -122,6 +123,35 @@ class GoogleRobotDefaultConfig:
             normalize_action=False,
             drive_mode=self.base_arm_drive_mode,
         )
+        arm_pd_ee_delta_pose_align = PDEEPoseControllerConfig(
+            self.arm_joint_names,
+            -1.0, # dummy limit, which is unused since normalize_action=False
+            1.0,
+            np.pi / 2,
+            self.arm_stiffness,
+            self.arm_damping,
+            self.arm_force_limit,
+            friction=self.arm_friction,
+            ee_link=self.ee_link_name,
+            frame="ee_align",
+            normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
+        )
+        arm_pd_ee_delta_pose_align_interpolate = PDEEPoseControllerConfig(
+            self.arm_joint_names,
+            -1.0, # dummy limit, which is unused since normalize_action=False
+            1.0,
+            np.pi / 2,
+            self.arm_stiffness,
+            self.arm_damping,
+            self.arm_force_limit,
+            friction=self.arm_friction,
+            ee_link=self.ee_link_name,
+            frame="ee_align",
+            interpolate=True,
+            normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
+        )
         arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
             -1.0,
@@ -151,6 +181,37 @@ class GoogleRobotDefaultConfig:
             normalize_action=False,
             drive_mode=self.base_arm_drive_mode,
         )
+        arm_pd_ee_target_delta_pose_align = PDEEPoseControllerConfig(
+            self.arm_joint_names,
+            -1.0,
+            1.0,
+            np.pi / 2,
+            self.arm_stiffness,
+            self.arm_damping,
+            self.arm_force_limit,
+            friction=self.arm_friction,
+            ee_link=self.ee_link_name,
+            frame="ee_align",
+            use_target=True,
+            normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
+        )
+        arm_pd_ee_target_delta_pose_align_interpolate = PDEEPoseControllerConfig(
+            self.arm_joint_names,
+            -1.0,
+            1.0,
+            np.pi / 2,
+            self.arm_stiffness,
+            self.arm_damping,
+            self.arm_force_limit,
+            friction=self.arm_friction,
+            ee_link=self.ee_link_name,
+            frame="ee_align",
+            use_target=True,
+            interpolate=True,
+            normalize_action=False,
+            drive_mode=self.base_arm_drive_mode,
+        )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
             self.arm_joint_names,
             -1.0,
@@ -168,8 +229,12 @@ class GoogleRobotDefaultConfig:
         )
         _C["arm"] = dict(
             arm_pd_ee_delta_pose=arm_pd_ee_delta_pose,
+            arm_pd_ee_delta_pose_align=arm_pd_ee_delta_pose_align,
+            arm_pd_ee_delta_pose_align_interpolate=arm_pd_ee_delta_pose_align_interpolate,
             arm_pd_ee_delta_pose_base=arm_pd_ee_delta_pose_base,
             arm_pd_ee_target_delta_pose=arm_pd_ee_target_delta_pose,
+            arm_pd_ee_target_delta_pose_align=arm_pd_ee_target_delta_pose_align,
+            arm_pd_ee_target_delta_pose_align_interpolate=arm_pd_ee_target_delta_pose_align_interpolate,
             arm_pd_ee_target_delta_pose_base=arm_pd_ee_target_delta_pose_base,
         )
 
@@ -178,12 +243,25 @@ class GoogleRobotDefaultConfig:
         # -------------------------------------------------------------------------- #
         gripper_pd_joint_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            0.0, 
+            -1.3 - 0.01,
             1.3 + 0.01, # a trick to have force when grasping
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
-            normalize_action=True,
+            normalize_action=True, # action 0 maps to qpos=0, and action 1 maps to qpos=1.31
+            drive_mode="force",
+        )
+        gripper_pd_joint_target_pos = PDJointPosMimicControllerConfig(
+            self.gripper_joint_names,
+            -1.3 - 0.01,
+            1.3 + 0.01, # a trick to have force when grasping
+            self.gripper_stiffness,
+            self.gripper_damping,
+            self.gripper_force_limit,
+            use_target=True,
+            clip_target=True,
+            clip_target_thres=0.01,
+            normalize_action=True, # action 0 maps to qpos=0, and action 1 maps to qpos=1.31
             drive_mode="force",
         )
         gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
@@ -199,20 +277,21 @@ class GoogleRobotDefaultConfig:
         )
         gripper_pd_joint_target_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            -1.3 - 0.5, 
-            1.3 + 0.5, # a trick to have force when grasping
+            -1.3 - 0.01, 
+            1.3 + 0.01, # a trick to have force when grasping
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
             use_delta=True,
             use_target=True,
             clip_target=True,
-            clip_target_thres=0.5,
+            clip_target_thres=0.01,
             normalize_action=True,
             drive_mode="force",
         )
         _C["gripper"] = dict(
             gripper_pd_joint_pos=gripper_pd_joint_pos,
+            gripper_pd_joint_target_pos=gripper_pd_joint_target_pos,
             gripper_pd_joint_delta_pos=gripper_pd_joint_delta_pos,
             gripper_pd_joint_target_delta_pos=gripper_pd_joint_target_delta_pos,
         )
@@ -277,92 +356,111 @@ Debug and tuning
                 # finger_nail_mat=dict(static_friction=0.4, dynamic_friction=0.4, restitution=0.0),
                 
 
-# self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
-# self.arm_damping = 10
-
-if self.base_arm_drive_mode == 'acceleration':
-            # Parameters obtained from https://github.com/google-deepmind/mujoco_menagerie/blob/main/google_robot/robot.xml
-            self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-            self.arm_damping = 500
-        elif self.base_arm_drive_mode == 'force':
-            self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-            self.arm_damping = 500
-            # self.arm_stiffness = [1000, 1000, 1000, 500, 500, 300, 300, 1000, 1000]
-            # self.arm_damping = 125
-            # self.arm_stiffness = [2000, 2000, 2000, 1000, 1000, 500, 500, 2000, 2000]
-            # self.arm_damping = 250
-            # self.arm_stiffness = [2000, 2000, 2000, 2000, 2000, 1000, 1000, 2000, 2000]
-            # self.arm_damping = 500
-            # self.arm_stiffness = [3000, 3000, 3000, 1500, 1500, 750, 750, 3000, 3000]
-            # self.arm_damping = 375
-            # self.arm_stiffness = [2000, 2000, 2000, 1000, 1000, 500, 500, 2000, 2000]
-            # self.arm_damping = 250
-            # self.arm_stiffness = [8000, 8000, 8000, 4000, 4000, 2000, 2000, 4000, 4000]
-            # self.arm_damping = 1000
-        else:
-            raise NotImplementedError()
+self.arm_friction = 0.0
+        self.arm_force_limit = [1500, 1500, 300, 300, 300, 300, 300, 300, 300]
         
-        self.arm_friction = 0.0 # 0.1
-        
-        # self.gripper_stiffness = 20 # TODO: arm and gripper both need system identification
-        # self.gripper_damping = 2
-        # self.gripper_stiffness = 2000
-        # self.gripper_damping = 100 # 300
-        self.gripper_stiffness = 1000
-        self.gripper_damping = 50
-        
-        self.arm_force_limit = [150, 150, 30, 30, 30, 30, 30, 30, 30]
-        self.gripper_force_limit = 30
-        self.arm_force_limit = [x * 10 for x in self.arm_force_limit]
-        self.gripper_force_limit = self.gripper_force_limit * 5
-        
-        
-        # tuning draft
-        # when decreasing damping, need to decrease stiffness as well (and in many cases, arm force limit)!!
-        # good: damping45, v3: 48; v2: 41; v1: 46; v4: 43; v7: 33; v6: 41; v5: 39; v8: 47; v9: 49 (more near-robot success); v10: 41 (lower than v9, so j4&5 damping shouldn't be too low)
-        # v11: 38; v12: 38; v13: 36
-        
-        # self.arm_stiffness = [400, 400, 400, 200, 200, 100, 100, 400, 400]
-        # self.arm_damping = 68 # 100
-        # self.arm_force_limit = [200, 200, 90, 90, 90, 90, 90, 90, 90]
-        # self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-        # self.arm_stiffness = [4000, 4000, 2000, 2000, 2000, 1000, 1000, 4000, 4000] # damping45v3, v4
-        # self.arm_stiffness = [3000, 3000, 1500, 1500, 1500, 1000, 1000, 4000, 4000] # damping45v5
-        # self.arm_stiffness = [3000, 3000, 1500, 1000, 1000, 1000, 1000, 4000, 4000] # damping45v6, v7
-        # self.arm_stiffness = [4000, 4000, 1500, 1500, 1500, 1000, 1000, 4000, 4000] # v8
-        # self.arm_stiffness = [4000, 4000, 1500, 1000, 1000, 1000, 1000, 4000, 4000] # v9, v10
-        # # self.arm_stiffness = [4000, 4000, 1500, 1000, 1000, 600, 600, 4000, 4000] # v11
-        # # self.arm_stiffness = [2000, 2000, 1500, 1000, 1000, 600, 600, 4000, 4000] # v12
-        # # self.arm_stiffness = [3000, 3000, 1500, 1000, 1000, 600, 600, 4000, 4000] # v13
-        # # self.arm_damping = [300, 300, 250, 500, 500, 500, 500, 500, 500] # damping123
-        # # self.arm_damping = [300, 300, 250, 300, 300, 500, 500, 500, 500] # damping45
-        # self.arm_damping = [300, 300, 200, 200, 200, 500, 500, 500, 500] # damping45v2, v3, v5, v8, v9
-        # # self.arm_damping = [300, 300, 200, 200, 200, 200, 200, 500, 500] # v11
-        # # self.arm_damping = [200, 200, 200, 200, 200, 200, 200, 500, 500] # v12, v13
-        # # self.arm_damping = [300, 300, 200, 120, 120, 500, 500, 500, 500] # damping45v4, v6, v10
-        # # self.arm_force_limit = [300, 300, 300, 100, 100, 100, 100, 100, 100]
-        # # self.arm_force_limit = [750, 750, 300, 300, 300, 300, 300, 300, 300] # lowerforcelimit
-        # # self.arm_force_limit = [500, 500, 250, 300, 300, 300, 300, 300, 300] # evenlowerforcelimit
-        # # self.arm_force_limit = [500, 500, 250, 250, 250, 300, 300, 300, 300] # damping45
-        # self.arm_force_limit = [500, 500, 200, 200, 200, 300, 300, 300, 300] # damping45v2, v3, v4, v5, v6, v8, v9, v10
-        # self.arm_force_limit = [500, 500, 200, 200, 200, 200, 200, 300, 300] # v11
-        # self.arm_force_limit = [300, 300, 200, 200, 200, 200, 200, 300, 300] # v12, v13
-        # self.arm_force_limit = [500, 500, 200, 150, 150, 300, 300, 300, 300] # damping45v7
-        # self.arm_force_limit = 300
-        
-        # self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-        # self.arm_damping = [700, 700, 700, 500, 500, 500, 500, 500, 500] # tmp6
-        # self.arm_damping = [700, 700, 500, 500, 500, 500, 500, 500, 500] # tmp7
-        # self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000]
-        # self.arm_damping = 200 # tmp8 # [500, 500, 500, 500, 500, 500, 500, 500, 500]
-        # self.arm_force_limit = [1500, 1500, 300, 300, 300, 300, 300, 300, 300]
-        
-        # self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40]
-        # self.arm_damping = 10
+        # self.arm_stiffness = [40, 40, 40, 20, 20, 10, 10, 40, 40] # TODO: arm and gripper both need system identification
+        # self.arm_damping = [15, 15, 15, 7, 7, 5, 5, 15, 15]
         # self.arm_force_limit = [150, 150, 30, 30, 30, 30, 30, 30, 30]
+
+        # self.gripper_stiffness = 200
+        # self.gripper_damping = 15
+        # self.gripper_force_limit = 60
         
+        self.arm_stiffness = [4000, 4000, 4000, 2000, 2000, 1000, 1000, 4000, 4000] # TODO: arm and gripper both need system identification
+        # self.arm_damping = [1600, 1600, 1500, 1000, 1200, 300, 550, 1800, 1800] # candidate1
+        # self.arm_damping = [2000, 2000, 1600, 600, 1200, 350, 600, 1800, 1800]
+        # self.arm_damping = [2000, 1600, 1600, 600, 1200, 350, 600, 1800, 1800] # candidate2
+        # self.arm_damping = [1600, 1600, 1500, 600, 1000, 300, 550, 1800, 1800]
+        # self.arm_damping = [1800, 1600, 1500, 800, 1200, 400, 650, 1800, 1800] # candidate3
+        # self.arm_damping = [1800, 1600, 1500, 900, 1200, 380, 650, 1800, 1800] # candidate4
+        # self.arm_damping = [1880, 1680, 1580, 980, 1200, 360, 650, 1800, 1800]
+        # self.arm_damping = [2000, 1800, 1700, 1100, 1200, 360, 650, 1800, 1800]
+        self.arm_force_limit = [450, 450, 150, 150, 150, 150, 150, 150, 150]
         
-        self.gripper_stiffness = 200
-        self.gripper_damping = 15
-        self.gripper_force_limit = 60
+        # rotate gripper vert to horiz: [0][4] > [1],[2] > [3]
+        # raise gripper when gripper horiz: [0] > [1][4] > [3]
+        # move gripper horizontally outwards: [0][1] > [3][4] > [2]
+        # move gripper vertically down: [0] > [3][2] > [1][4]
+        self.arm_stiffness = [2000, 2000, 1500, 1000, 1000, 500, 500, 2000, 2000]
+        # self.arm_damping = [900, 800, 600, 450, 640, 190, 325, 900, 900] # candidate1
+        # self.arm_damping = [650, 900, 600, 450, 640, 190, 325, 900, 900]
+        # self.arm_damping = [730, 900, 600, 580, 640, 190, 325, 900, 900]
+        # self.arm_damping = [730, 900, 650, 580, 640, 190, 325, 900, 900]
+        self.arm_damping = [730, 950, 650, 580, 580, 190, 325, 900, 900]
+        self.arm_damping = [730, 950, 650, 530, 500, 190, 325, 900, 900]
+        self.arm_stiffness = [2000, 2000, 1000, 1000, 1000, 500, 500, 2000, 2000] # candidate 2
+        self.arm_damping = [730, 950, 650, 530, 500, 190, 325, 900, 900] # candidate 2; 730 -> 700 is also good
+        self.arm_force_limit = [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        
+        self.arm_stiffness = [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+        # self.arm_damping = [700, 950, 650, 530, 400, 190, 325, 900, 900] # decreasing damping[4] helps to raise arm; decrease damping[4] more than [2]
+        # self.arm_damping = [770, 800, 560, 500, 430, 180, 350, 900, 900] # candidate 2 w/ [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000] [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        self.arm_damping = [770, 830, 560, 500, 460, 180, 350, 900, 900] 
+        # gradient descent at [2000, 1800, 1200, 1000, 700, 500, 500, 2000, 2000] [700, 900, 650, 500, 380, 270, 325, 900, 900] [300, 300, 100, 100, 100, 100, 100, 100, 100]; 
+        # current phenomenon: 805 too low and a bit outwards; 1257 fine (need a tiny bit deeper); 1495 overshoots to the right and second last link not horizontal, grasping fine
+        # decreasing damping[0] makes horizontal gripper further outwards (also 1495); when gripper vertical, reaching object on the left overshoots;
+        # decreasing damping[1] makes horizontal gripper further lower; when gripper vertical, the gripper is lower, too
+        # decreasing damping[2] makes horizontal gripper slightly higher and further inwards; when gripper vertical, gripper also slightly higher and a bit inwards
+        # decreasing damping[3] makes horizontal gripper doesn't change; 1495 gripper slightly higher but a bit less horizontal; 
+        # vertical gripper 1257 "less distance to orange" but a tiny bit overshoot
+        # decreasing damping[4] makes horizontal gripper higher (good) and a little bit inwards; vertical gripper 1257 a very slight overshoot; 
+        # 1495 overshoots to the left and second last link significantly tiled and not horizontal
+        # decreasing damping[5] makes horizontal gripper further outwards and same height; when gripper vertical, reaching object on the left overshoots; 
+        # 1495 less horizontal and a bit higher
+        # slightly increase 5, increase 4, increase 1, increase 2, 0
+        self.arm_force_limit = [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        
+        # 1495 almost perfect:[2000, 1800, 1000, 1000, 700, 500, 500, 2000, 2000] [800, 950, 550, 500, 380, 280, 325, 900, 900] [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        
+        # gradient descent at [800, 900, 560, 480, 380, 230, 350, 900, 900]
+        # decreasing damping[0] to 730 causes horizontal gripper to move slightly inwards; vertical gripper slightly overshoots; 1495 very similar?
+        # decreasing damping[1] to 800 causes horizontal gripper to move lower and a bit outwards; 1495 gripper slightly lower and tiny bit outwards
+        # decreasing damping[2] to 460 causes horizontal gripper to overshoot inwards and higher; when gripper vertical, also overshoots; 
+        # 1495 overshoots to the left (but horizontal)
+        # decreasing damping[3] to 400 causes horizontal gripper to a bit overshoot inwards; 1495 higher and a bit further?
+        # decreasing damping[4] to 300 causes horizontal gripper to be higher and overshoot to the left; vertical gripper 1257 a bit overshoot; 
+        # 1495 higher but overshoots to the left and not horizontal
+        # decreasing damping[5] to 160 causes horizontal gripper to be higher and a bit further and second link in a qpos more similar to gt;
+        # vertical gripper a bit further away from apple; 1495 up a lot and not horizontal
+        
+        self.arm_stiffness = [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+        # self.arm_damping = [750, 830, 540, 480, 460, 190, 350, 900, 900] # candidate 3 with [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000] [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        # damping[5] should be around 220
+        # self.arm_damping = [750, 830, 500, 480, 460, 220, 350, 900, 900] # candidate 4
+        self.arm_force_limit = [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        # gradient descent at [770, 830, 560, 500, 460, 180, 350, 900, 900] [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000] [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        # issue: 805 needs to be a bit higher and to the left; 1257 needs to be a bit deeper; 1495 a bit faster turn?
+        # decreasing damping[0] to 700 causes 805 to be soft; 1495 a bit to the right; decreasing damping[0] to 750 might be a bit better
+        # decreasing damping[1] to 760 causes 805 to be lower and undershoot; 1495 also a bit lower
+        # decreasing damping[2] to 500 causes 805 to be higher and further to the left; 1495 overshoots to the left
+        # decreasing damping[3] to 440 causes 805 to undershoot to the right; 1495 higher
+        # decreasing damping[4] to 400 causes 805 to be a bit to the left; 1495 overshoots to the left and not horizontal
+        # decreasing damping[5] to 130 causes 805 to be drifted a up and 1495 a lot up and doesn't turn?
+        
+        self.arm_stiffness = [2000, 1650, 1200, 1000, 650, 500, 500, 2000, 2000]
+        self.arm_damping = [750, 830, 500, 480, 460, 220, 300, 900, 900]
+        self.arm_force_limit = [250, 250, 100, 100, 100, 100, 100, 100, 100]
+        # self.arm_stiffness = [1800, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+        self.arm_stiffness = [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+        # self.arm_damping = [750, 960, 450, 600, 460, 200, 450, 900, 900] # last tmp
+        # self.arm_damping = [750, 1000, 640, 630, 460, 160, 350, 900, 900] # tmp too high
+        self.arm_stiffness = [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+        # self.arm_damping = [730, 830, 400, 480, 480, 200, 450, 900, 900] # last tmp 2
+        self.arm_damping = [850, 810, 500, 480, 460, 190, 450, 900, 900] # best candidate 1 w/ [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000] [400, 400, 300, 300, 200, 200, 100, 100, 100]
+        # self.arm_damping = [880, 880, 500, 480, 460, 190, 450, 900, 900] # candidate 3
+        # self.arm_damping = [880, 830, 500, 480, 460, 200, 450, 900, 900]
+        # 1539 is fine w/ damping [850, 960, 440, 480, 460, 200, 350, 900, 900] and force limit [300, 300, 100, 100, 100, 100, 100, 100, 100]; increasing damping[0] causes 1539 to overshoot a bit
+        # increasing damping[0] and decreasing damping[2] causes 1539 to reach closer towards coke can
+        # increasing damping[3] causes 1539 to be further away from coke can, and when keeping damping[0] to be the same, horizontal moving distance is smaller
+        # however decreasing damping[3] doesn't reach closer towards the can...
+        self.arm_damping = [850, 810, 500, 480, 460, 190, 250, 900, 900]
+        self.arm_force_limit = [400, 400, 300, 300, 200, 200, 100, 100, 100]
+        # gradient descent at [750, 830, 500, 480, 460, 220, 350, 900, 900] [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000] [300, 300, 100, 100, 100, 100, 100, 100, 100]
+        # decreasing damping[0] to 700 doesn't change?
+        # decreasing damping[1] to 750 causes horizontal gripper to be lower in all horizontal cases (including 1539)
+        # decreasing damping[2] to 430 causes horizontal gripper to be higher and overshoot; vertical gripper to overshoot; 1495 to overshoot to left; but 1539 is better and higher and deeper
+        # decreasing damping[3] to 400 causes 805 to be a bit to the left and 1495 higher; 
+        # decreasing damping[4] to 380 causes 805 second last link to be a bit incorrect and 1495 to be a bit overshoot to left
+        # increasing stiffness[0] causes 1539 to undershoot and 1495 a bit to the right
 """

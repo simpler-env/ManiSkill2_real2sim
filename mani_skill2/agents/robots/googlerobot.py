@@ -45,6 +45,11 @@ class GoogleRobot(BaseAgent):
             self.robot.get_links(), "link_gripper"
         )
 
+    def get_gripper_closedness(self):
+        finger_qpos = self.robot.get_qpos()[-4:-2]
+        finger_qlim = self.robot.get_qlimits()[-4:-2, -1]
+        return np.maximum(np.mean(finger_qpos / finger_qlim), 0.0)
+        
     def get_fingers_info(self):
         finger_right_pos = self.finger_right_link.get_global_pose().p
         finger_left_pos = self.finger_left_link.get_global_pose().p
@@ -67,7 +72,7 @@ class GoogleRobot(BaseAgent):
             "finger_left_tip_vel": finger_left_tip_vel,
         }
 
-    def check_grasp(self, actor: sapien.ActorBase, min_impulse=1e-6, max_angle=85):
+    def check_grasp(self, actor: sapien.ActorBase, min_impulse=1e-6, max_angle=60):
         assert isinstance(actor, sapien.ActorBase), type(actor)
         contacts = self.scene.get_contacts()
 
