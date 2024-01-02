@@ -10,6 +10,7 @@ from mani_skill2.agents.base_agent import BaseAgent
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.agents.robots.xmate3 import Xmate3Robotiq
 from mani_skill2.agents.robots.googlerobot import GoogleRobotStaticBase
+from mani_skill2.agents.robots.widowx import WidowX
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.sensors.camera import CameraConfig
 from mani_skill2.utils.sapien_utils import (
@@ -21,13 +22,15 @@ from mani_skill2.utils.sapien_utils import (
 
 
 class StationaryManipulationEnv(BaseEnv):
-    SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, "google_robot_static": GoogleRobotStaticBase}
-    agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase]
+    SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, 
+                        "google_robot_static": GoogleRobotStaticBase, "widowx": WidowX}
+    agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase, WidowX]
 
     def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, 
-                 rgb_overlay_path=None, rgb_overlay_cameras=[], **kwargs):
+                 rgb_overlay_path=None, rgb_overlay_cameras=[], rgb_overlay_mode='background', **kwargs):
         self.robot_uid = robot
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        
         if rgb_overlay_path is not None:
             self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
         else:
@@ -35,6 +38,8 @@ class StationaryManipulationEnv(BaseEnv):
         if not isinstance(rgb_overlay_cameras, list):
             rgb_overlay_cameras = [rgb_overlay_cameras]
         self.rgb_overlay_cameras = rgb_overlay_cameras
+        self.rgb_overlay_mode = rgb_overlay_mode
+        
         super().__init__(*args, **kwargs)
 
     def _build_cube(
@@ -103,10 +108,6 @@ class StationaryManipulationEnv(BaseEnv):
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
         elif self.robot_uid == "google_robot_static":
-            # qpos = np.zeros(13)
-            # qpos[:-6] += self._episode_rng.normal(
-            #     0, self.robot_init_qpos_noise, len(qpos) - 6
-            # ) # add noise to all joints except the gripper and the head
             qpos = np.array(
                 [-0.2639457174606611,
                 0.0831913360274175,
@@ -120,6 +121,10 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([0, 0, 0.06205]))
+        elif self.robot_uid == 'widowx':
+            qpos = np.array([0, 0, 0, -np.pi, np.pi / 2, 0, 0.037, 0.037])
+            self.agent.reset(qpos)
+            self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
         else:
             raise NotImplementedError(self.robot_uid)
 
@@ -157,6 +162,10 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([0, 0, 0.06205]))
+        elif self.robot_uid == 'widowx':
+            qpos = np.array([0, 0, 0, -np.pi, np.pi / 2, 0, 0.037, 0.037])
+            self.agent.reset(qpos)
+            self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
         else:
             raise NotImplementedError(self.robot_uid)
 
@@ -185,6 +194,7 @@ class StationaryManipulationEnv(BaseEnv):
     
     def get_obs(self):
         obs = super().get_obs()
+        
         if self._obs_mode == "image" and self.rgb_overlay_img is not None:
             # get the actor ids of objects to manipulate; note that objects here are not articulated
             target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '']]
@@ -200,10 +210,17 @@ class StationaryManipulationEnv(BaseEnv):
                 seg = obs['image'][camera_name]['Segmentation'] # (H, W, 4); [..., 0] is mesh-level; [..., 1] is actor-level; [..., 2:] is zero (unused)
                 actor_seg = seg[..., 1]
                 mask = np.ones_like(actor_seg, dtype=np.float32)
-                mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids]))] = 0.0
+                if 'background' in self.rgb_overlay_mode and 'object' not in self.rgb_overlay_mode:
+                    mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids]))] = 0.0
+                elif 'background' in self.rgb_overlay_mode:
+                    mask[np.isin(actor_seg, robot_link_ids)] = 0.0
                 mask = mask[..., np.newaxis]
                 
                 rgb_overlay_img = cv2.resize(self.rgb_overlay_img, (obs['image'][camera_name]['Color'].shape[1], obs['image'][camera_name]['Color'].shape[0]))
-                obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
-                # obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * 0.5 + rgb_overlay_img * 0.5
+                if 'debug' not in self.rgb_overlay_mode:
+                    obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
+                else:
+                    # debug
+                    obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * 0.5 + rgb_overlay_img * 0.5
+                
         return obs

@@ -42,6 +42,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         obj_init_rot_quat=None,
         robot_init_fixed_xy_pos=None,
         robot_init_fixed_rot_quat=None,
+        require_lifting_obj_for_success=True,
         **kwargs,
     ):
         if asset_root is None:
@@ -93,7 +94,10 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
                 
         self._check_assets()
         
+        self.require_lifting_obj_for_success = require_lifting_obj_for_success
         self.consecutive_grasp = 0
+        self.lifted_obj_during_consecutive_grasp = False
+        self.obj_height_after_settle = None
         
         super().__init__(**kwargs)
 
@@ -147,6 +151,8 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         options["reconfigure"] = reconfigure
         
         self.consecutive_grasp = 0
+        self.lifted_obj_during_consecutive_grasp = False
+        self.obj_height_after_settle = None
         
         return super().reset(seed=self._episode_seed, options=options)
 
@@ -225,14 +231,16 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         self.obj.set_pose(self.obj.pose)
         self.obj.set_velocity(np.zeros(3))
         self.obj.set_angular_velocity(np.zeros(3))
-        self._settle(0.5)
-
+        self._settle(0.5)   
+        
         # Some objects need longer time to settle
         lin_vel = np.linalg.norm(self.obj.velocity)
         ang_vel = np.linalg.norm(self.obj.angular_velocity)
         if lin_vel > 1e-3 or ang_vel > 1e-2:
-            self._settle(0.5)
-
+            self._settle(1.5)
+        
+        self.obj_height_after_settle = self.obj.pose.p[2]
+        
     @property
     def obj_pose(self):
         """Get the center of mass (COM) pose."""
@@ -255,14 +263,50 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         return np.max(np.abs(qvel)) <= thresh
 
     def evaluate(self, **kwargs):
-        is_grasped = self.agent.check_grasp(self.obj, max_angle=60)
+        is_grasped = self.agent.check_grasp(self.obj, max_angle=80)
         if is_grasped:
             self.consecutive_grasp += 1
         else:
             self.consecutive_grasp = 0
+            self.lifted_obj_during_consecutive_grasp = False
+            
+        contacts = self._scene.get_contacts()
+        flag = True
+        robot_link_names = [x.name for x in self.agent.robot.get_links()]
+        for contact in contacts:
+            actor_0, actor_1 = contact.actor0, contact.actor1
+            other_obj_contact_actor_name = None
+            if actor_0.name == self.obj.name:
+                other_obj_contact_actor_name = actor_1.name
+            elif actor_1.name == self.obj.name:
+                other_obj_contact_actor_name = actor_0.name
+            if other_obj_contact_actor_name is not None:
+                # the object is in contact with an actor
+                contact_impulse = np.sum([point.impulse for point in contact.points], axis=0)
+                if (other_obj_contact_actor_name not in robot_link_names) and (np.linalg.norm(contact_impulse) > 1e-6):
+                    # the object has contact with an actor other than the robot link, so the object is not yet lifted up
+                    # print(other_obj_contact_actor_name, np.linalg.norm(contact_impulse))
+                    flag = False
+                    break
+
+        consecutive_grasp = (self.consecutive_grasp >= 5)
+        diff_obj_height = self.obj.pose.p[2] - self.obj_height_after_settle
+        self.lifted_obj_during_consecutive_grasp = self.lifted_obj_during_consecutive_grasp or (consecutive_grasp and flag and diff_obj_height > 1e-2)
+        
+        # # if the object still touches the platform but its height is now higher than its initialization, we still count as success
+        # diff_obj_height = self.obj.pose.p[2] - self.obj_height_after_settle
+        # if (diff_obj_height > 1e-2) and (consecutive_grasp):
+        #     self.lifted_obj_during_consecutive_grasp = True
+        
+        if self.require_lifting_obj_for_success:
+            success = self.lifted_obj_during_consecutive_grasp
+        else:
+            success = consecutive_grasp
         return dict(
             is_grasped=is_grasped,
-            success=(self.consecutive_grasp >= 10),
+            consecutive_grasp=consecutive_grasp,
+            lifted_object=self.lifted_obj_during_consecutive_grasp,
+            success=success,
         )
 
     def compute_dense_reward(self, info, **kwargs):
@@ -349,7 +393,7 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
     def _initialize_agent(self):
         if self.robot_uid == "google_robot_static":
             qpos = np.array(
-                [-0.2639457174606611, # -0.1639457174606611
+                [-0.2639457174606611,
                 0.0831913360274175,
                 0.5017611504652179,
                 1.156859026208673,
@@ -359,22 +403,26 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
                 0, 0,
                 -0.00285961, 0.7851361]
             )
-            # qpos = np.array([-0.168, -0.001, 0.596, 1.211, 0.011, 1.591, -0.98, 0, 0, 0.003, 0.785])
-            # qpos = np.array([0.225, 0.381, 0.396, 0.895, -0.141, 1.611, -0.921, 0., 0., -0.003, 0.785])
+            rob_init_height = 0.06205 + 0.017 # base height + ground offset
+            robot_init_rot_quat = [0, 0, 0, 1]
             self.agent.reset(qpos)
-            if self.robot_init_fixed_xy_pos is not None:
-                robot_init_xyz = [self.robot_init_fixed_xy_pos[0], self.robot_init_fixed_xy_pos[1], 0.06205]
-            else:
-                init_x = self._episode_rng.uniform(0.30, 0.40)
-                init_y = self._episode_rng.uniform(0.0, 0.2)
-                robot_init_xyz = [init_x, init_y, 0.06205]
-            if self.robot_init_fixed_rot_quat is not None:
-                robot_init_rot_quat = self.robot_init_fixed_rot_quat
-            else:
-                robot_init_rot_quat = [0, 0, 0, 1]
-            self.agent.robot.set_pose(Pose(robot_init_xyz, robot_init_rot_quat))
+        elif self.robot_uid == 'widowx':
+            qpos = np.array([0, 0, 0, -np.pi, np.pi / 2, 0, 0.037, 0.037])
+            rob_init_height = 0.0
+            robot_init_rot_quat = [1, 0, 0, 0]
+            self.agent.reset(qpos)
         else:
             raise NotImplementedError(self.robot_uid)
+        
+        if self.robot_init_fixed_xy_pos is not None:
+            robot_init_xyz = [self.robot_init_fixed_xy_pos[0], self.robot_init_fixed_xy_pos[1], rob_init_height]
+        else:
+            init_x = self._episode_rng.uniform(0.30, 0.40)
+            init_y = self._episode_rng.uniform(0.0, 0.2)
+            robot_init_xyz = [init_x, init_y, rob_init_height]
+        if self.robot_init_fixed_rot_quat is not None:
+            robot_init_rot_quat = self.robot_init_fixed_rot_quat
+        self.agent.robot.set_pose(Pose(robot_init_xyz, robot_init_rot_quat))
         
         
 # ---------------------------------------------------------------------------- #
@@ -558,13 +606,17 @@ class GraspSingleWithDistractorInSceneEnv(GraspSingleCustomInSceneEnv):
         return super().reset(*args, **kwargs)
     
 class GraspSingleCanInSceneEnv(GraspSingleCustomInSceneEnv):
-    def __init__(self, upright=False, laid_vertically=False, **kwargs):
+    def __init__(self, upright=False, laid_vertically=False, lr_switch=False, **kwargs):
         if upright:
             kwargs['obj_init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
             kwargs['obj_init_rand_rot_z_enabled'] = False
             kwargs['obj_init_rand_rot_range'] = 0
         elif laid_vertically:
             kwargs['obj_init_rot_quat'] = euler2quat(0, 0, np.pi/2)
+            kwargs['obj_init_rand_rot_z_enabled'] = False
+            kwargs['obj_init_rand_rot_range'] = 0
+        elif lr_switch:
+            kwargs['obj_init_rot_quat'] = euler2quat(0, 0, np.pi)
             kwargs['obj_init_rand_rot_z_enabled'] = False
             kwargs['obj_init_rand_rot_range'] = 0
         super().__init__(**kwargs)
@@ -585,6 +637,11 @@ class GraspSingleVerticalCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):
     def __init__(self, **kwargs):
         super().__init__(laid_vertically=True, **kwargs)
         
+@register_env("GraspSingleLRSwitchCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleLRSwitchCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(lr_switch=True, **kwargs)
+        
 @register_env("GraspSingleUpRightCokeCanInScene-v0", max_episode_steps=200)
 class GraspSingleUpRightCokeCanInSceneEnv(GraspSingleCokeCanInSceneEnv):
     def __init__(self, **kwargs):
@@ -604,10 +661,20 @@ class GraspSingleLightCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
         for model_id in self.model_ids:
             self.model_db[model_id]["density"] = 100
             
+@register_env("GraspSingleLRSwitchLightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleLRSwitchLightCokeCanInSceneEnv(GraspSingleLightCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(lr_switch=True, **kwargs)
+            
 @register_env("GraspSingleUpRightLightCokeCanInScene-v0", max_episode_steps=200)
 class GraspSingleUpRightLightCokeCanInSceneEnv(GraspSingleLightCokeCanInSceneEnv):
     def __init__(self, **kwargs):
         super().__init__(upright=True, **kwargs)
+
+@register_env("GraspSingleVerticalLightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleVerticalLightCokeCanInSceneEnv(GraspSingleLightCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(laid_vertically=True, **kwargs)
         
 @register_env("GraspSingleOpenedCokeCanInScene-v0", max_episode_steps=200)
 class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
@@ -624,6 +691,22 @@ class GraspSingleUpRightOpenedCokeCanInSceneEnv(GraspSingleOpenedCokeCanInSceneE
 @register_env("GraspSingleUpRightOpenedCokeCanWithDistractorInScene-v0", max_episode_steps=200)
 class GraspSingleUpRightOpenedCokeCanWithDistractorInSceneEnv(GraspSingleUpRightOpenedCokeCanInSceneEnv, GraspSingleWithDistractorInSceneEnv):
     distractor_model_ids = ['7up_can']
+    
+@register_env("GraspSingleOpenedLightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleOpenedLightCokeCanInSceneEnv(GraspSingleCanInSceneEnv):
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["opened_coke_can"]
+        super().__init__(**kwargs)
+        for model_id in self.model_ids:
+            self.model_db[model_id]["density"] = 100
+        
+@register_env("GraspSingleUpRightOpenedLightCokeCanInScene-v0", max_episode_steps=200)
+class GraspSingleUpRightOpenedLightCokeCanInSceneEnv(GraspSingleOpenedLightCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        super().__init__(upright=True, **kwargs)
+    
+    
     
 @register_env("GraspSinglePepsiCanInScene-v0", max_episode_steps=200)
 class GraspSinglePepsiCanInSceneEnv(GraspSingleCanInSceneEnv):

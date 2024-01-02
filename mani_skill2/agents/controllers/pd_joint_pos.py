@@ -42,8 +42,12 @@ class PDJointPosController(BaseController):
         self._step = 0  # counter of simulation steps after action is set
         self._start_qpos = self.qpos
         self._target_qpos = self.qpos
+        self._last_drive_qpos_targets = self.qpos
+        self._interpolation_path = None
+        self._last_interpolation_success = False
 
     def set_drive_targets(self, targets):
+        self._last_drive_qpos_targets = targets
         for i, joint in enumerate(self.joints):
             joint.set_drive_target(targets[i])
 
@@ -55,6 +59,9 @@ class PDJointPosController(BaseController):
 
         if self.config.use_delta:
             if self.config.use_target:
+                if self.config.delta_target_from_last_drive_target:
+                    self._target_qpos = self._last_drive_qpos_targets
+                    self._start_qpos = self._last_drive_qpos_targets
                 self._target_qpos = self._target_qpos + action
                 if self.config.clip_target:
                     joint_limits = self.articulation.get_qlimits()[self.joint_indices]
@@ -70,16 +77,57 @@ class PDJointPosController(BaseController):
             self._target_qpos = np.broadcast_to(action, self._start_qpos.shape)
 
         if self.config.interpolate:
-            self._step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
+            self._setup_qpos_interpolation()
         else:
             self.set_drive_targets(self._target_qpos)
+            
+    def _setup_qpos_interpolation(self):
+        if self.config.interpolate_by_planner:
+            # self._interpolation_path, self._last_interpolation_success = self.plan_joint_path(
+            #     self._start_qpos, self._target_qpos, 
+            #     self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
+            # )
+            if (self._interpolation_path is None) or (not self._last_interpolation_success):
+                self._interpolation_path, self._last_interpolation_success = self.plan_joint_path(
+                    self._start_qpos, self._target_qpos, 
+                    self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
+                )
+            else:
+                last_start_qpos = self._interpolation_path[0]
+                # last_end_qpos = self.qpos
+                if self.config.use_target:
+                    length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
+                    last_end_qpos = self._interpolation_path[length_last_path - 1]
+                else:
+                    length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
+                    last_end_qpos = self._interpolation_path[length_last_path - 1]
+                    # last_end_qpos = self._start_qpos
+                # include last interpolation result during current interpolation to keep velocity continuous
+                self._interpolation_path, success = self.plan_joint_path(
+                    last_start_qpos, self._target_qpos, 
+                    self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
+                    additional_waypoints=[last_end_qpos]
+                )
+                if success:
+                    closest_idx_to_last_end_qpos = np.argmin(np.linalg.norm(self._interpolation_path - last_end_qpos[None, :], axis=-1))
+                    self._interpolation_path = self._interpolation_path[closest_idx_to_last_end_qpos:]
+                self._last_interpolation_success = success
+        else:
+            step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
+            # linear interpolation
+            self._interpolation_path = np.array(
+                [self._start_qpos + step_size * i for i in range(self._sim_steps + 1)]
+            )
+        # print("interpolation path length", len(self._interpolation_path))
+        # print("interpolation at next ctrl", self._interpolation_path[min(self._sim_steps, len(self._interpolation_path) - 1)])
+        # print()
 
     def before_simulation_step(self):
         self._step += 1
 
         # Compute the next target
         if self.config.interpolate:
-            targets = self._start_qpos + self._step_size * self._step
+            targets = self._interpolation_path[min(self._step, len(self._interpolation_path) - 1)]
             self.set_drive_targets(targets)
 
     def get_state(self) -> dict:
@@ -103,9 +151,13 @@ class PDJointPosControllerConfig(ControllerConfig):
     drive_mode: str = "force"
     use_delta: bool = False
     use_target: bool = False
+    delta_target_from_last_drive_target: bool = False
     clip_target: bool = False
     clip_target_thres: float = 0.01
     interpolate: bool = False
+    interpolate_by_planner: bool = False
+    interpolate_planner_vlim: float = 1.5
+    interpolate_planner_alim: float = 2.0
     normalize_action: bool = True
     controller_cls = PDJointPosController
 

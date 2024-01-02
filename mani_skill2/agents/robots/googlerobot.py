@@ -40,10 +40,6 @@ class GoogleRobot(BaseAgent):
         self.finger_right_tip_link = get_entity_by_name(self.robot.get_links(), "link_finger_tip_right")
         self.finger_left_link = get_entity_by_name(self.robot.get_links(), "link_finger_left")
         self.finger_left_tip_link = get_entity_by_name(self.robot.get_links(), "link_finger_tip_left")
-        
-        self.hand: sapien.LinkBase = get_entity_by_name(
-            self.robot.get_links(), "link_gripper"
-        )
 
     def get_gripper_closedness(self):
         finger_qpos = self.robot.get_qpos()[-4:-2]
@@ -72,7 +68,7 @@ class GoogleRobot(BaseAgent):
             "finger_left_tip_vel": finger_left_tip_vel,
         }
 
-    def check_grasp(self, actor: sapien.ActorBase, min_impulse=1e-6, max_angle=60):
+    def check_grasp(self, actor: sapien.ActorBase, min_impulse=1e-6, max_angle=80):
         assert isinstance(actor, sapien.ActorBase), type(actor)
         contacts = self.scene.get_contacts()
 

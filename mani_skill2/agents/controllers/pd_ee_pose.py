@@ -69,6 +69,13 @@ class PDEEPosController(PDJointPosController):
             return result[self.joint_indices]
         else:
             return None
+        
+    def compute_fk(self, qpos):
+        full_qpos = self.articulation.get_qpos()
+        for i, idx in enumerate(self.joint_indices):
+            full_qpos[idx] = qpos[i]
+        self.pmodel.compute_forward_kinematics(full_qpos)
+        return self.pmodel.get_link_pose(self.ee_link_idx)
 
     def compute_target_pose(self, prev_ee_pose_at_base, action):
         # Keep the current rotation and change the position
@@ -94,9 +101,28 @@ class PDEEPosController(PDJointPosController):
         self._start_qpos = self.qpos
 
         if self.config.use_target:
-            prev_ee_pose_at_base = self._target_pose
+            if self.config.delta_target_from_last_drive_target:
+                # print("set action", "last drive target", self._last_drive_qpos_targets, "last target qpos", self._target_qpos)
+                prev_ee_pose_at_base = self.compute_fk(self._last_drive_qpos_targets)
+                self._start_qpos = self._last_drive_qpos_targets
+            else:
+                prev_ee_pose_at_base = self._target_pose
         else:
             prev_ee_pose_at_base = self.ee_pose_at_base
+            # if self.config.use_delta and self.config.interpolate_by_planner:
+            #     if self._interpolation_path is None:
+            #         prev_ee_pose_at_base = self.ee_pose_at_base
+            #     else:
+            #         closest_idx_to_cur_qpos = np.argmin(np.linalg.norm(self._interpolation_path - self.qpos[None, :], axis=-1))
+            #         # print(self._interpolation_path[max(closest_idx_to_cur_qpos-6, 0):closest_idx_to_cur_qpos+6], self.qpos)
+            #         if closest_idx_to_cur_qpos > 0 and closest_idx_to_cur_qpos < len(self._interpolation_path) - 1:
+            #             qpos_subtarget_from_last_action = self._interpolation_path[min(closest_idx_to_cur_qpos + 1, len(self._interpolation_path) - 1)]
+            #             prev_ee_pose_at_base = self.compute_fk(qpos_subtarget_from_last_action)
+            #         else:
+            #             prev_ee_pose_at_base = self.ee_pose_at_base
+            #         # print(self.ee_pose_at_base, prev_ee_pose_at_base, qpos_subtarget_from_last_action, closest_idx_to_cur_qpos, len(self._interpolation_path) - 1)
+            # else:
+            #     prev_ee_pose_at_base = self.ee_pose_at_base
 
         self._target_pose = self.compute_target_pose(prev_ee_pose_at_base, action)
         self._target_qpos = self.compute_ik(self._target_pose)
@@ -104,7 +130,7 @@ class PDEEPosController(PDJointPosController):
             self._target_qpos = self._start_qpos
         
         if self.config.interpolate:
-            self._step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
+            self._setup_qpos_interpolation()
         else:
             self.set_drive_targets(self._target_qpos)
 
@@ -131,7 +157,11 @@ class PDEEPosControllerConfig(ControllerConfig):
     frame: str = "ee"  # [base, ee]
     use_delta: bool = True
     use_target: bool = False
+    delta_target_from_last_drive_target: bool = False
     interpolate: bool = False
+    interpolate_by_planner: bool = False
+    interpolate_planner_vlim: float = 1.5
+    interpolate_planner_alim: float = 2.0
     normalize_action: bool = True
     controller_cls = PDEEPosController
 
@@ -184,6 +214,24 @@ class PDEEPoseController(PDEEPosController):
                 # origin at ee but base rotation
                 target_pose = delta_pose * prev_ee_pose_at_base
                 target_pose.set_p(prev_ee_pose_at_base.p + delta_pos)
+            elif self.config.frame == "ee_align2":
+                cur_ee_pose_at_base = self.compute_fk(self.qpos)
+                target_pose = (
+                    (
+                    sapien.Pose(p=cur_ee_pose_at_base.p) 
+                    * delta_pose 
+                    * sapien.Pose(p=cur_ee_pose_at_base.p).inv()
+                    ) 
+                    * prev_ee_pose_at_base
+                )
+                # target_pose = (
+                #     (
+                #     sapien.Pose(p=prev_ee_pose_at_base.p) 
+                #     * delta_pose 
+                #     * sapien.Pose(p=prev_ee_pose_at_base.p).inv()
+                #     ) 
+                #     * prev_ee_pose_at_base
+                # )
             else:
                 raise NotImplementedError(self.config.frame)
         else:
@@ -209,6 +257,10 @@ class PDEEPoseControllerConfig(ControllerConfig):
     frame: str = "ee"  # [base, ee, ee_align]
     use_delta: bool = True
     use_target: bool = False
+    delta_target_from_last_drive_target: bool = False
     interpolate: bool = False
+    interpolate_by_planner: bool = False
+    interpolate_planner_vlim: float = 1.5
+    interpolate_planner_alim: float = 2.0
     normalize_action: bool = True
     controller_cls = PDEEPoseController

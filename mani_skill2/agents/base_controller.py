@@ -6,6 +6,8 @@ import numpy as np
 import sapien.core as sapien
 from gymnasium import spaces
 
+from pymp.planner import parameterize_path
+
 from mani_skill2.utils.common import clip_and_scale_action, normalize_action_space
 
 from .utils import flatten_action_spaces, get_active_joint_indices, get_active_joints
@@ -38,6 +40,7 @@ class BaseController:
             sim_freq = round(1.0 / sim_timestep)
         # Number of simulation steps per control step
         self._sim_steps = sim_freq // control_freq
+        self._sim_freq = sim_freq
 
         self._initialize_joints()
         self._initialize_action_space()
@@ -126,6 +129,45 @@ class BaseController:
         return clip_and_scale_action(
             action, self._action_space.low, self._action_space.high
         )
+        
+    # -------------------------------------------------------------------------- #
+    # Planning utils
+    # -------------------------------------------------------------------------- #
+    def plan_joint_path(self, start_qpos, target_qpos, vlim, alim, additional_waypoints=None):
+        dt = 1 / self._sim_freq
+        if additional_waypoints is not None:
+            waypoints = np.stack([start_qpos, *additional_waypoints, target_qpos], axis=0)
+        else:
+            waypoints = np.stack([start_qpos, target_qpos], axis=0)
+        if (additional_waypoints is None) and (np.max(np.abs(target_qpos - start_qpos)) < 1e-2):
+            # skip planning as the target_qpos is too close to start_qpos
+            return waypoints, False
+        planner_result = parameterize_path(waypoints, vlim, alim, dt)
+        success = True
+        position = planner_result.get('position', np.array([]))
+        if position.shape[0] == 0:
+            # planner failure
+            # print("planner failure", waypoints, vlim, alim, dt, flush=True)
+            success = False
+            position = np.array(start_qpos)[None]
+        return position, success
+    
+        # results = []
+        # for idx in range(len(start_qpos)):
+        #     if np.abs(target_qpos[idx] - start_qpos[idx]) < 1e-2:
+        #         # directly reach the target_qpos as it is too close to start_qpos
+        #         results.append(waypoints[:, idx:idx+1])
+        #         continue
+        #     planner_result = parameterize_path(waypoints[:, idx:idx+1], vlim, alim, dt)
+        #     result = planner_result.get('position', np.array([]))
+        #     if result.shape[0] == 0:
+        #         # planner failure
+        #         result = np.array(start_qpos[idx])[None]
+        #     results.append(result)
+        # # pad each array in results to the same length
+        # max_len = max([len(x) for x in results])
+        # results = [np.pad(x, ((0, max_len - len(x)), (0, 0)), 'edge') for x in results]
+        # return np.concatenate(results, axis=1)
 
 
 @dataclass

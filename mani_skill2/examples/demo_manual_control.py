@@ -19,7 +19,7 @@ MS1_ENV_IDS = [
 # python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleYCBCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleCustomInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos robot google_robot_static sim_freq @500 control_freq @3 scene_name Baked_sc1_staging_objaverse_cabinet1
-# python mani_skill2/examples/demo_manual_control.py -e GraspSingleUpRightOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616380  rgb_overlay_path /home/xuanlin/Downloads/805_0_cleanup_no_coke_can.png rgb_overlay_cameras "overhead_camera"
+# python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose_align_interpolate_gripper_pd_joint_target_delta_pos -o rgbd robot widowx sim_freq @500 control_freq @15
 
 
 def parse_args():
@@ -105,18 +105,23 @@ def main():
     num_arms = sum("arm" in x for x in env.agent.controller.configs)
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
     is_google_robot = 'google_robot' in env.agent.robot.name
-    is_google_robot_gripper_target_control = is_google_robot and env.agent.controller.controllers['gripper'].config.use_target
+    is_widowx = 'wx250s' in env.agent.robot.name
+    is_gripper_delta_target_control = env.agent.controller.controllers['gripper'].config.use_target and env.agent.controller.controllers['gripper'].config.use_delta
     
-    # open gripper at initialization
-    if not is_google_robot:
-        gripper_action = 1
-    else:
-        gripper_action = -1 if not is_google_robot_gripper_target_control else 0
+    def get_reset_gripper_action():
+        # open gripper at initialization
+        if not is_google_robot:
+            return 1
+        else:
+            # for google robot, open-and-close actions are reversed
+            return -1
+        
+    gripper_action = get_reset_gripper_action()
     
-    EE_ACTION = 0.1 if not is_google_robot else 0.03 # google robot uses unnormalized action space
-    EE_ROT_ACTION = 1.0 if not is_google_robot else 0.1 # google robot uses unnormalized action space
+    EE_ACTION = 0.1 if not (is_google_robot or is_widowx) else 0.03 # google robot and widowx use unnormalized action space
+    EE_ROT_ACTION = 1.0 if not (is_google_robot or is_widowx) else 0.1 # google robot and widowx use unnormalized action space
     
-    print("obj pos", env.obj.pose.p, "tcp pos", env.tcp.pose.p)
+    print("obj pose", env.obj.pose, "tcp pose", env.tcp.pose)
     print("qpos", env.agent.robot.get_qpos())
     
     while True:
@@ -127,7 +132,6 @@ def main():
             env.render_human()
 
         render_frame = env.render()
-        # render_frame = (env.get_obs()["image"]["overhead_camera"]['Color'][..., :3] * 255).astype(np.uint8)
 
         if after_reset:
             after_reset = False
@@ -228,10 +232,7 @@ def main():
             render_wait()
         elif key == "r":  # reset env
             obs, _ = env.reset()
-            if not is_google_robot:
-                gripper_action = 1
-            else:
-                gripper_action = -1 if not is_google_robot_gripper_target_control else 0
+            gripper_action = get_reset_gripper_action()
             after_reset = True
             continue
         elif key == None:  # exit
@@ -285,8 +286,10 @@ def main():
 
         print("action", action)
         obs, reward, terminated, truncated, info = env.step(action)
-        if is_google_robot_gripper_target_control:
-            gripper_action = 0 # set gripper target delta pos to 0 after each env step
+        
+        if is_gripper_delta_target_control:
+            gripper_action = 0
+            
         print("obj pos", env.obj.pose.p, "tcp pose", env.tcp.pose)
         print("tcp pose wrt robot base", env.agent.robot.pose.inv() * env.tcp.pose)
         print("qpos", env.agent.robot.get_qpos())

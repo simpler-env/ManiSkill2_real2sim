@@ -9,6 +9,7 @@ from mani_skill2.agents.configs.panda.defaults import PandaRealSensed435Config
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.agents.robots.xmate3 import Xmate3Robotiq
 from mani_skill2.agents.robots.googlerobot import GoogleRobotStaticBase
+from mani_skill2.agents.robots.widowx import WidowX
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.sensors.camera import CameraConfig
 from mani_skill2.utils.sapien_utils import (
@@ -20,8 +21,9 @@ from mani_skill2.utils.sapien_utils import (
 
 
 class StationaryManipulationEnv(BaseEnv):
-    SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, "google_robot_static": GoogleRobotStaticBase}
-    agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase]
+    SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, 
+                        "google_robot_static": GoogleRobotStaticBase, "widowx": WidowX}
+    agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase, WidowX]
 
     def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_uid = robot
@@ -73,10 +75,6 @@ class StationaryManipulationEnv(BaseEnv):
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
         elif self.robot_uid == "google_robot_static":
-            # qpos = np.zeros(13)
-            # qpos[:-6] += self._episode_rng.normal(
-            #     0, self.robot_init_qpos_noise, len(qpos) - 6
-            # ) # add noise to all joints except the gripper and the headself.agent.reset(qpos)
             qpos = np.array(
                 [-0.2639457174606611,
                 0.0831913360274175,
@@ -89,6 +87,10 @@ class StationaryManipulationEnv(BaseEnv):
                 -0.00285961, 0.7851361]
             )
             self.agent.robot.set_pose(Pose([-0.615, 0, 0.06205]))
+        elif self.robot_uid == 'widowx':
+            qpos = np.array([0, 0, 0, -np.pi, np.pi / 2, 0, 0.037, 0.037])
+            self.agent.reset(qpos)
+            self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
         else:
             raise NotImplementedError(self.robot_uid)
 

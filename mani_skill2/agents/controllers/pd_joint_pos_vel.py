@@ -37,6 +37,9 @@ class PDJointPosVelController(PDJointPosController):
 
         if self.config.use_delta:
             if self.config.use_target:
+                if self.config.delta_target_from_last_drive_target:
+                    self._target_qpos = self._last_drive_qpos_targets
+                    self._start_qpos = self._last_drive_qpos_targets
                 self._target_qpos = self._target_qpos + action[:nq]
             else:
                 self._target_qpos = self._start_qpos + action[:nq]
@@ -45,7 +48,7 @@ class PDJointPosVelController(PDJointPosController):
             self._target_qpos = np.broadcast_to(action[:nq], self._start_qpos.shape)
 
         if self.config.interpolate:
-            self._step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
+            self._setup_qpos_interpolation()
         else:
             self.set_drive_targets(self._target_qpos)
 
