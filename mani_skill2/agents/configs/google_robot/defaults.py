@@ -198,6 +198,15 @@ class GoogleRobotDefaultConfig:
             interpolate_planner_alim = 2.0,
             **arm_common_kwargs,
         )
+        arm_pd_ee_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
+            *arm_common_args,
+            frame="ee_align2",
+            interpolate=True,
+            interpolate_by_planner = True,
+            interpolate_planner_vlim = 1.5,
+            interpolate_planner_alim = 2.0,
+            **arm_common_kwargs,
+        )
         arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
             *arm_common_args,
             frame="base",
@@ -233,6 +242,17 @@ class GoogleRobotDefaultConfig:
             interpolate_planner_alim = 2.0,
             **arm_common_kwargs,
         )
+        arm_pd_ee_target_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
+            *arm_common_args,
+            frame="ee_align2",
+            use_target=True,
+            interpolate=True,
+            delta_target_from_last_drive_target=True,
+            interpolate_by_planner = True,
+            interpolate_planner_vlim = 1.5,
+            interpolate_planner_alim = 2.0,
+            **arm_common_kwargs,
+        )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
             *arm_common_args,
             frame="base",
@@ -244,11 +264,13 @@ class GoogleRobotDefaultConfig:
             arm_pd_ee_delta_pose_align=arm_pd_ee_delta_pose_align,
             arm_pd_ee_delta_pose_align_interpolate=arm_pd_ee_delta_pose_align_interpolate,
             arm_pd_ee_delta_pose_align_interpolate_by_planner=arm_pd_ee_delta_pose_align_interpolate_by_planner,
+            arm_pd_ee_delta_pose_align2_interpolate_by_planner=arm_pd_ee_delta_pose_align2_interpolate_by_planner,
             arm_pd_ee_delta_pose_base=arm_pd_ee_delta_pose_base,
             arm_pd_ee_target_delta_pose=arm_pd_ee_target_delta_pose,
             arm_pd_ee_target_delta_pose_align=arm_pd_ee_target_delta_pose_align,
             arm_pd_ee_target_delta_pose_align_interpolate=arm_pd_ee_target_delta_pose_align_interpolate,
             arm_pd_ee_target_delta_pose_align_interpolate_by_planner=arm_pd_ee_target_delta_pose_align_interpolate_by_planner,
+            arm_pd_ee_target_delta_pose_align2_interpolate_by_planner=arm_pd_ee_target_delta_pose_align2_interpolate_by_planner,
             arm_pd_ee_target_delta_pose_base=arm_pd_ee_target_delta_pose_base,
         )
 

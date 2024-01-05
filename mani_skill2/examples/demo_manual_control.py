@@ -19,6 +19,8 @@ MS1_ENV_IDS = [
 # python mani_skill2/examples/demo_manual_control.py -e PickSingleYCBIntoBowl-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleYCBCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_delta_pos robot google_robot_static sim_freq @500 control_freq @3
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleCustomInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos robot google_robot_static sim_freq @500 control_freq @3 scene_name Baked_sc1_staging_objaverse_cabinet1
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleUpRightOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616385
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleLRSwitchCokeCanInScene-v0 -c arm_pd_ee_delta_pose_gripper_pd_joint_target_delta_pos -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616385
 # python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose_align_interpolate_gripper_pd_joint_target_delta_pos -o rgbd robot widowx sim_freq @500 control_freq @15
 
 
@@ -57,7 +59,7 @@ def main():
         args.env_kwargs['render_camera_cfgs'] = {
             "render_camera": dict(p=pose.p, q=pose.q)
         }
-        
+    
     from transforms3d.euler import euler2quat
     env: BaseEnv = gym.make(
         args.env_id,
@@ -66,10 +68,6 @@ def main():
         control_mode=args.control_mode,
         render_mode=args.render_mode,
         camera_cfgs={'add_segmentation': args.add_segmentation},
-        # robot_init_fixed_xy_pos=np.array([0.05, 0.188]),
-        # obj_init_fixed_xy_pos = np.array([-0.02, 0.2]),
-        # obj_init_rot_quat=euler2quat(0, 0, np.pi / 2),
-        # obj_init_rand_rot_z_enabled=False,
         **args.env_kwargs
     )
 
@@ -83,8 +81,12 @@ def main():
     print("Control mode", env.control_mode)
     print("Reward mode", env.reward_mode)
 
-    obs, _ = env.reset() # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution
+    env_reset_options = {}
+    # env_reset_options={'obj_init_options': {'init_xy': [-0.35, 0.0]}, 'robot_init_options': {'init_xy': [0.35, 0.20]}} # for GraspSingle env debugging
+    obs, _ = env.reset(options=env_reset_options)
     after_reset = True
+
+    # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution # object material properties
 
     # Viewer
     if args.enable_sapien_viewer:
@@ -231,7 +233,7 @@ def main():
         if key == "0":  # switch to SAPIEN viewer
             render_wait()
         elif key == "r":  # reset env
-            obs, _ = env.reset()
+            obs, _ = env.reset(options=env_reset_options)
             gripper_action = get_reset_gripper_action()
             after_reset = True
             continue
@@ -290,7 +292,7 @@ def main():
         if is_gripper_delta_target_control:
             gripper_action = 0
             
-        print("obj pos", env.obj.pose.p, "tcp pose", env.tcp.pose)
+        print("obj pose", env.obj.pose, "tcp pose", env.tcp.pose)
         print("tcp pose wrt robot base", env.agent.robot.pose.inv() * env.tcp.pose)
         print("qpos", env.agent.robot.get_qpos())
         print("reward", reward)
