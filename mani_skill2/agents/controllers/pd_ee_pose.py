@@ -160,6 +160,7 @@ class PDEEPosControllerConfig(ControllerConfig):
     delta_target_from_last_drive_target: bool = False
     interpolate: bool = False
     interpolate_by_planner: bool = False
+    interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     normalize_action: bool = True
@@ -260,6 +261,7 @@ class PDEEPoseControllerConfig(ControllerConfig):
     delta_target_from_last_drive_target: bool = False
     interpolate: bool = False
     interpolate_by_planner: bool = False
+    interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     normalize_action: bool = True

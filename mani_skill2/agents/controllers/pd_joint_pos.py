@@ -87,7 +87,7 @@ class PDJointPosController(BaseController):
             #     self._start_qpos, self._target_qpos, 
             #     self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
             # )
-            if (self._interpolation_path is None) or (not self._last_interpolation_success):
+            if (self._interpolation_path is None) or (not self._last_interpolation_success) or (self.config.interpolate_planner_init_no_vel):
                 self._interpolation_path, self._last_interpolation_success = self.plan_joint_path(
                     self._start_qpos, self._target_qpos, 
                     self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
@@ -96,8 +96,9 @@ class PDJointPosController(BaseController):
                 last_start_qpos = self._interpolation_path[0]
                 # last_end_qpos = self.qpos
                 if self.config.use_target:
-                    length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
-                    last_end_qpos = self._interpolation_path[length_last_path - 1]
+                    last_end_qpos = self.qpos
+                    # length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
+                    # last_end_qpos = self._interpolation_path[length_last_path - 1]
                 else:
                     length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
                     last_end_qpos = self._interpolation_path[length_last_path - 1]
@@ -156,6 +157,7 @@ class PDJointPosControllerConfig(ControllerConfig):
     clip_target_thres: float = 0.01
     interpolate: bool = False
     interpolate_by_planner: bool = False
+    interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     normalize_action: bool = True
