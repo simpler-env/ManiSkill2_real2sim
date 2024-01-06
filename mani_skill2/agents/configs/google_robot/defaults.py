@@ -132,7 +132,7 @@ class GoogleRobotDefaultConfig:
         self.arm_friction = 0.0
              
         self.gripper_stiffness = 200
-        self.gripper_damping = 4
+        self.gripper_damping = 8 # 80
         self.gripper_force_limit = 60
 
         self.arm_vel_limit = 1.5
@@ -344,6 +344,8 @@ class GoogleRobotDefaultConfig:
             drive_mode="force",
             interpolate=True,
             interpolate_by_planner=True,
+            delta_target_from_last_drive_target=True,
+            small_action_repeat_last_target=True,
             interpolate_planner_init_no_vel=True,
             interpolate_planner_vlim=self.gripper_vel_limit,
             interpolate_planner_alim=self.gripper_acc_limit,

@@ -56,6 +56,7 @@ class PDJointPosController(BaseController):
 
         self._step = 0
         self._start_qpos = self.qpos
+        _last_target_qpos = self._target_qpos
 
         if self.config.use_delta:
             if self.config.use_target:
@@ -76,6 +77,10 @@ class PDJointPosController(BaseController):
             # Compatible with mimic
             self._target_qpos = np.broadcast_to(action, self._start_qpos.shape)
 
+        if self.config.small_action_repeat_last_target:
+            small_action_idx = np.where(np.abs(action) < 1e-3)[0]
+            self._target_qpos[small_action_idx] = _last_target_qpos[small_action_idx]
+
         if self.config.interpolate:
             self._setup_qpos_interpolation()
         else:
@@ -92,6 +97,7 @@ class PDJointPosController(BaseController):
                     self._start_qpos, self._target_qpos, 
                     self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
                 )
+                # print(self.qpos, self._start_qpos, self._target_qpos, self._interpolation_path[0], self._interpolation_path[min(self._sim_steps, len(self._interpolation_path) - 1)])
             else:
                 last_start_qpos = self._interpolation_path[0]
                 # last_end_qpos = self.qpos
@@ -125,7 +131,7 @@ class PDJointPosController(BaseController):
 
     def before_simulation_step(self):
         self._step += 1
-
+        
         # Compute the next target
         if self.config.interpolate:
             targets = self._interpolation_path[min(self._step, len(self._interpolation_path) - 1)]
@@ -160,6 +166,7 @@ class PDJointPosControllerConfig(ControllerConfig):
     interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
+    small_action_repeat_last_target: bool = False
     normalize_action: bool = True
     controller_cls = PDJointPosController
 
