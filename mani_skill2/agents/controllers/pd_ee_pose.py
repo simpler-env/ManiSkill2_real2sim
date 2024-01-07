@@ -163,6 +163,7 @@ class PDEEPosControllerConfig(ControllerConfig):
     interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
+    interpolate_planner_jerklim: float = 50.0
     normalize_action: bool = True
     controller_cls = PDEEPosController
 
@@ -264,5 +265,6 @@ class PDEEPoseControllerConfig(ControllerConfig):
     interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
+    interpolate_planner_jerklim: float = 50.0
     normalize_action: bool = True
     controller_cls = PDEEPoseController

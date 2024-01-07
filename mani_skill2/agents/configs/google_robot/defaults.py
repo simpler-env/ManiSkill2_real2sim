@@ -137,8 +137,10 @@ class GoogleRobotDefaultConfig:
 
         self.arm_vel_limit = 1.5
         self.arm_acc_limit = 2.0
+        self.arm_jerk_limit = 50.0
         self.gripper_vel_limit = 1.0
         self.gripper_acc_limit = 7.0
+        self.gripper_jerk_limit = 50.0
         self.ee_link_name = "link_gripper_tcp"
 
     @property
@@ -204,6 +206,7 @@ class GoogleRobotDefaultConfig:
             interpolate_by_planner = True,
             interpolate_planner_vlim = self.arm_vel_limit,
             interpolate_planner_alim = self.arm_acc_limit,
+            interpolate_planner_jerklim = self.arm_jerk_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
@@ -213,6 +216,7 @@ class GoogleRobotDefaultConfig:
             interpolate_by_planner = True,
             interpolate_planner_vlim = self.arm_vel_limit,
             interpolate_planner_alim = self.arm_acc_limit,
+            interpolate_planner_jerklim = self.arm_jerk_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
@@ -248,6 +252,7 @@ class GoogleRobotDefaultConfig:
             interpolate_by_planner = True,
             interpolate_planner_vlim = self.arm_vel_limit,
             interpolate_planner_alim = self.arm_acc_limit,
+            interpolate_planner_jerklim = self.arm_jerk_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_target_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
@@ -259,6 +264,7 @@ class GoogleRobotDefaultConfig:
             interpolate_by_planner = True,
             interpolate_planner_vlim = self.arm_vel_limit,
             interpolate_planner_alim = self.arm_acc_limit,
+            interpolate_planner_jerklim = self.arm_jerk_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
@@ -318,6 +324,7 @@ class GoogleRobotDefaultConfig:
             interpolate_planner_init_no_vel=True,
             interpolate_planner_vlim=self.gripper_vel_limit,
             interpolate_planner_alim=self.gripper_acc_limit,
+            interpolate_planner_jerklim=self.gripper_jerk_limit,
         )
         gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
             *gripper_common_args,
@@ -349,6 +356,7 @@ class GoogleRobotDefaultConfig:
             interpolate_planner_init_no_vel=True,
             interpolate_planner_vlim=self.gripper_vel_limit,
             interpolate_planner_alim=self.gripper_acc_limit,
+            interpolate_planner_jerklim=self.gripper_jerk_limit,
         )
         _C["gripper"] = dict(
             gripper_pd_joint_pos=gripper_pd_joint_pos,

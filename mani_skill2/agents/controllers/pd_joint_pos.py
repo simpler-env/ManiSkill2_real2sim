@@ -44,12 +44,16 @@ class PDJointPosController(BaseController):
         self._target_qpos = self.qpos
         self._last_drive_qpos_targets = self.qpos
         self._interpolation_path = None
-        self._last_interpolation_success = False
+        self._interpolation_path_vel = None
 
     def set_drive_targets(self, targets):
         self._last_drive_qpos_targets = targets
         for i, joint in enumerate(self.joints):
             joint.set_drive_target(targets[i])
+            
+    def set_drive_velocity_targets(self, targets):
+        for i, joint in enumerate(self.joints):
+            joint.set_drive_velocity_target(targets[i])
 
     def set_action(self, action: np.ndarray):
         action = self._preprocess_action(action)
@@ -78,6 +82,9 @@ class PDJointPosController(BaseController):
             self._target_qpos = np.broadcast_to(action, self._start_qpos.shape)
 
         if self.config.small_action_repeat_last_target:
+            if len(action) != len(self._target_qpos):
+                assert len(action) == 1
+                action = np.broadcast_to(action, self._target_qpos.shape)
             small_action_idx = np.where(np.abs(action) < 1e-3)[0]
             self._target_qpos[small_action_idx] = _last_target_qpos[small_action_idx]
 
@@ -88,37 +95,30 @@ class PDJointPosController(BaseController):
             
     def _setup_qpos_interpolation(self):
         if self.config.interpolate_by_planner:
-            # self._interpolation_path, self._last_interpolation_success = self.plan_joint_path(
-            #     self._start_qpos, self._target_qpos, 
-            #     self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
-            # )
-            if (self._interpolation_path is None) or (not self._last_interpolation_success) or (self.config.interpolate_planner_init_no_vel):
-                self._interpolation_path, self._last_interpolation_success = self.plan_joint_path(
-                    self._start_qpos, self._target_qpos, 
-                    self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
-                )
-                # print(self.qpos, self._start_qpos, self._target_qpos, self._interpolation_path[0], self._interpolation_path[min(self._sim_steps, len(self._interpolation_path) - 1)])
+            if self.config.interpolate_planner_init_no_vel:
+                init_qvel = 0.0
             else:
-                last_start_qpos = self._interpolation_path[0]
-                # last_end_qpos = self.qpos
-                if self.config.use_target:
-                    last_end_qpos = self.qpos
-                    # length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
-                    # last_end_qpos = self._interpolation_path[length_last_path - 1]
-                else:
-                    length_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end
-                    last_end_qpos = self._interpolation_path[length_last_path - 1]
-                    # last_end_qpos = self._start_qpos
-                # include last interpolation result during current interpolation to keep velocity continuous
-                self._interpolation_path, success = self.plan_joint_path(
-                    last_start_qpos, self._target_qpos, 
-                    self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim,
-                    additional_waypoints=[last_end_qpos]
+                init_qvel = np.clip(
+                    self.articulation.get_qvel()[self.joint_indices], 
+                    -self.config.interpolate_planner_vlim, 
+                    self.config.interpolate_planner_vlim
                 )
-                if success:
-                    closest_idx_to_last_end_qpos = np.argmin(np.linalg.norm(self._interpolation_path - last_end_qpos[None, :], axis=-1))
-                    self._interpolation_path = self._interpolation_path[closest_idx_to_last_end_qpos:]
-                self._last_interpolation_success = success
+            if self.config.use_target or self._interpolation_path is None:
+                init_qpos = self.qpos
+            else:
+                len_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end point
+                init_qpos = self._interpolation_path[len_last_path - 1]
+                if not self.config.interpolate_planner_init_no_vel:
+                    init_qvel = self._interpolation_path_vel[len_last_path - 1]
+            
+            self._interpolation_path, vel_path = self.plan_joint_path(
+                init_qpos, self._target_qpos, 
+                self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim, self.config.interpolate_planner_jerklim,
+                init_v = init_qvel
+            )
+            # print(self.qpos, self._start_qpos, self._target_qpos, self._interpolation_path[0], self._interpolation_path[min(self._sim_steps, len(self._interpolation_path) - 1)])
+            if not self.config.interpolate_planner_init_no_vel:
+                self._interpolation_path_vel = vel_path
         else:
             step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
             # linear interpolation
@@ -134,8 +134,12 @@ class PDJointPosController(BaseController):
         
         # Compute the next target
         if self.config.interpolate:
-            targets = self._interpolation_path[min(self._step, len(self._interpolation_path) - 1)]
+            interp_path_idx = min(self._step, len(self._interpolation_path) - 1)
+            targets = self._interpolation_path[interp_path_idx]
             self.set_drive_targets(targets)
+            # if self._interpolation_path_vel is not None:
+            #     self.set_drive_velocity_targets(self._interpolation_path_vel[interp_path_idx])
+                                
 
     def get_state(self) -> dict:
         if self.config.use_target:
@@ -166,6 +170,7 @@ class PDJointPosControllerConfig(ControllerConfig):
     interpolate_planner_init_no_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
+    interpolate_planner_jerklim: float = 50.0
     small_action_repeat_last_target: bool = False
     normalize_action: bool = True
     controller_cls = PDJointPosController
