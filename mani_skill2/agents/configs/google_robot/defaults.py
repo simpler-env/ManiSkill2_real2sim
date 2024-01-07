@@ -114,8 +114,10 @@ class GoogleRobotDefaultConfig:
             # self.arm_damping = [1000.0, 1100.0, 748.6538324775375, 508.93417963876084, 655.8899700318738, 273.5057444692134, 360.0, 900, 900]
             # self.arm_stiffness = [1755.5802337759733, 1700.0, 1000.0, 896.1427073141074, 1181.0596023097614, 460.0, 518.7478307141772, 2000, 2000]
             # self.arm_damping = [1039.3004397057607, 997.7609238661106, 781.9120300040199, 533.1406757667885, 763.5690552485103, 247.37299930493683, 330.0, 900, 900]
-            self.arm_stiffness = [1749.5298171431002, 1705.5726191663362, 973.703880069825, 880.2143611543981, 1150.557454707083, 468.8830266395885, 487.9445796329134, 2000, 2000]
-            self.arm_damping = [1247.2693705772879, 1179.4662677725612, 827.9760463274691, 655.5257436519437, 698.1166353806758, 282.84185389851126, 363.80038823411655, 900, 900]
+            # self.arm_stiffness = [1749.5298171431002, 1705.5726191663362, 973.703880069825, 880.2143611543981, 1150.557454707083, 468.8830266395885, 487.9445796329134, 2000, 2000]
+            # self.arm_damping = [1247.2693705772879, 1179.4662677725612, 827.9760463274691, 655.5257436519437, 698.1166353806758, 282.84185389851126, 363.80038823411655, 900, 900]
+            self.arm_stiffness = [1770.8308138974369, 1697.500731588304, 970.977256832895, 940.0554875427881, 1230.0, 425.3836247605601, 453.38706759790983, 2000, 2000]
+            self.arm_damping = [1091.3847347710587, 1030.0, 741.4791517045943, 613.4624617382875, 706.2673984986591, 239.82988966950478, 340.0, 900, 900]
             # # continuous velocity but use current qpos as waypoint; loss 0.42
             # self.arm_stiffness = [1578.821511256692, 1950.0, 1430.0, 1258.064902497621, 721.684579284884, 714.0907339829357, 659.096253775289, 2000, 2000]
             # self.arm_damping = [380.0, 680.0, 603.9252159643679, 386.659479352307, 228.54468356490756, 156.10494372615977, 220.0]
@@ -321,7 +323,7 @@ class GoogleRobotDefaultConfig:
             drive_mode="force",
             interpolate=True,
             interpolate_by_planner=True,
-            interpolate_planner_init_no_vel=True,
+            interpolate_planner_exec_set_target_vel=True,
             interpolate_planner_vlim=self.gripper_vel_limit,
             interpolate_planner_alim=self.gripper_acc_limit,
             interpolate_planner_jerklim=self.gripper_jerk_limit,
@@ -351,9 +353,9 @@ class GoogleRobotDefaultConfig:
             drive_mode="force",
             interpolate=True,
             interpolate_by_planner=True,
+            interpolate_planner_exec_set_target_vel=True,
             delta_target_from_last_drive_target=True,
             small_action_repeat_last_target=True,
-            interpolate_planner_init_no_vel=True,
             interpolate_planner_vlim=self.gripper_vel_limit,
             interpolate_planner_alim=self.gripper_acc_limit,
             interpolate_planner_jerklim=self.gripper_jerk_limit,

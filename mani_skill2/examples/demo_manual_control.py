@@ -17,6 +17,7 @@ MS1_ENV_IDS = [
 ]
 
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616385
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static --add-segmentation sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v3  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/google_coke_can_real_eval_1.jpg rgb_overlay_cameras overhead_camera
 # python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot widowx sim_freq @500 control_freq @15
 
 
@@ -78,7 +79,7 @@ def main():
     print("Reward mode", env.reward_mode)
 
     env_reset_options = {}
-    # env_reset_options={'obj_init_options': {'init_xy': [-0.35, 0.0]}, 'robot_init_options': {'init_xy': [0.35, 0.20]}} # for GraspSingle env debugging
+    # env_reset_options={'obj_init_options': {'init_xy': [-0.35, 0.0]}, 'robot_init_options': {'init_xy': [0.35, 0.20]}} # for GraspSingle env debugging and overlay
     obs, _ = env.reset(options=env_reset_options)
     after_reset = True
 

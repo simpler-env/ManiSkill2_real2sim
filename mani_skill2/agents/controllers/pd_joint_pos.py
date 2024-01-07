@@ -137,8 +137,9 @@ class PDJointPosController(BaseController):
             interp_path_idx = min(self._step, len(self._interpolation_path) - 1)
             targets = self._interpolation_path[interp_path_idx]
             self.set_drive_targets(targets)
-            # if self._interpolation_path_vel is not None:
-            #     self.set_drive_velocity_targets(self._interpolation_path_vel[interp_path_idx])
+            if self.config.interpolate_by_planner and self.config.interpolate_planner_exec_set_target_vel:
+                if self._interpolation_path_vel is not None:
+                    self.set_drive_velocity_targets(self._interpolation_path_vel[interp_path_idx])
                                 
 
     def get_state(self) -> dict:
@@ -168,6 +169,7 @@ class PDJointPosControllerConfig(ControllerConfig):
     interpolate: bool = False
     interpolate_by_planner: bool = False
     interpolate_planner_init_no_vel: bool = False
+    interpolate_planner_exec_set_target_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     interpolate_planner_jerklim: float = 50.0

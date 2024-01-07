@@ -109,20 +109,6 @@ class PDEEPosController(PDJointPosController):
                 prev_ee_pose_at_base = self._target_pose
         else:
             prev_ee_pose_at_base = self.ee_pose_at_base
-            # if self.config.use_delta and self.config.interpolate_by_planner:
-            #     if self._interpolation_path is None:
-            #         prev_ee_pose_at_base = self.ee_pose_at_base
-            #     else:
-            #         closest_idx_to_cur_qpos = np.argmin(np.linalg.norm(self._interpolation_path - self.qpos[None, :], axis=-1))
-            #         # print(self._interpolation_path[max(closest_idx_to_cur_qpos-6, 0):closest_idx_to_cur_qpos+6], self.qpos)
-            #         if closest_idx_to_cur_qpos > 0 and closest_idx_to_cur_qpos < len(self._interpolation_path) - 1:
-            #             qpos_subtarget_from_last_action = self._interpolation_path[min(closest_idx_to_cur_qpos + 1, len(self._interpolation_path) - 1)]
-            #             prev_ee_pose_at_base = self.compute_fk(qpos_subtarget_from_last_action)
-            #         else:
-            #             prev_ee_pose_at_base = self.ee_pose_at_base
-            #         # print(self.ee_pose_at_base, prev_ee_pose_at_base, qpos_subtarget_from_last_action, closest_idx_to_cur_qpos, len(self._interpolation_path) - 1)
-            # else:
-            #     prev_ee_pose_at_base = self.ee_pose_at_base
 
         self._target_pose = self.compute_target_pose(prev_ee_pose_at_base, action)
         self._target_qpos = self.compute_ik(self._target_pose)
@@ -161,6 +147,7 @@ class PDEEPosControllerConfig(ControllerConfig):
     interpolate: bool = False
     interpolate_by_planner: bool = False
     interpolate_planner_init_no_vel: bool = False
+    interpolate_planner_exec_set_target_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     interpolate_planner_jerklim: float = 50.0
@@ -263,6 +250,7 @@ class PDEEPoseControllerConfig(ControllerConfig):
     interpolate: bool = False
     interpolate_by_planner: bool = False
     interpolate_planner_init_no_vel: bool = False
+    interpolate_planner_exec_set_target_vel: bool = False
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     interpolate_planner_jerklim: float = 50.0
