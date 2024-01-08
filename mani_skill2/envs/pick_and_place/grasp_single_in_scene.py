@@ -315,7 +315,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
                 lin_vel += np.linalg.norm(distractor_obj.velocity)
                 ang_vel += np.linalg.norm(distractor_obj.angular_velocity)
             if lin_vel > 1e-3 or ang_vel > 1e-2:
-                self._settle(0.5)
+                self._settle(1.5)
         
     @property
     def obj_pose(self):
@@ -367,7 +367,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
 
         consecutive_grasp = (self.consecutive_grasp >= 5)
         diff_obj_height = self.obj.pose.p[2] - self.obj_height_after_settle
-        self.lifted_obj_during_consecutive_grasp = self.lifted_obj_during_consecutive_grasp or (flag and diff_obj_height > 5e-3)
+        self.lifted_obj_during_consecutive_grasp = self.lifted_obj_during_consecutive_grasp or flag
         
         if self.require_lifting_obj_for_success:
             success = self.lifted_obj_during_consecutive_grasp
@@ -377,6 +377,7 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
             is_grasped=is_grasped,
             consecutive_grasp=consecutive_grasp,
             lifted_object=self.lifted_obj_during_consecutive_grasp,
+            lifted_object_significantly=self.lifted_obj_during_consecutive_grasp and (diff_obj_height > 0.02),
             success=success,
         )
 

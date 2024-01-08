@@ -8,6 +8,7 @@ from mani_skill2.utils.visualization.cv2_utils import OpenCVViewer
 from mani_skill2.utils.wrappers import RecordEpisode
 from mani_skill2.utils.sapien_utils import look_at
 from mani_skill2.sensors.camera import CameraConfig, parse_camera_cfgs
+from sapien.core import Pose
 
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
@@ -19,6 +20,7 @@ MS1_ENV_IDS = [
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616385
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static --add-segmentation sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v3  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/google_coke_can_real_eval_1.jpg rgb_overlay_cameras overhead_camera
 # python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot widowx sim_freq @500 control_freq @15
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/google_coke_can_real_eval_2.png rgb_overlay_cameras overhead_camera
 
 
 def parse_args():
@@ -79,7 +81,10 @@ def main():
     print("Reward mode", env.reward_mode)
 
     env_reset_options = {}
-    # env_reset_options={'obj_init_options': {'init_xy': [-0.35, 0.0]}, 'robot_init_options': {'init_xy': [0.35, 0.20]}} # for GraspSingle env debugging and overlay
+    # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q
+    # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
+    # env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
+    #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
     obs, _ = env.reset(options=env_reset_options)
     after_reset = True
 
