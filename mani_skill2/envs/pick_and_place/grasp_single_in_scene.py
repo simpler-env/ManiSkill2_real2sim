@@ -525,6 +525,34 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
         
         self.agent.robot.set_pose(Pose(robot_init_xyz, robot_init_rot_quat))
         
+
+@register_env("GraspSingleYCBCanInScene-v0", max_episode_steps=200)
+class GraspSingleYCBCanInSceneEnv(GraspSingleYCBInSceneEnv):
+    
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["002_master_chef_can", "005_tomato_soup_can", "007_tuna_fish_can", "010_potted_meat_can"]
+        super().__init__(**kwargs)
+    
+
+@register_env("GraspSingleYCBTomatoCanInScene-v0", max_episode_steps=200)
+class GraspSingleYCBTomatoCanInSceneEnv(GraspSingleYCBInSceneEnv):
+    
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["005_tomato_soup_can"]
+        super().__init__(**kwargs)
+    
+    
+@register_env("GraspSingleYCBBoxInScene-v0", max_episode_steps=200)
+class GraspSingleYCBBoxInSceneEnv(GraspSingleYCBInSceneEnv):
+    
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["003_cracker_box", "004_sugar_box", "008_pudding_box", "009_gelatin_box"]
+        super().__init__(**kwargs)
+    
+        
         
 # ---------------------------------------------------------------------------- #
 # Custom Assets
@@ -579,58 +607,7 @@ class GraspSingleCustomInSceneEnv(GraspSingleYCBInSceneEnv):
                     "convex.obj has been renamed to collision.obj. "
                 )        
         
-        
-        
-        
-@register_env("GraspSingleYCBCanInScene-v0", max_episode_steps=200)
-class GraspSingleYCBCanInSceneEnv(GraspSingleYCBInSceneEnv):
-    DEFAULT_MODEL_JSON = "info_pick_can_v0.json"
-    
-@register_env("GraspSingleYCBTomatoCanInScene-v0", max_episode_steps=200)
-class GraspSingleYCBTomatoCanInSceneEnv(GraspSingleYCBInSceneEnv):
-    DEFAULT_MODEL_JSON = "info_pick_can_v0.json"
-    def __init__(self, **kwargs):
-        kwargs.pop('model_ids', None)
-        kwargs['model_ids'] = ["005_tomato_soup_can"]
-        super().__init__(**kwargs)
-    
-@register_env("GraspSingleYCBBoxInScene-v0", max_episode_steps=200)
-class GraspSingleYCBBoxInSceneEnv(GraspSingleYCBInSceneEnv):
-    DEFAULT_MODEL_JSON = "info_pick_box_v0.json"
-    
-    def _load_model(self):
-        density = 500 # override by hand
-        self.obj = build_actor_ycb(
-            self.model_id,
-            self._scene,
-            scale=self.model_scale,
-            density=density,
-            physical_material=self._scene.create_physical_material(
-                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
-            ),
-            root_dir=self.asset_root,
-        )
-        self.obj.name = self.model_id
-    
-@register_env("GraspSingleYCBFruitInScene-v0", max_episode_steps=200)
-class GraspSingleYCBFruitInSceneEnv(GraspSingleYCBInSceneEnv):
-    DEFAULT_MODEL_JSON = "info_pick_fruit_v0.json"
-    
-@register_env("GraspSingleYCBSomeInScene-v0", max_episode_steps=200)
-class GraspSingleYCBSomeInSceneEnv(GraspSingleYCBInSceneEnv):
-    DEFAULT_MODEL_JSON = "info_pickintobowl_v0.json"
-    
 
-@register_env("KnockSingleYCBBoxOverInScene-v0", max_episode_steps=200)
-class KnockSingleYCBBoxOverInSceneEnv(GraspSingleYCBInSceneEnv):
-    DEFAULT_MODEL_JSON = "info_knock_box_v0.json"
-    # TODO: override success condition
-    
-    
-    
-"""
-Custom Assets
-"""
 class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, upright=False, laid_vertically=False, lr_switch=False, **kwargs):
         self.obj_upright = upright
