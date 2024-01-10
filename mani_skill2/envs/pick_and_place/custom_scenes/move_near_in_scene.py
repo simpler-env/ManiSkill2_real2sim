@@ -19,10 +19,10 @@ from mani_skill2.utils.geometry import (
     angle_between_vec
 )
 
-from .base_env import StationaryManipulationEnv
+from .base_env import CustomSceneEnv
 
 
-class GraspSingleInSceneEnv(StationaryManipulationEnv):
+class MoveNearInSceneEnv(CustomSceneEnv):
     DEFAULT_ASSET_ROOT: str
     DEFAULT_SCENE_ROOT: str
     DEFAULT_MODEL_JSON: str
@@ -39,8 +39,6 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         scene_table_height: float = 0.85,
         model_json: str = None,
         model_ids: List[str] = (),
-        require_lifting_obj_for_success: bool = True,
-        distractor_model_ids: Optional[List[str]] = None,
         **kwargs,
     ):
         if asset_root is None:
@@ -69,38 +67,25 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         self.model_db: Dict[str, Dict] = load_json(model_json)
 
         if isinstance(model_ids, str):
-            model_ids = [model_ids]
+            raise ValueError(f"For MoveNear, model_ids must be a list of strings; got {model_ids}")
         if len(model_ids) == 0:
             model_ids = sorted(self.model_db.keys())
-        assert len(model_ids) > 0, model_json
+        assert len(model_ids) >= 3, f"You need to have at least 3 objects for MoveNear; Got {model_ids}"
         self.model_ids = model_ids
         
-        if isinstance(distractor_model_ids, str):
-            distractor_model_ids = [distractor_model_ids]
-        self.distractor_model_ids = distractor_model_ids
-
-        self.model_id = model_ids[0]
-        self.model_scale = None
-        self.model_bbox_size = None
-        
-        self.selected_distractor_model_ids = None
-        self.selected_distractor_model_scales = None
+        self.episode_model_ids = model_ids[:3]
+        self.episode_model_scales = [None] * 3
+        self.episode_model_bbox_sizes = [None] * 3
+        self.episode_model_init_xyz = [None] * 3
 
         self.arena = None
         
         self.obj = None
-        self.distractor_objs = []
         
         self.obj_init_options = {}
-        self.distractor_obj_init_options = {}
         self.robot_init_options = {}
                 
         self._check_assets()
-        
-        self.require_lifting_obj_for_success = require_lifting_obj_for_success
-        self.consecutive_grasp = 0
-        self.lifted_obj_during_consecutive_grasp = False
-        self.obj_height_after_settle = None
         
         super().__init__(**kwargs)
 
@@ -143,15 +128,12 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         raise NotImplementedError
     
     def reset(self, seed=None, options=None):
-        for distractor_obj in self.distractor_objs:
-            self._scene.remove_actor(distractor_obj)
         
         if options is None:
             options = dict()
             
         options = deepcopy(options)
         self.obj_init_options = options.pop("obj_init_options", {})
-        self.distractor_obj_init_options = options.pop("distractor_obj_init_options", {})
         self.robot_init_options = options.pop("robot_init_options", {})
         
         self.set_episode_rng(seed)
@@ -160,18 +142,13 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
         reconfigure = options.pop("reconfigure", False)
         _reconfigure = self._set_model(model_id, model_scale)
         reconfigure = _reconfigure or reconfigure
-        if self.distractor_model_ids is not None:
-            distractor_model_scales = options.pop("distractor_model_scales", None)
-            distractor_model_ids = options.pop("distractor_model_ids", None)
-            if distractor_model_ids is not None:
-                reconfigure = True
-                self._set_distractor_models(distractor_model_ids, distractor_model_scales)
                 
         options["reconfigure"] = reconfigure
         
-        self.consecutive_grasp = 0
-        self.lifted_obj_during_consecutive_grasp = False
-        self.obj_height_after_settle = None
+        self.episode_model_ids = model_ids[:3]
+        self.episode_model_scales = [None] * 3
+        self.episode_model_bbox_sizes = [None] * 3
+        self.episode_model_init_xyz = [None] * 3
         
         return super().reset(seed=self._episode_seed, options=options)
 
@@ -210,23 +187,6 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
 
         return reconfigure
     
-    def _set_distractor_models(self, distractor_model_ids, distractor_model_scales):
-        assert distractor_model_ids is not None
-        
-        self.selected_distractor_model_ids = distractor_model_ids
-        
-        if distractor_model_scales is None:
-            distractor_model_scales = []
-            for distractor_model_id in distractor_model_ids:
-                model_scales = self.model_db[distractor_model_id].get("scales")
-                if model_scales is None:
-                    model_scale = 1.0
-                else:
-                    model_scale = random_choice(model_scales, self._episode_rng)
-                distractor_model_scales.append(model_scale)
-                
-        self.selected_distractor_model_scales = distractor_model_scales
-
     def _settle(self, t):
         sim_steps = int(self.sim_freq * t)
         for _ in range(sim_steps):
@@ -279,43 +239,6 @@ class GraspSingleInSceneEnv(StationaryManipulationEnv):
             self._settle(1.5)
         
         self.obj_height_after_settle = self.obj.pose.p[2]
-        
-        if len(self.distractor_objs) > 0:
-            for distractor_obj in self.distractor_objs:
-                distractor_obj_init_options = self.distractor_obj_init_options.get(distractor_obj.name, None)
-                
-                distractor_init_xy = distractor_obj_init_options.get('init_xy', None)
-                if distractor_init_xy is None:
-                    while True:
-                        distractor_init_xy = obj_init_xy + self._episode_rng.uniform(-0.3, 0.3, [2]) # hardcoded for now
-                        distractor_init_xy = np.clip(distractor_init_xy, [-0.35, 0.0], [-0.1, 0.4])
-                        if np.linalg.norm(distractor_init_xy - obj_init_xy) > 0.2:
-                            break
-                p = np.hstack([distractor_init_xy, obj_init_z]) # let distractor fall from the same height as the main object
-                distractor_init_rot_quat = distractor_obj_init_options.get("init_rot_quat", None)
-                q = obj_init_rot_quat if distractor_init_rot_quat is None else distractor_init_rot_quat
-                distractor_obj.set_pose(Pose(p, q))
-
-            # Move the robot far away to avoid collision
-            # The robot should be initialized later
-            self.agent.robot.set_pose(Pose([-10, 0, 0]))
-            for distractor_obj in self.distractor_objs:
-                # Lock rotation around x and y
-                distractor_obj.lock_motion(0, 0, 0, 1, 1, 0)
-            self._settle(0.5)
-            for distractor_obj in self.distractor_objs:
-                # Unlock motion
-                distractor_obj.lock_motion(0, 0, 0, 0, 0, 0)
-                distractor_obj.set_pose(distractor_obj.pose)
-                distractor_obj.set_velocity(np.zeros(3))
-                distractor_obj.set_angular_velocity(np.zeros(3))
-            self._settle(0.5)
-            lin_vel, ang_vel = 0.0, 0.0
-            for distractor_obj in self.distractor_objs:
-                lin_vel += np.linalg.norm(distractor_obj.velocity)
-                ang_vel += np.linalg.norm(distractor_obj.angular_velocity)
-            if lin_vel > 1e-3 or ang_vel > 1e-2:
-                self._settle(1.5)
         
     @property
     def obj_pose(self):
@@ -467,21 +390,6 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv):
         )
         self.obj.name = self.model_id
         
-        if self.selected_distractor_model_ids is not None:
-            for distractor_model_id, distractor_model_scale in zip(self.selected_distractor_model_ids, self.selected_distractor_model_scales):
-                distractor_obj = build_actor_func(
-                    distractor_model_id,
-                    self._scene,
-                    scale=distractor_model_scale,
-                    density=self.model_db[distractor_model_id].get("density", 1000),
-                    physical_material=self._scene.create_physical_material(
-                        static_friction=self.obj_static_friction, dynamic_friction=self.obj_dynamic_friction, restitution=0.0
-                    ),
-                    root_dir=self.asset_root,
-                )
-                distractor_obj.name = distractor_model_id
-                self.distractor_objs.append(distractor_obj)
-
     def _get_init_z(self):
         bbox_min = self.model_db[self.model_id]["bbox"]["min"]
         return -bbox_min[2] * self.model_scale + 0.05
@@ -760,4 +668,11 @@ class GraspSingleSpongeInSceneEnv(GraspSingleCustomInSceneEnv):
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["sponge"]
         super().__init__(**kwargs)
-        
+
+
+@register_env("GraspSingleBridgeSpoonInScene-v0", max_episode_steps=200)
+class GraspSingleBridgeSpoonInSceneEnv(GraspSingleCustomInSceneEnv):
+    def __init__(self, **kwargs):
+        kwargs.pop('model_ids', None)
+        kwargs['model_ids'] = ["bridge_spoon_generated_modified"]
+        super().__init__(**kwargs)

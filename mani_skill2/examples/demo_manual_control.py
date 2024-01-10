@@ -81,7 +81,7 @@ def main():
     print("Reward mode", env.reward_mode)
 
     env_reset_options = {}
-    # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q
+    # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.015)) * Pose(q=[0, 0, 0, 1])).q
     # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
     # env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
     #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
