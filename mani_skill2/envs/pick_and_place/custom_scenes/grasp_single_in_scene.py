@@ -97,12 +97,12 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         shadow = self.enable_shadow
         self._scene.set_ambient_light([0.3, 0.3, 0.3])
         # Only the first of directional lights can have shadow
-        self._scene.add_directional_light(
-            [0.05, 0, -1], [100, 100, 100], shadow=shadow, scale=5, shadow_map_size=2048
-        )
         # self._scene.add_directional_light(
-        #     [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
+        #     [0.05, 0, -1], [100, 100, 100], shadow=shadow, scale=5, shadow_map_size=2048
         # )
+        self._scene.add_directional_light(
+            [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
+        )
         # self._scene.add_directional_light([0, -1, -1], [50, 50, 50])
         
     def _set_model(self, model_id, model_scale):
