@@ -96,13 +96,82 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 
         shadow = self.enable_shadow
         self._scene.set_ambient_light([0.3, 0.3, 0.3])
+        # add_directional_light: direction vec, color vec
         # Only the first of directional lights can have shadow
         # self._scene.add_directional_light(
         #     [0.05, 0, -1], [100, 100, 100], shadow=shadow, scale=5, shadow_map_size=2048
         # )
+        
+        # 84% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        
+        # 88% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        # self._scene.add_directional_light(
+        #     [0.05, 0, -1], [2, 2, 2]
+        # )
+        
+        # 84% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [0.05, 0, -1], [2, 2, 2]
+        # )
+        
+        # 60% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        # self._scene.add_directional_light(
+        #     [0.05, 0, -1], [1, 1, 1]
+        # )
+        
+        # 72% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [-1, -0.5, -1], [0.7, 0.7, 0.7], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        # self._scene.add_directional_light(
+        #     [1, 1, -1], [0.7, 0.7, 0.7]
+        # )
+        # self._scene.add_directional_light(
+        #     [0, 0, -1], [1.6, 1.6, 1.6]
+        # )
+        
+        # 92% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [-1, -0.5, -1], [0.7, 0.7, 0.7], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        # self._scene.add_directional_light(
+        #     [1, 1, -1], [0.7, 0.7, 0.7]
+        # )
+        # self._scene.add_directional_light(
+        #     [0, 0, -1], [2, 2, 2]
+        # )
+        
+        # 92% for rt-1-new-best standing coke can
+        # self._scene.add_directional_light(
+        #     [0, 0, -1], [2.5, 2.5, 2.5], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        # self._scene.add_directional_light(
+        #     [-1, -0.5, -1], [0.7, 0.7, 0.7]
+        # )
+        # self._scene.add_directional_light(
+        #     [1, 1, -1], [0.7, 0.7, 0.7]
+        # )
+        
+        # % for rt-1-new-best standing coke can 
         self._scene.add_directional_light(
-            [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
+            [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
         )
+        self._scene.add_directional_light(
+            [-1, -0.5, -1], [0.7, 0.7, 0.7]
+        )
+        self._scene.add_directional_light(
+            [1, 1, -1], [0.7, 0.7, 0.7]
+        )
+        
         # self._scene.add_directional_light([0, -1, -1], [50, 50, 50])
         
     def _set_model(self, model_id, model_scale):
