@@ -69,7 +69,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
         """Check whether the assets exist."""
         pass
     
-    def _load_actor_helper(self):
+    def _load_arena_helper(self):
         builder = self._scene.create_actor_builder()
         if self.scene_name is None:
             scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v3.glb") # hardcoded for now

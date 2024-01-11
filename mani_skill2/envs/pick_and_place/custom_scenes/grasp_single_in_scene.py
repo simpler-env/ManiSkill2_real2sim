@@ -51,7 +51,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
     #     self._scene.add_directional_light([-1, 1, -1], [1, 1, 1])
         
     def _load_actors(self):
-        self._load_actor_helper()        
+        self._load_arena_helper()        
         self._load_model()
         self.obj.set_damping(0.1, 0.1)
             
@@ -90,10 +90,20 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         
         return super().reset(seed=self._episode_seed, options=options)
 
-    # def _setup_lighting(self):
-    #     super()._setup_lighting()
-    #     # self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
-    #     self._scene.add_point_light([-0.2, 0.0, 1.4], [1, 1, 1])
+    def _setup_lighting(self):
+        if self.bg_name is not None:
+            return
+
+        shadow = self.enable_shadow
+        self._scene.set_ambient_light([0.3, 0.3, 0.3])
+        # Only the first of directional lights can have shadow
+        self._scene.add_directional_light(
+            [0.05, 0, -1], [100, 100, 100], shadow=shadow, scale=5, shadow_map_size=2048
+        )
+        # self._scene.add_directional_light(
+        #     [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
+        # )
+        # self._scene.add_directional_light([0, -1, -1], [50, 50, 50])
         
     def _set_model(self, model_id, model_scale):
         """Set the model id and scale. If not provided, choose one randomly."""
