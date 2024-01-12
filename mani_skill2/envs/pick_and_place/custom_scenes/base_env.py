@@ -69,7 +69,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
         """Check whether the assets exist."""
         pass
     
-    def _load_arena_helper(self):
+    def _load_arena_helper(self, add_collision=True):
         builder = self._scene.create_actor_builder()
         if self.scene_name is None:
             scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v3.glb") # hardcoded for now
@@ -85,7 +85,8 @@ class CustomSceneEnv(StationaryManipulationEnv):
             scene_pose = sapien.Pose(q=self.scene_pose)
         
         # NOTE: use nonconvex collision for static scene
-        builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
+        if add_collision:
+            builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
         builder.add_visual_from_file(scene_path, scene_pose)
         self.arena = builder.build_static()
         # Add offset so that the workspace is next to the table
