@@ -20,6 +20,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self,
         require_lifting_obj_for_success: bool = True,
         distractor_model_ids: Optional[List[str]] = None,
+        original_lighting: bool = False,
         **kwargs,
     ):
         if isinstance(distractor_model_ids, str):
@@ -43,6 +44,8 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.consecutive_grasp = 0
         self.lifted_obj_during_consecutive_grasp = False
         self.obj_height_after_settle = None
+        
+        self.original_lighting = original_lighting
         
         super().__init__(**kwargs)
 
@@ -96,6 +99,13 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 
         shadow = self.enable_shadow
         self._scene.set_ambient_light([0.3, 0.3, 0.3])
+        if self.original_lighting:
+            self._scene.add_directional_light(
+                [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
+            return
+        
         # add_directional_light: direction vec, color vec
         # Only the first of directional lights can have shadow
         # self._scene.add_directional_light(
@@ -161,7 +171,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         #     [1, 1, -1], [0.7, 0.7, 0.7]
         # )
         
-        # % for rt-1-new-best standing coke can 
+        # 80% for rt-1-new-best standing coke can 
         self._scene.add_directional_light(
             [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
         )
