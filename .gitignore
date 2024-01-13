@@ -32,7 +32,7 @@ imgui.ini
 # directories that should be ignored in general
 # but can be excluded explicitly
 tmp/
-data/
+/data/*
 demos/
 videos/
 
