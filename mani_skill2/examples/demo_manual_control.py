@@ -83,14 +83,15 @@ def main():
 
     env_reset_options = {}
     # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.015)) * Pose(q=[0, 0, 0, 1])).q
-    # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q
+    # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q # for MoveSingle env debugging and overlay
     # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
     # env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
     #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
     # env_reset_options={'obj_init_options': {},
     #                    'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}} # for MoveSingle env debugging and overlay
-    # env_reset_options['obj_init_options']['episode_id'] = 22 # for MoveSingle env debugging and overlay
+    # env_reset_options['obj_init_options']['episode_id'] = 1 # for MoveSingle env debugging and overlay
     obs, _ = env.reset(options=env_reset_options)
+    print(env.episode_source_obj.mass, env.episode_target_obj.mass)
     after_reset = True
 
     # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution # object material properties

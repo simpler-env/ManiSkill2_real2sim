@@ -44,6 +44,11 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         
         super().__init__(**kwargs)
 
+    def _get_default_scene_config(self):
+        scene_config = super()._get_default_scene_config()
+        scene_config.contact_offset = 0.005 # important to avoid "false-positive" collisions with other objects
+        return scene_config
+    
     def _setup_lighting(self):
         if self.bg_name is not None:
             return
@@ -245,9 +250,14 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         source_obj_pose = self.source_obj_pose
         target_obj_pose = self.target_obj_pose
         
-        all_obj_heights = [obj.pose.p[2] for obj in self.episode_objs]
-        diff_obj_heights = [all_obj_heights[i] - self.episode_obj_xyzs_after_settle[i][2] for i in range(len(all_obj_heights))]
-        all_obj_keep_height = all([x > -0.02 for x in diff_obj_heights])
+        other_obj_ids = [i for (i, obj) in enumerate(self.episode_objs) if (obj.name != self.episode_source_obj.name) and (obj.name != self.episode_target_obj.name)]
+        other_obj_heights = [self.episode_objs[i].pose.p[2] for i in other_obj_ids]
+        other_obj_heights_after_settle = [self.episode_obj_xyzs_after_settle[i][2] for i in other_obj_ids]
+        other_obj_diff_heights = [x - y for (x, y) in zip(other_obj_heights_after_settle, other_obj_heights)]
+        other_obj_keep_height = all([x > -0.02 for x in other_obj_diff_heights]) # require other objects to not be knocked down on the table
+        source_obj_diff_height = source_obj_pose.p[2] - self.episode_source_obj_xyz_after_settle[2] # source object should not be knocked down off the table
+        target_obj_diff_height = target_obj_pose.p[2] - self.episode_target_obj_xyz_after_settle[2]
+        all_obj_keep_height = other_obj_keep_height and (source_obj_diff_height > -0.15) and (target_obj_diff_height > -0.15)
         
         source_obj_xy_move_dist = np.linalg.norm(self.episode_source_obj_xyz_after_settle[:2] - self.episode_source_obj.pose.p[:2])
         other_obj_xy_move_dist = []
@@ -260,14 +270,15 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         dist_to_tgt_obj = np.linalg.norm(source_obj_pose.p[:2] - target_obj_pose.p[:2])
         tgt_obj_bbox_xy_dist = np.linalg.norm(self.episode_target_obj_bbox_world[:2]) / 2 # get half-length of bbox xy diagonol distance in the world frame at timestep=0
         src_obj_bbox_xy_dist = np.linalg.norm(self.episode_source_obj_bbox_world[:2]) / 2
-        near_tgt_obj = (dist_to_tgt_obj < tgt_obj_bbox_xy_dist + src_obj_bbox_xy_dist + 0.04)
+        # print(dist_to_tgt_obj, tgt_obj_bbox_xy_dist, src_obj_bbox_xy_dist)
+        near_tgt_obj = (dist_to_tgt_obj < tgt_obj_bbox_xy_dist + src_obj_bbox_xy_dist + 0.08)
         
         dist_to_other_objs = []
         for obj in self.episode_objs:
             if obj.name == self.episode_source_obj.name:
                 continue
             dist_to_other_objs.append(np.linalg.norm(source_obj_pose.p[:2] - obj.pose.p[:2]))
-        is_closest_to_tgt = all([dist_to_tgt_obj < x + 0.03 for x in dist_to_other_objs])
+        is_closest_to_tgt = all([dist_to_tgt_obj < x + 0.01 for x in dist_to_other_objs])
         
         success = all_obj_keep_height and moved_correct_obj and near_tgt_obj and is_closest_to_tgt
         return dict(
@@ -288,8 +299,9 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         return self.compute_dense_reward(**kwargs) / 1.0
     
     def get_language_instruction(self):
-        src_name = self.episode_source_obj.name.replace('_', ' ')
-        tgt_name = self.episode_target_obj.name.replace('_', ' ')
+        clean_name_fxn = lambda s: s.replace('opened_', '').replace('light_', '').replace('_', ' ')
+        src_name = clean_name_fxn(self.episode_source_obj.name)
+        tgt_name = clean_name_fxn(self.episode_target_obj.name)
         return f"move {src_name} near {tgt_name}"
     
     
@@ -300,12 +312,13 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
         self,
         **kwargs,
     ):
+        # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
         self.triplets = [
-            ("blue_plastic_bottle", "pepsi_can", "orange"),
-            ("7up_can", "apple", "sponge"),
-            ("coke_can", "redbull_can", "apple"),
-            ("sponge", "blue_plastic_bottle", "7up_can"),
-            ("orange", "pepsi_can", "redbull_can"),
+            ("blue_plastic_bottle", "opened_pepsi_can", "orange"),
+            ("opened_7up_can", "apple", "sponge"),
+            ("opened_coke_can", "opened_redbull_can", "apple"),
+            ("sponge", "blue_plastic_bottle", "opened_7up_can"),
+            ("orange", "opened_pepsi_can", "opened_redbull_can"),
         ]
         self._source_obj_ids, self._target_obj_ids = [], []
         for i in range(3):
@@ -319,13 +332,18 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
         ]
         self.obj_init_quat_dict = {
             "blue_plastic_bottle": euler2quat(np.pi/2, 0, np.pi/2),
-            "pepsi_can": euler2quat(np.pi/2, 0, 0),
-            "orange": [1.0, 0.0, 0.0, 0.0],
-            "7up_can": euler2quat(np.pi/2, 0, 0),
+            "opened_pepsi_can": euler2quat(np.pi/2, 0, 0),
+            "orange": euler2quat(0, 0, np.pi/2),
+            "opened_7up_can": euler2quat(np.pi/2, 0, 0),
             "apple": [1.0, 0.0, 0.0, 0.0],
             "sponge": euler2quat(0, 0, np.pi/2),
-            "coke_can": euler2quat(np.pi/2, 0, 0),
-            "redbull_can": euler2quat(np.pi/2, 0, 0),
+            "opened_coke_can": euler2quat(np.pi/2, 0, 0),
+            "opened_redbull_can": euler2quat(np.pi/2, 0, 0),
+        }
+        self.special_density_dict = {
+            "apple": 200, # toy apple as in real eval
+            "orange": 200
+            # by default, opened cans have density 50; blue plastic bottle has density 50; sponge has density 150
         }
         super().__init__(**kwargs)
     
@@ -355,7 +373,11 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
     def _load_model(self):
         self.episode_objs = []
         for (model_id, model_scale) in zip(self.episode_model_ids, self.episode_model_scales):
-            density = self.model_db[model_id].get("density", 1000)
+            if model_id in self.special_density_dict:
+                density = self.special_density_dict[model_id]
+            else:
+                density = self.model_db[model_id].get("density", 1000)
+            
             obj = self._build_actor_helper(
                 model_id,
                 self._scene,
