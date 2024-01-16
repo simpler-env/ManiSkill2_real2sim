@@ -21,6 +21,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         require_lifting_obj_for_success: bool = True,
         distractor_model_ids: Optional[List[str]] = None,
         original_lighting: bool = False,
+        darker_lighting: bool = False,
         **kwargs,
     ):
         if isinstance(distractor_model_ids, str):
@@ -46,6 +47,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.obj_height_after_settle = None
         
         self.original_lighting = original_lighting
+        self.darker_lighting = darker_lighting
         
         super().__init__(**kwargs)
 
@@ -104,6 +106,12 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
                 [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
+            return
+        elif self.darker_lighting:
+            self._scene.add_directional_light(
+                [1, 1, -1], [0.3, 0.3, 0.3], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light([0, 0, -1], [0.3, 0.3, 0.3])
             return
         
         # add_directional_light: direction vec, color vec

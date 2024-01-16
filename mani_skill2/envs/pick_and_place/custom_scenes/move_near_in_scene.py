@@ -253,7 +253,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         other_obj_ids = [i for (i, obj) in enumerate(self.episode_objs) if (obj.name != self.episode_source_obj.name) and (obj.name != self.episode_target_obj.name)]
         other_obj_heights = [self.episode_objs[i].pose.p[2] for i in other_obj_ids]
         other_obj_heights_after_settle = [self.episode_obj_xyzs_after_settle[i][2] for i in other_obj_ids]
-        other_obj_diff_heights = [x - y for (x, y) in zip(other_obj_heights_after_settle, other_obj_heights)]
+        other_obj_diff_heights = [x - y for (x, y) in zip(other_obj_heights, other_obj_heights_after_settle)]
         other_obj_keep_height = all([x > -0.02 for x in other_obj_diff_heights]) # require other objects to not be knocked down on the table
         source_obj_diff_height = source_obj_pose.p[2] - self.episode_source_obj_xyz_after_settle[2] # source object should not be knocked down off the table
         target_obj_diff_height = target_obj_pose.p[2] - self.episode_target_obj_xyz_after_settle[2]
@@ -265,13 +265,14 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             if obj.name == self.episode_source_obj.name:
                 continue
             other_obj_xy_move_dist.append(np.linalg.norm(obj_xyz_after_settle[:2] - obj.pose.p[:2]))
-        moved_correct_obj = (all(x < source_obj_xy_move_dist / 2 for x in other_obj_xy_move_dist))
+        moved_correct_obj = (source_obj_xy_move_dist > 0.03) and (all([x < source_obj_xy_move_dist for x in other_obj_xy_move_dist]))
+        moved_wrong_obj = any([x > 0.03 for x in other_obj_xy_move_dist]) and any([x > source_obj_xy_move_dist for x in other_obj_xy_move_dist])
         
         dist_to_tgt_obj = np.linalg.norm(source_obj_pose.p[:2] - target_obj_pose.p[:2])
         tgt_obj_bbox_xy_dist = np.linalg.norm(self.episode_target_obj_bbox_world[:2]) / 2 # get half-length of bbox xy diagonol distance in the world frame at timestep=0
         src_obj_bbox_xy_dist = np.linalg.norm(self.episode_source_obj_bbox_world[:2]) / 2
         # print(dist_to_tgt_obj, tgt_obj_bbox_xy_dist, src_obj_bbox_xy_dist)
-        near_tgt_obj = (dist_to_tgt_obj < tgt_obj_bbox_xy_dist + src_obj_bbox_xy_dist + 0.08)
+        near_tgt_obj = (dist_to_tgt_obj < tgt_obj_bbox_xy_dist + src_obj_bbox_xy_dist + 0.10)
         
         dist_to_other_objs = []
         for obj in self.episode_objs:
@@ -284,6 +285,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         return dict(
             all_obj_keep_height=all_obj_keep_height,
             moved_correct_obj=moved_correct_obj,
+            moved_wrong_obj=moved_wrong_obj,
             near_tgt_obj=near_tgt_obj,
             is_closest_to_tgt=is_closest_to_tgt,
             success=success,
