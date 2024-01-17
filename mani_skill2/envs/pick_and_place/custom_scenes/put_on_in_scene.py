@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 import sapien.core as sapien
 from transforms3d.euler import euler2quat
@@ -66,10 +67,10 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
 class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
     def __init__(
         self,
-        source_obj_name=None,
-        target_obj_name=None,
-        xy_configs=[],
-        quat_configs=[],
+        source_obj_name: str = None,
+        target_obj_name: str = None,
+        xy_configs: List[np.ndarray] = None,
+        quat_configs: List[np.ndarray] = None,
         **kwargs,
     ):
         self._source_obj_name = source_obj_name
@@ -140,7 +141,7 @@ class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
         for i, grid_pos_1 in enumerate(grid_pos):
             for j, grid_pos_2 in enumerate(grid_pos):
                 if i != j:
-                    xy_configs.append([grid_pos_1, grid_pos_2])
+                    xy_configs.append(np.array([grid_pos_1, grid_pos_2]))
         
         quat_configs = [np.array([[1, 0, 0, 0], [1, 0, 0, 0]]), 
                         np.array([euler2quat(0, 0, np.pi/2), [1, 0, 0, 0]])]
@@ -177,7 +178,7 @@ class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
         for i, grid_pos_1 in enumerate(grid_pos):
             for j, grid_pos_2 in enumerate(grid_pos):
                 if i != j:
-                    xy_configs.append([grid_pos_1, grid_pos_2])
+                    xy_configs.append(np.array([grid_pos_1, grid_pos_2]))
         
         quat_configs = [np.array([[1, 0, 0, 0], [1, 0, 0, 0]]), 
                         np.array([euler2quat(0, 0, np.pi/2), [1, 0, 0, 0]])]
@@ -216,7 +217,7 @@ class StackGreenCubeOnYellowCubeInScene(PutOnBridgeInSceneEnv):
             for i, grid_pos_1 in enumerate(grid_pos):
                 for j, grid_pos_2 in enumerate(grid_pos):
                     if i != j:
-                        xy_configs.append([grid_pos_1, grid_pos_2])
+                        xy_configs.append(np.array([grid_pos_1, grid_pos_2]))
         
         quat_configs = [np.array([[1, 0, 0, 0], [1, 0, 0, 0]])]
         

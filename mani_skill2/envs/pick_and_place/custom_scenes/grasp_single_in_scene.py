@@ -482,7 +482,7 @@ class GraspSingleCustomInSceneEnv(GraspSingleYCBInSceneEnv, CustomOtherObjectsIn
     
 
 class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
-    def __init__(self, upright=False, laid_vertically=False, lr_switch=False, **kwargs):
+    def __init__(self, upright: bool = False, laid_vertically: bool = False, lr_switch: bool = False, **kwargs):
         self.obj_upright = upright
         self.obj_laid_vertically = laid_vertically
         self.obj_lr_switch = lr_switch

@@ -216,8 +216,8 @@ class CustomYCBInSceneEnv(CustomSceneEnv):
         scene: sapien.Scene,
         scale: float = 1.0,
         physical_material: sapien.PhysicalMaterial = None,
-        density=1000,
-        root_dir=ASSET_DIR / "mani_skill2_ycb",
+        density: float = 1000.0,
+        root_dir: str = ASSET_DIR / "mani_skill2_ycb",
     ):
         builder = scene.create_actor_builder()
         model_dir = Path(root_dir) / "models" / model_id
