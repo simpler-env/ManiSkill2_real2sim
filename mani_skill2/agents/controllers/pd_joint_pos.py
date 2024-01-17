@@ -104,8 +104,9 @@ class PDJointPosController(BaseController):
                     self.config.interpolate_planner_vlim
                 )
             if self.config.use_target or self._interpolation_path is None:
-                init_qpos = self.qpos
+                init_qpos = self.qpos # plan from current sensed qpos (and qvel) to target qpos
             else:
+                # the interpolation waypoints for this control step start from the "terminal intermediate target" of last control step's planned path
                 len_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end point
                 init_qpos = self._interpolation_path[len_last_path - 1]
                 if not self.config.interpolate_planner_init_no_vel:

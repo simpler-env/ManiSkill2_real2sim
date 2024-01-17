@@ -88,7 +88,8 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.robot.set_pose(Pose([-0.615, 0, 0.06205]))
         elif self.robot_uid == 'widowx':
-            qpos = np.array([0, 0, 0, -np.pi, np.pi / 2, 0, 0.037, 0.037])
+            # qpos = np.array([0, 0, 0, -np.pi, np.pi / 2, np.pi, 0.037, 0.037])
+            qpos = np.array([-0.00153398, 0.04448544, -0.21629129, -3.14466056, 1.36524296, np.pi, 0.037, 0.037])
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
         else:

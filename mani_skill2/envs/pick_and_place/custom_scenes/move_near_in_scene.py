@@ -17,8 +17,6 @@ class MoveNearInSceneEnv(CustomSceneEnv):
     DEFAULT_SCENE_ROOT: str
     DEFAULT_MODEL_JSON: str
 
-    obj: sapien.Actor  # target object
-    
     def __init__(
         self,
         original_lighting: bool = False,
@@ -237,7 +235,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             obs.update(
                 source_obj_pose=vectorize_pose(self.source_obj_pose),
                 target_obj_pose=vectorize_pose(self.target_obj_pose),
-                tcp_to_obj_pos=self.source_obj_pose.p - self.tcp.pose.p,
+                tcp_to_source_obj_pos=self.source_obj_pose.p - self.tcp.pose.p,
             )
         return obs
 
@@ -299,11 +297,10 @@ class MoveNearInSceneEnv(CustomSceneEnv):
 
     def compute_normalized_dense_reward(self, **kwargs):
         return self.compute_dense_reward(**kwargs) / 1.0
-    
+        
     def get_language_instruction(self):
-        clean_name_fxn = lambda s: s.replace('opened_', '').replace('light_', '').replace('_', ' ')
-        src_name = clean_name_fxn(self.episode_source_obj.name)
-        tgt_name = clean_name_fxn(self.episode_target_obj.name)
+        src_name = self._get_instruction_obj_name(self.episode_source_obj.name)
+        tgt_name = self._get_instruction_obj_name(self.episode_target_obj.name)
         return f"move {src_name} near {tgt_name}"
     
     

@@ -3,6 +3,7 @@ import numpy as np
 
 from mani_skill2.agents.controllers import *
 from mani_skill2.sensors.camera import CameraConfig
+from mani_skill2.utils.sapien_utils import look_at
 
 
 class WidowXDefaultConfig:
@@ -50,7 +51,10 @@ class WidowXDefaultConfig:
         self.gripper_stiffness = 200
         self.gripper_damping = 20
         self.gripper_force_limit = 60
-
+        self.gripper_vel_limit = 0.12
+        self.gripper_acc_limit = 0.50
+        self.gripper_jerk_limit = 5.0
+        
         self.ee_link_name = "ee_gripper_link"
 
     @property
@@ -236,6 +240,25 @@ class WidowXDefaultConfig:
             normalize_action=True,
             drive_mode="force",
         )
+        gripper_pd_joint_target_pos_interpolate_by_planner = PDJointPosMimicControllerConfig(
+            self.gripper_joint_names,
+            0.015 - 0.001,
+            0.037 + 0.001, # a trick to have force when grasping
+            self.gripper_stiffness,
+            self.gripper_damping,
+            self.gripper_force_limit,
+            use_target=True,
+            clip_target=True,
+            clip_target_thres=0.001,
+            normalize_action=True,
+            interpolate=True,
+            interpolate_by_planner=True,
+            interpolate_planner_exec_set_target_vel=True,
+            interpolate_planner_vlim=self.gripper_vel_limit,
+            interpolate_planner_alim=self.gripper_acc_limit,
+            interpolate_planner_jerklim=self.gripper_jerk_limit,
+            drive_mode="force",
+        )
         gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
             -(0.037 - 0.015) - 0.001, 
@@ -264,6 +287,7 @@ class WidowXDefaultConfig:
         _C["gripper"] = dict(
             gripper_pd_joint_pos=gripper_pd_joint_pos,
             gripper_pd_joint_target_pos=gripper_pd_joint_target_pos,
+            gripper_pd_joint_target_pos_interpolate_by_planner=gripper_pd_joint_target_pos_interpolate_by_planner,
             gripper_pd_joint_delta_pos=gripper_pd_joint_delta_pos,
             gripper_pd_joint_target_delta_pos=gripper_pd_joint_target_delta_pos,
         )
@@ -282,18 +306,37 @@ class WidowXDefaultConfig:
     
     @property
     def cameras(self):
-        return CameraConfig(
-            uid="3rd_view_camera",
-            # p=[-0.0765 - 0.03, -0.0765 - 0.12, 0.20],
-            p=[0.00, -0.14, 0.34],
-            # q=[ 0.88047624, -0.11591689,  0.27984813,  0.3647052],
-            # q=[0.892258, -0.107725, 0.3071, 0.312987],
-            q=[0.909182, -0.0819809, 0.347277, 0.214629],
-            width=640,
-            height=480,
-            fov=1.5,
-            near=0.01,
-            far=10,
-            actor_uid="base_link",
-            intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
-        )
+        return [
+            CameraConfig(
+                uid="3rd_view_camera",
+                # p=[0.00, -0.16, 0.36],
+                p=[0.0, -0.16, 0.36],
+                # q=look_at([0, 0, 0], [1, 0.58, -1.0]).q, # p=[0.0, -0.16, 0.36], env_reset_options={'robot_init_options': {'init_xy': [0.16, 0.08], 'init_rot_quat': [0, 0, 0, 1]}}
+                # q=look_at([0, 0, 0], [1, 0.55, -1.04]).q, # p=[0.0, -0.16, 0.36], 'robot_init_options': {'init_xy': [0.13, 0.05], 'init_rot_quat': [0, 0, 0, 1]}
+                # q=look_at([0, 0, 0], [1, 0.553, -1.085]).q, # p=[0.0, -0.16, 0.36], 'robot_init_options': {'init_xy': [0.104, 0.028], 'init_rot_quat': [0, 0, 0, 1]}
+                q=look_at([0, 0, 0], [1, 0.553, -1.085]).q, # p=[0.0, -0.16, 0.36], 'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': [0, 0, 0, 1]}
+                # q=look_at([0, 0, 0], [1, 0.58, -0.96]).q,
+                width=640,
+                height=480,
+                fov=1.5,
+                near=0.01,
+                far=10,
+                actor_uid="base_link",
+                intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
+            ),
+            CameraConfig(
+                uid="3rd_view_camera_bridge",
+                # p=[-0.0765 - 0.03, -0.0765 - 0.12, 0.20],
+                p=[0.00, -0.14, 0.34],
+                # q=[ 0.88047624, -0.11591689,  0.27984813,  0.3647052],
+                # q=[0.892258, -0.107725, 0.3071, 0.312987],
+                q=[0.909182, -0.0819809, 0.347277, 0.214629],
+                width=640,
+                height=480,
+                fov=1.5,
+                near=0.01,
+                far=10,
+                actor_uid="base_link",
+                intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
+            )
+        ]

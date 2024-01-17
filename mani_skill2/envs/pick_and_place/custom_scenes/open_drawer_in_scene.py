@@ -53,6 +53,10 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
     def evaluate(self, **kwargs):
         qpos = self._art_obj.get_qpos()[0]
         return dict(success=qpos >= 0.18, qpos=qpos)
+    
+    def get_language_instruction(self):
+        # TODO: add other drawers
+        return "open top drawer"
 
 
 @register_env("OpenDrawerCustomInScene-v0", max_episode_steps=200)

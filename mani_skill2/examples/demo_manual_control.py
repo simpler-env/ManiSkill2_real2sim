@@ -22,6 +22,7 @@ MS1_ENV_IDS = [
 # python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot widowx sim_freq @500 control_freq @15
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/google_coke_can_real_eval_2.png rgb_overlay_cameras overhead_camera
 # python mani_skill2/examples/demo_manual_control.py -e MoveNearGoogleInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
+# python mani_skill2/examples/demo_manual_control.py -e PutSpoonOnTableClothInScene -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
 
 
 def parse_args():
@@ -54,11 +55,17 @@ def main():
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
 
-    if 'robot' in args.env_kwargs and 'google_robot' in args.env_kwargs['robot']:
-        pose = look_at([1.0, 1.0, 2.0], [0.0, 0.0, 0.7])
-        args.env_kwargs['render_camera_cfgs'] = {
-            "render_camera": dict(p=pose.p, q=pose.q)
-        }
+    if 'robot' in args.env_kwargs:
+        if 'google_robot' in args.env_kwargs['robot']:
+            pose = look_at([1.0, 1.0, 2.0], [0.0, 0.0, 0.7])
+            args.env_kwargs['render_camera_cfgs'] = {
+                "render_camera": dict(p=pose.p, q=pose.q)
+            }
+        elif 'widowx' in args.env_kwargs['robot']:
+            pose = look_at([1.0, 1.0, 2.0], [0.0, 0.0, 0.7])
+            args.env_kwargs['render_camera_cfgs'] = {
+                "render_camera": dict(p=pose.p, q=pose.q)
+            }
     
     from transforms3d.euler import euler2quat
     env: BaseEnv = gym.make(
@@ -89,7 +96,11 @@ def main():
     #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
     # env_reset_options={'obj_init_options': {},
     #                    'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}} # for MoveSingle env debugging and overlay
-    # env_reset_options['obj_init_options']['episode_id'] = 0 # for MoveSingle env debugging and overlay
+    # env_reset_options['obj_init_options']['episode_id'] = 0 # for MoveSingle debugging and overlay
+    # init_rot_quat = Pose(q=[0, 0, 0, 1]).q # Bridge
+    # env_reset_options={'obj_init_options': {},
+    #                    'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}} # for Bridge env debugging and overlay
+    # env_reset_options['obj_init_options']['episode_id'] = 16 # for Bridge env debugging and overlay
     obs, _ = env.reset(options=env_reset_options)
     after_reset = True
 
