@@ -154,8 +154,8 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             self._scene.step()
 
     def _initialize_actors(self):
-        source_obj_id = self.obj_init_options.get("source_obj_id", None)
-        target_obj_id = self.obj_init_options.get("target_obj_id", None)
+        source_obj_id: int = self.obj_init_options.get("source_obj_id", None)
+        target_obj_id: int = self.obj_init_options.get("target_obj_id", None)
         assert source_obj_id is not None and target_obj_id is not None
         self.episode_source_obj = self.episode_objs[source_obj_id]
         self.episode_target_obj = self.episode_objs[target_obj_id]
