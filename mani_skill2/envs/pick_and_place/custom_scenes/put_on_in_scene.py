@@ -44,7 +44,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         pos_tgt = target_obj_pose.p
         offset = pos_src - pos_tgt
         xy_flag = (
-            np.linalg.norm(offset[:2]) <= np.linalg.norm(tgt_obj_half_length_bbox[:2]) + 0.005
+            np.linalg.norm(offset[:2]) <= np.linalg.norm(tgt_obj_half_length_bbox[:2]) - 0.005
         )
         z_flag = (offset[2] > 0) and (offset[2] - tgt_obj_half_length_bbox[2] - src_obj_half_length_bbox[2] <= 0.02)
         src_on_target = (xy_flag and z_flag)

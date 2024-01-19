@@ -47,9 +47,11 @@ class WidowXDefaultConfig:
         self.arm_damping = [330.0, 180.0, 152.12036565582588, 309.6215302722146, 201.04998711007383, 269.51458932695414]
         
         self.arm_force_limit = [200, 200, 100, 100, 100, 100]
+        self.arm_vel_limit = 1.5
+        self.arm_acc_limit = 2.0
         
-        self.gripper_stiffness = 200
-        self.gripper_damping = 20
+        self.gripper_stiffness = 4000 # 200
+        self.gripper_damping = 1000 # 700 # 60
         self.gripper_force_limit = 60
         self.gripper_vel_limit = 0.12
         self.gripper_acc_limit = 0.50
@@ -104,8 +106,8 @@ class WidowXDefaultConfig:
             frame="ee_align",
             interpolate=True,
             interpolate_by_planner = True,
-            interpolate_planner_vlim = 1.5,
-            interpolate_planner_alim = 2.0,
+            interpolate_planner_vlim = self.arm_vel_limit,
+            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
@@ -113,8 +115,8 @@ class WidowXDefaultConfig:
             frame="ee_align2",
             interpolate=True,
             interpolate_by_planner = True,
-            interpolate_planner_vlim = 1.5,
-            interpolate_planner_alim = 2.0,
+            interpolate_planner_vlim = self.arm_vel_limit,
+            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
@@ -127,8 +129,8 @@ class WidowXDefaultConfig:
             frame="base",
             interpolate=True,
             interpolate_by_planner = True,
-            interpolate_planner_vlim = 1.5,
-            interpolate_planner_alim = 2.0,
+            interpolate_planner_vlim = self.arm_vel_limit,
+            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_target_delta_pose = PDEEPoseControllerConfig(
@@ -163,8 +165,8 @@ class WidowXDefaultConfig:
             interpolate=True,
             delta_target_from_last_drive_target=True,
             interpolate_by_planner = True,
-            interpolate_planner_vlim = 1.5,
-            interpolate_planner_alim = 2.0,
+            interpolate_planner_vlim = self.arm_vel_limit,
+            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_target_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
@@ -174,8 +176,8 @@ class WidowXDefaultConfig:
             interpolate=True,
             delta_target_from_last_drive_target=True,
             interpolate_by_planner = True,
-            interpolate_planner_vlim = 1.5,
-            interpolate_planner_alim = 2.0,
+            interpolate_planner_vlim = self.arm_vel_limit,
+            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
@@ -191,8 +193,8 @@ class WidowXDefaultConfig:
             interpolate=True,
             delta_target_from_last_drive_target=True,
             interpolate_by_planner = True,
-            interpolate_planner_vlim = 1.5,
-            interpolate_planner_alim = 2.0,
+            interpolate_planner_vlim = self.arm_vel_limit,
+            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         _C["arm"] = dict(
@@ -217,10 +219,11 @@ class WidowXDefaultConfig:
         # -------------------------------------------------------------------------- #
         # Gripper
         # -------------------------------------------------------------------------- #
+        extra_gripper_clearance = 0.001 # since real gripper is PID, we use extra clearance to mitigate PD small errors
         gripper_pd_joint_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            0.015 - 0.001,
-            0.037 + 0.001, # a trick to have force when grasping
+            0.015 - extra_gripper_clearance,
+            0.037 + extra_gripper_clearance, # a trick to have force when grasping
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
@@ -229,27 +232,27 @@ class WidowXDefaultConfig:
         )
         gripper_pd_joint_target_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            0.015 - 0.001,
-            0.037 + 0.001, # a trick to have force when grasping
+            0.015 - extra_gripper_clearance,
+            0.037 + extra_gripper_clearance, # a trick to have force when grasping
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
             use_target=True,
             clip_target=True,
-            clip_target_thres=0.001,
+            clip_target_thres=extra_gripper_clearance,
             normalize_action=True,
             drive_mode="force",
         )
         gripper_pd_joint_target_pos_interpolate_by_planner = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            0.015 - 0.001,
-            0.037 + 0.001, # a trick to have force when grasping
+            0.015 - extra_gripper_clearance,
+            0.037 + extra_gripper_clearance, # a trick to have force when grasping
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
             use_target=True,
             clip_target=True,
-            clip_target_thres=0.001,
+            clip_target_thres=extra_gripper_clearance,
             normalize_action=True,
             interpolate=True,
             interpolate_by_planner=True,
@@ -261,8 +264,8 @@ class WidowXDefaultConfig:
         )
         gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            -(0.037 - 0.015) - 0.001, 
-            0.037 - 0.015 + 0.001,
+            -(0.037 - 0.015) - extra_gripper_clearance, 
+            0.037 - 0.015 + extra_gripper_clearance,
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
@@ -272,15 +275,15 @@ class WidowXDefaultConfig:
         )
         gripper_pd_joint_target_delta_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            -(0.037 - 0.015) - 0.001, 
-            0.037 - 0.015 + 0.001,
+            -(0.037 - 0.015) - extra_gripper_clearance, 
+            0.037 - 0.015 + extra_gripper_clearance,
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
             use_delta=True,
             use_target=True,
             clip_target=True,
-            clip_target_thres=0.001,
+            clip_target_thres=extra_gripper_clearance,
             normalize_action=True,
             drive_mode="force",
         )
