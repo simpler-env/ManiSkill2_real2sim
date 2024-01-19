@@ -4,6 +4,10 @@ from .pd_joint_pos import (
     PDJointPosControllerConfig,
     PDJointPosMimicController,
     PDJointPosMimicControllerConfig,
+    PIDJointPosController,
+    PIDJointPosControllerConfig,
+    PIDJointPosMimicController,
+    PIDJointPosMimicControllerConfig,
 )
 from .pd_ee_pose import (
     PDEEPosController,

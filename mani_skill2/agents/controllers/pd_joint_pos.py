@@ -189,3 +189,54 @@ class PDJointPosMimicController(PDJointPosController):
 
 class PDJointPosMimicControllerConfig(PDJointPosControllerConfig):
     controller_cls = PDJointPosMimicController
+
+
+
+
+
+
+
+class PIDJointPosController(PDJointPosController):
+    config: "PIDJointPosControllerConfig"
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._integral = np.zeros_like(self.qpos)
+    
+    def reset(self):
+        super().reset()
+        self._integral = np.zeros_like(self.qpos)
+        
+    def set_drive_targets(self, targets):
+        self._last_drive_qpos_targets = targets
+        # target = target + err * k_i / k_p
+        n = len(self.joints)
+        integral = np.broadcast_to(self.config.integral, n)
+        stiffness = np.broadcast_to(self.config.stiffness, n)
+        targets = targets + self._integral * integral / stiffness
+        print(self._integral, self._integral * integral / stiffness, targets)
+        for i, joint in enumerate(self.joints):
+            joint.set_drive_target(targets[i])
+            
+    def set_drive_velocity_targets(self, targets):
+        raise NotImplementedError("PIDJointPosController does not support velocity control")
+    
+    def before_simulation_step(self):
+        self._integral = self._integral + (self._last_drive_qpos_targets - self.qpos) * (1.0 / self._sim_freq)
+        super().before_simulation_step()
+
+
+@dataclass
+class PIDJointPosControllerConfig(PDJointPosControllerConfig):
+    integral: Union[float, Sequence[float]] = 100.0
+    controller_cls = PIDJointPosController
+
+class PIDJointPosMimicController(PIDJointPosController):
+    def _get_joint_limits(self):
+        joint_limits = super()._get_joint_limits()
+        diff = joint_limits[0:-1] - joint_limits[1:]
+        assert np.allclose(diff, 0), "Mimic joints should have the same limit"
+        return joint_limits[0:1]
+    
+class PIDJointPosMimicControllerConfig(PIDJointPosControllerConfig):
+    controller_cls = PIDJointPosMimicController

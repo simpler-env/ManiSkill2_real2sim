@@ -50,8 +50,11 @@ class WidowXDefaultConfig:
         self.arm_vel_limit = 1.5
         self.arm_acc_limit = 2.0
         
-        self.gripper_stiffness = 4000 # 200
-        self.gripper_damping = 1000 # 700 # 60
+        self.gripper_stiffness = 1000 # 200
+        self.gripper_damping = 200 # 1000 # 700 # 60
+        self.gripper_pid_stiffness = 1000 # 4000
+        self.gripper_pid_damping = 200 # 1000
+        self.gripper_pid_integral = 300
         self.gripper_force_limit = 60
         self.gripper_vel_limit = 0.12
         self.gripper_acc_limit = 0.50
@@ -287,12 +290,24 @@ class WidowXDefaultConfig:
             normalize_action=True,
             drive_mode="force",
         )
+        gripper_pid_joint_pos = PIDJointPosMimicControllerConfig(
+            self.gripper_joint_names,
+            0.015,
+            0.037,
+            self.gripper_pid_stiffness,
+            self.gripper_pid_damping,
+            self.gripper_force_limit,
+            integral=self.gripper_pid_integral,
+            normalize_action=True,
+            drive_mode="force",
+        )
         _C["gripper"] = dict(
             gripper_pd_joint_pos=gripper_pd_joint_pos,
             gripper_pd_joint_target_pos=gripper_pd_joint_target_pos,
             gripper_pd_joint_target_pos_interpolate_by_planner=gripper_pd_joint_target_pos_interpolate_by_planner,
             gripper_pd_joint_delta_pos=gripper_pd_joint_delta_pos,
             gripper_pd_joint_target_delta_pos=gripper_pd_joint_target_delta_pos,
+            gripper_pid_joint_pos=gripper_pid_joint_pos,
         )
 
         controller_configs = {}
