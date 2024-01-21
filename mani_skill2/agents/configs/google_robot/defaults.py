@@ -409,6 +409,45 @@ class GoogleRobotStaticBaseConfig(GoogleRobotDefaultConfig):
     def __init__(self) -> None:
         super().__init__(mobile_base=False)
         
+
+class GoogleRobotStaticBaseWorseControl1Config(GoogleRobotDefaultConfig):
+    
+    def __init__(self) -> None:
+        super().__init__(mobile_base=False)
+        self.arm_stiffness = [2000, 1800, 1200, 1000, 650, 500, 500, 2000, 2000]
+        self.arm_damping = [850, 810, 500, 480, 460, 190, 250, 900, 900]
+        
+class GoogleRobotStaticBaseWorseControl2Config(GoogleRobotDefaultConfig):
+    
+    def __init__(self) -> None:
+        super().__init__(mobile_base=False)
+        self.arm_stiffness = [1542.4844516168355, 1906.9938992819923, 1605.8611345378665, 1400.0, 630.0, 730.0, 583.6446104792196, 2000, 2000]
+        self.arm_damping = [513.436152107585, 504.0051814405743, 455.6134557131383, 408.36436883104705, 253.94979108395967, 156.7912085424362, 138.8619324972991, 900, 900]
+        
+class GoogleRobotStaticBaseWorseControl3Config(GoogleRobotDefaultConfig):
+    
+    def __init__(self) -> None:
+        super().__init__(mobile_base=False)
+        self.arm_stiffness = [1700.4844516168355, 1906.9938992819923, 1605.8611345378665, 1400.0, 630.0, 730.0, 583.6446104792196, 2000, 2000]
+        self.arm_damping = [383.43615210758503, 384.00518144057423, 335.6134557131383, 288.36436883104705, 153.94979108395967, 106.7912085424362, 88.86193249729911, 900, 900]
+        
+
+class GoogleRobotStaticBaseWorseControl4Config(GoogleRobotDefaultConfig):
+    
+    def __init__(self) -> None:
+        super().__init__(mobile_base=False)
+        self.arm_stiffness =  [2000.0, 2000.0, 1500.0, 1500.0, 1500.0, 800.0, 800.0, 2000, 2000]
+        self.arm_damping = [300.0, 300.0, 200.0, 200.0, 150.0, 100.0, 80.0, 900, 900]
+        
+        
+class GoogleRobotStaticBaseWorseControl5Config(GoogleRobotDefaultConfig):
+    
+    def __init__(self) -> None:
+        super().__init__(mobile_base=False)
+        self.arm_stiffness =  [1200.0, 1200.0, 800.0, 800.0, 600.0, 300.0, 300.0, 2000, 2000]
+        self.arm_damping = [1200.0, 1200.0, 800.0, 800.0, 800.0, 400.0, 400.0, 900, 900]
+        
+        
         
 class GoogleRobotMobileBaseConfig(GoogleRobotDefaultConfig):
     

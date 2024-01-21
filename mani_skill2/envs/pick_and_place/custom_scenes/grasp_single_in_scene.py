@@ -369,7 +369,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 
         consecutive_grasp = (self.consecutive_grasp >= 5)
         diff_obj_height = self.obj.pose.p[2] - self.obj_height_after_settle
-        self.lifted_obj_during_consecutive_grasp = self.lifted_obj_during_consecutive_grasp or flag
+        self.lifted_obj_during_consecutive_grasp = self.lifted_obj_during_consecutive_grasp or (flag and (diff_obj_height > 0.01))
         
         if self.require_lifting_obj_for_success:
             success = self.lifted_obj_during_consecutive_grasp

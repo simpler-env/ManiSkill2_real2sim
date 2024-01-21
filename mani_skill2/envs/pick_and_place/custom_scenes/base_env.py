@@ -72,14 +72,14 @@ class CustomSceneEnv(StationaryManipulationEnv):
     def _load_arena_helper(self, add_collision=True):
         builder = self._scene.create_actor_builder()
         if self.scene_name is None:
-            if self.robot_uid == "google_robot_static":
+            if "google_robot_static" in self.robot_uid:
                 scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v4.glb") # hardcoded for now
             elif self.robot_uid == "widowx":
                 scene_path = str(self.scene_root / "stages/bridge_table_1_v1.glb") # hardcoded for now
         else:
             scene_path = str(self.scene_root / "stages" / f"{self.scene_name}.glb")
         if self.scene_offset is None:
-            if self.robot_uid == "google_robot_static":
+            if "google_robot_static" in self.robot_uid:
                 scene_offset = np.array([-1.6616, -3.0337, 0.0])
             elif self.robot_uid == "widowx":
                 scene_offset = np.array([-2.0634, -2.8313, 0.0])
@@ -109,7 +109,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
         return super().reset(seed=seed, options=options)
     
     def _initialize_agent(self):
-        if self.robot_uid == "google_robot_static":
+        if "google_robot_static" in self.robot_uid:
             qpos = np.array(
                 [-0.2639457174606611,
                 0.0831913360274175,

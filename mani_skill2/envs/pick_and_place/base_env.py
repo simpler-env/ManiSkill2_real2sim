@@ -9,7 +9,11 @@ import cv2
 from mani_skill2.agents.base_agent import BaseAgent
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.agents.robots.xmate3 import Xmate3Robotiq
-from mani_skill2.agents.robots.googlerobot import GoogleRobotStaticBase
+from mani_skill2.agents.robots.googlerobot import (
+    GoogleRobotStaticBase, 
+    GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
+    GoogleRobotStaticBaseWorseControl4, GoogleRobotStaticBaseWorseControl5
+)
 from mani_skill2.agents.robots.widowx import WidowX
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.sensors.camera import CameraConfig
@@ -23,7 +27,13 @@ from mani_skill2.utils.sapien_utils import (
 
 class StationaryManipulationEnv(BaseEnv):
     SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, 
-                        "google_robot_static": GoogleRobotStaticBase, "widowx": WidowX}
+                        "google_robot_static": GoogleRobotStaticBase, 
+                        "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
+                        "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
+                        "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
+                        "google_robot_static_worse_control4": GoogleRobotStaticBaseWorseControl4,
+                        "google_robot_static_worse_control5": GoogleRobotStaticBaseWorseControl5,
+                        "widowx": WidowX}
     agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase, WidowX]
 
     def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, 
@@ -107,7 +117,7 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
-        elif self.robot_uid == "google_robot_static":
+        elif "google_robot_static" in self.robot_uid:
             qpos = np.array(
                 [-0.2639457174606611,
                 0.0831913360274175,
@@ -148,7 +158,7 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
-        elif self.robot_uid == "google_robot_static":
+        elif "google_robot_static" in self.robot_uid:
             qpos = np.array(
                 [-0.2639457174606611,
                 0.0831913360274175,

@@ -21,8 +21,7 @@ from mani_skill2.utils.sapien_utils import (
 
 
 class StationaryManipulationEnv(BaseEnv):
-    SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, 
-                        "google_robot_static": GoogleRobotStaticBase, "widowx": WidowX}
+    SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq}
     agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase, WidowX]
 
     def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, **kwargs):
@@ -74,23 +73,6 @@ class StationaryManipulationEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose([-0.562, 0, 0]))
-        elif self.robot_uid == "google_robot_static":
-            qpos = np.array(
-                [-0.2639457174606611,
-                0.0831913360274175,
-                0.5017611504652179,
-                1.156859026208673,
-                0.028583671314766423,
-                1.592598203487462,
-                -1.080652960128774,
-                0, 0,
-                -0.00285961, 0.7851361]
-            )
-            self.agent.robot.set_pose(Pose([-0.615, 0, 0.06205]))
-        elif self.robot_uid == 'widowx':
-            qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
-            self.agent.reset(qpos)
-            self.agent.robot.set_pose(Pose([-0.615, 0, 0]))
         else:
             raise NotImplementedError(self.robot_uid)
 
