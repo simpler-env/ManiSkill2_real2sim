@@ -12,6 +12,10 @@ from .move_near_in_scene import MoveNearInSceneEnv
 
 class PutOnInSceneEnv(MoveNearInSceneEnv):
     
+    def reset(self, *args, **kwargs):
+        self.consecutive_grasp = 0
+        return super().reset(*args, **kwargs)
+        
     def _set_model(self, model_ids, model_scales):
         """Set the model id and scale. If not provided, choose one randomly."""
         
@@ -38,6 +42,11 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         
         # whether the source object is grasped
         is_src_obj_grasped = self.agent.check_grasp(self.episode_source_obj)
+        if is_src_obj_grasped:
+            self.consecutive_grasp += 1
+        else:
+            self.consecutive_grasp = 0
+        consecutive_grasp = (self.consecutive_grasp >= 5)
         
         # whether the source object is on the target object based on bounding box position
         tgt_obj_half_length_bbox = self.episode_target_obj_bbox_world / 2 # get half-length of bbox xy diagonol distance in the world frame at timestep=0
@@ -79,6 +88,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
             moved_correct_obj=moved_correct_obj,
             moved_wrong_obj=moved_wrong_obj,
             is_src_obj_grasped=is_src_obj_grasped,
+            consecutive_grasp=consecutive_grasp,
             src_on_target=src_on_target,
             success=success,
         )
