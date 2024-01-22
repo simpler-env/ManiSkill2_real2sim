@@ -26,6 +26,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         source_obj_pose = self.source_obj_pose
         target_obj_pose = self.target_obj_pose
         
+        # whether moved the correct object
         source_obj_xy_move_dist = np.linalg.norm(self.episode_source_obj_xyz_after_settle[:2] - self.source_obj_pose.p[:2])
         other_obj_xy_move_dist = []
         for obj, obj_xyz_after_settle in zip(self.episode_objs, self.episode_obj_xyzs_after_settle):
@@ -35,8 +36,10 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         moved_correct_obj = (source_obj_xy_move_dist > 0.03) and (all([x < source_obj_xy_move_dist for x in other_obj_xy_move_dist]))
         moved_wrong_obj = any([x > 0.03 for x in other_obj_xy_move_dist]) and any([x > source_obj_xy_move_dist for x in other_obj_xy_move_dist])
         
+        # whether the source object is grasped
         is_src_obj_grasped = self.agent.check_grasp(self.episode_source_obj)
         
+        # whether the source object is on the target object based on bounding box position
         tgt_obj_half_length_bbox = self.episode_target_obj_bbox_world / 2 # get half-length of bbox xy diagonol distance in the world frame at timestep=0
         src_obj_half_length_bbox = self.episode_source_obj_bbox_world / 2 
         
@@ -48,6 +51,28 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         )
         z_flag = (offset[2] > 0) and (offset[2] - tgt_obj_half_length_bbox[2] - src_obj_half_length_bbox[2] <= 0.02)
         src_on_target = (xy_flag and z_flag)
+        
+        # whether the source object is on the target object based on contact
+        contacts = self._scene.get_contacts()
+        flag = True
+        robot_link_names = [x.name for x in self.agent.robot.get_links()]
+        tgt_obj_name = self.episode_target_obj.name
+        ignore_actor_names = [tgt_obj_name] + robot_link_names
+        for contact in contacts:
+            actor_0, actor_1 = contact.actor0, contact.actor1
+            other_obj_contact_actor_name = None
+            if actor_0.name == self.episode_source_obj.name:
+                other_obj_contact_actor_name = actor_1.name
+            elif actor_1.name == self.episode_source_obj.name:
+                other_obj_contact_actor_name = actor_0.name
+            if other_obj_contact_actor_name is not None:
+                # the object is in contact with an actor
+                contact_impulse = np.sum([point.impulse for point in contact.points], axis=0)
+                if (other_obj_contact_actor_name not in ignore_actor_names) and (np.linalg.norm(contact_impulse) > 1e-6):
+                    # the object has contact with an actor other than the robot link or the target object, so the object is not yet put on the target object
+                    flag = False
+                    break
+        src_on_target = src_on_target and flag
         
         success = src_on_target
         return dict(
