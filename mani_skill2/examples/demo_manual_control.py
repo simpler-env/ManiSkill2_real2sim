@@ -20,7 +20,7 @@ MS1_ENV_IDS = [
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @15 scene_name Baked_sc1_staging_table_616385
 # python mani_skill2/examples/demo_manual_control.py -e GraspSingleOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static --add-segmentation sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v3  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/google_coke_can_real_eval_1.jpg rgb_overlay_cameras overhead_camera
 # python mani_skill2/examples/demo_manual_control.py -e PickCube-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot widowx sim_freq @500 control_freq @15
-# python mani_skill2/examples/demo_manual_control.py -e GraspSingleOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/google_coke_can_real_eval_2.png rgb_overlay_cameras overhead_camera
+# python mani_skill2/examples/demo_manual_control.py -e GraspSingleOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/google_coke_can_real_eval_1.png rgb_overlay_cameras overhead_camera
 # python mani_skill2/examples/demo_manual_control.py -e MoveNearGoogleInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
 # python mani_skill2/examples/demo_manual_control.py -e PutSpoonOnTableClothInScene -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/real_impainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
 
@@ -90,20 +90,33 @@ def main():
 
     env_reset_options = {}
     # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.015)) * Pose(q=[0, 0, 0, 1])).q
-    # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q # for MoveSingle env debugging and overlay
-    # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
+    # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q # for GraspSingle env debugging and overlay
     # env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
     #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
+    # env_reset_options['robot_init_options']['qpos'] = [
+    #             -0.2639457174606611,
+    #             0.0831913360274175,
+    #             0.5017611504652179,
+    #             1.156859026208673,
+    #             0.028583671314766423,
+    #             1.592598203487462,
+    #             -1.080652960128774,
+    #             0, 0,
+    #             -0.00285961, 0.9351361
+    # ]
+    # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q # for MoveSingle env debugging and overlay
     # env_reset_options={'obj_init_options': {},
     #                    'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}} # for MoveSingle env debugging and overlay
-    # env_reset_options['obj_init_options']['episode_id'] = 0 # for MoveSingle debugging and overlay
+    # env_reset_options['obj_init_options']['episode_id'] = 38 # for MoveSingle debugging and overlay
     # init_rot_quat = Pose(q=[0, 0, 0, 1]).q # Bridge
     # env_reset_options={'obj_init_options': {},
     #                    'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}} # for Bridge env debugging and overlay
     # env_reset_options['obj_init_options']['episode_id'] = 16 # for Bridge env debugging and overlay
     obs, _ = env.reset(options=env_reset_options)
     after_reset = True
-
+    
+    print("camera pose", env.unwrapped._cameras['overhead_camera'].camera.pose)
+    print("robot pose", env.agent.robot.pose)
     # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution # object material properties
 
     # Viewer

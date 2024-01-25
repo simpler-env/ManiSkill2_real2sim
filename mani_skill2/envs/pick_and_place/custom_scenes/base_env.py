@@ -174,7 +174,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
     @staticmethod
     def _get_instruction_obj_name(s):
         s = s.split('_')
-        rm_list = ['opened', 'light', 'generated', 'modified', 'objaverse', 'bridge']
+        rm_list = ['opened', 'light', 'generated', 'modified', 'objaverse', 'bridge', 'baked']
         cleaned = []
         for w in s:
             if w not in rm_list:

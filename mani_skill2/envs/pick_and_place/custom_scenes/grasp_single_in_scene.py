@@ -21,7 +21,9 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         require_lifting_obj_for_success: bool = True,
         distractor_model_ids: Optional[List[str]] = None,
         original_lighting: bool = False,
+        slightly_darker_lighting: bool = False,
         darker_lighting: bool = False,
+        alt_dir_lighting_1: bool = False,
         **kwargs,
     ):
         if isinstance(distractor_model_ids, str):
@@ -47,7 +49,9 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.obj_height_after_settle = None
         
         self.original_lighting = original_lighting
+        self.slightly_darker_lighting = slightly_darker_lighting
         self.darker_lighting = darker_lighting
+        self.alt_dir_lighting_1 = alt_dir_lighting_1
         
         super().__init__(**kwargs)
 
@@ -67,6 +71,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
     def reset(self, seed=None, options=None):
         for distractor_obj in self.distractor_objs:
             self._scene.remove_actor(distractor_obj)
+        self.distractor_objs = []
         
         if options is None:
             options = dict()
@@ -107,12 +112,29 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             )
             self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
             return
+        elif self.slightly_darker_lighting:
+            self._scene.add_directional_light(
+                [1, 1, -1], [0.8, 0.8, 0.8], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light([0, 0, -1], [0.8, 0.8, 0.8])
+            return
         elif self.darker_lighting:
             self._scene.add_directional_light(
                 [1, 1, -1], [0.3, 0.3, 0.3], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [0.3, 0.3, 0.3])
             return
+        elif self.alt_dir_lighting_1:
+            raise NotImplementedError()
+            self._scene.add_directional_light(
+                [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light(
+                [-1, -0.5, -1], [0.7, 0.7, 0.7]
+            )
+            self._scene.add_directional_light(
+                [1, 1, -1], [0.7, 0.7, 0.7]
+            )
         
         # add_directional_light: direction vec, color vec
         # Only the first of directional lights can have shadow
@@ -120,6 +142,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         #     [0.05, 0, -1], [100, 100, 100], shadow=shadow, scale=5, shadow_map_size=2048
         # )
         
+        # all below results are after overlaying google_pick_coke_can_1.png, not using simulation background observation
         # 84% for rt-1-new-best standing coke can
         # self._scene.add_directional_light(
         #     [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
@@ -246,9 +269,9 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             obj_init_xy = np.array([-0.2, 0.2]) + self._episode_rng.uniform(-0.05, 0.05, [2])
         obj_init_z = self.obj_init_options.get("init_z", self.scene_table_height)
         obj_init_z = obj_init_z + 0.5 # let object fall onto the table
-        obj_init_rot_quat = self.obj_init_options.get("init_rot_quat", None)
+        obj_init_rot_quat = self.obj_init_options.get("init_rot_quat", [1, 0, 0, 0])
         p = np.hstack([obj_init_xy, obj_init_z])
-        q = [1, 0, 0, 0] if obj_init_rot_quat is None else obj_init_rot_quat
+        q = obj_init_rot_quat
 
         # Rotate along z-axis
         if self.obj_init_options.get("init_rand_rot_z", False):
@@ -289,34 +312,43 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         
         if len(self.distractor_objs) > 0:
             for distractor_obj in self.distractor_objs:
-                distractor_obj_init_options = self.distractor_obj_init_options.get(distractor_obj.name, None)
-                
+                distractor_obj_init_options = self.distractor_obj_init_options.get(distractor_obj.name, {})
+
                 distractor_init_xy = distractor_obj_init_options.get('init_xy', None)
                 if distractor_init_xy is None:
                     while True:
                         distractor_init_xy = obj_init_xy + self._episode_rng.uniform(-0.3, 0.3, [2]) # hardcoded for now
-                        distractor_init_xy = np.clip(distractor_init_xy, [-0.35, 0.0], [-0.1, 0.4])
-                        if np.linalg.norm(distractor_init_xy - obj_init_xy) > 0.2:
+                        distractor_init_xy = np.clip(distractor_init_xy, [-0.50, 0.05], [-0.1, 0.35])
+                        if np.linalg.norm(distractor_init_xy - obj_init_xy) > 0.25:
                             break
                 p = np.hstack([distractor_init_xy, obj_init_z]) # let distractor fall from the same height as the main object
                 distractor_init_rot_quat = distractor_obj_init_options.get("init_rot_quat", None)
                 q = obj_init_rot_quat if distractor_init_rot_quat is None else distractor_init_rot_quat
                 distractor_obj.set_pose(sapien.Pose(p, q))
-
-            # Move the robot far away to avoid collision
-            # The robot should be initialized later
-            self.agent.robot.set_pose(sapien.Pose([-10, 0, 0]))
-            for distractor_obj in self.distractor_objs:
+                distractor_obj.set_velocity(np.zeros(3))
+                distractor_obj.set_angular_velocity(np.zeros(3))
                 # Lock rotation around x and y
-                distractor_obj.lock_motion(0, 0, 0, 1, 1, 0)
-            self._settle(0.5)
+                distractor_obj.lock_motion(1, 1, 0, 1, 1, 0)
+                
+                # sim_steps = int(self.sim_freq * 0.5)
+                # for _ in range(sim_steps):
+                #     print(distractor_obj.pose)
+                #     while True:
+                #         self.render_human()
+                #         sapien_viewer = self.viewer
+                #         if sapien_viewer.window.key_down("0"):
+                #             break
+                #     self._scene.step()
+                self._settle(0.5)
+                
+            # Unlock motion
             for distractor_obj in self.distractor_objs:
-                # Unlock motion
                 distractor_obj.lock_motion(0, 0, 0, 0, 0, 0)
                 distractor_obj.set_pose(distractor_obj.pose)
                 distractor_obj.set_velocity(np.zeros(3))
                 distractor_obj.set_angular_velocity(np.zeros(3))
-            self._settle(0.5)
+                self._settle(0.5)
+            
             lin_vel, ang_vel = 0.0, 0.0
             for distractor_obj in self.distractor_objs:
                 lin_vel += np.linalg.norm(distractor_obj.velocity)
@@ -525,6 +557,40 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
         kwargs.pop('model_ids', None)
         kwargs['model_ids'] = ["opened_coke_can"]
         super().__init__(**kwargs)
+        
+        
+        
+@register_env("GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0", max_episode_steps=200)
+class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
+    def reset(self, seed=None, options=None):
+        if 'robot_init_options' not in options:
+            options['robot_init_options'] = {}
+        options['robot_init_options']['qpos'] = np.array([
+                -0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0, 0,
+                -0.00285961, 0.9351361
+        ])
+        
+        return super().reset(seed=seed, options=options)
+        
+        
+@register_env("GraspSingleOpenedCokeCanDistractorInScene-v0", max_episode_steps=200)
+class GraspSingleOpenedCokeCanDistractorInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
+    def __init__(self, **kwargs):
+        self.distractor_model_ids = ['opened_pepsi_can', 'apple', 'sponge', 'orange']
+        kwargs['distractor_model_ids'] = self.distractor_model_ids
+        super().__init__(**kwargs)
+        
+    def reset(self, seed=None, options=None):
+        options['distractor_model_ids'] = self.distractor_model_ids
+            
+        return super().reset(seed=seed, options=options)
     
     
 @register_env("GraspSinglePepsiCanInScene-v0", max_episode_steps=200)

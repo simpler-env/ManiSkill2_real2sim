@@ -20,6 +20,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
     def __init__(
         self,
         original_lighting: bool = False,
+        slightly_darker_lighting: bool = False,
         **kwargs,
     ):
         self.episode_objs = [None] * 3
@@ -39,6 +40,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         self.obj_init_options = {}
         
         self.original_lighting = original_lighting
+        self.slightly_darker_lighting = slightly_darker_lighting
         
         super().__init__(**kwargs)
 
@@ -58,6 +60,12 @@ class MoveNearInSceneEnv(CustomSceneEnv):
                 [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
+            return
+        elif self.slightly_darker_lighting:
+            self._scene.add_directional_light(
+                [1, 1, -1], [0.8, 0.8, 0.8], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light([0, 0, -1], [0.8, 0.8, 0.8])
             return
         
         self._scene.add_directional_light(
@@ -309,8 +317,14 @@ class MoveNearInSceneEnv(CustomSceneEnv):
 class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv):
     def __init__(
         self,
+        no_distractor=False,
         **kwargs,
     ):
+        self.no_distractor = no_distractor
+        self._setup_obj_configs()
+        super().__init__(**kwargs)
+        
+    def _setup_obj_configs(self):
         # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
         self.triplets = [
             ("blue_plastic_bottle", "opened_pepsi_can", "orange"),
@@ -344,7 +358,6 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
             "orange": 200
             # by default, opened cans have density 50; blue plastic bottle has density 50; sponge has density 150
         }
-        super().__init__(**kwargs)
     
     def reset(self, seed=None, options=None):
         if options is None:
@@ -359,6 +372,12 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
             (episode_id % (len(self._source_obj_ids) * len(self._xy_config_per_triplet))) // len(self._source_obj_ids)
         ]
         quat_config_triplet = [self.obj_init_quat_dict[model_id] for model_id in triplet]
+        if self.no_distractor:
+            triplet = [triplet[source_obj_id], triplet[target_obj_id]]
+            xy_config_triplet = [xy_config_triplet[source_obj_id], xy_config_triplet[target_obj_id]]
+            quat_config_triplet = [quat_config_triplet[source_obj_id], quat_config_triplet[target_obj_id]]
+            source_obj_id = 0
+            target_obj_id = 1
         
         options['model_ids'] = triplet
         obj_init_options['source_obj_id'] = source_obj_id
@@ -389,3 +408,66 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
             )
             obj.name = model_id
             self.episode_objs.append(obj)
+
+
+
+@register_env("MoveNearGoogleBakedTexInScene-v0", max_episode_steps=200)
+class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
+    DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v0.json"
+    
+    def _setup_obj_configs(self):
+        # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
+        self.triplets = [
+            ("blue_plastic_bottle", "opened_pepsi_can", "orange"),
+            ("baked_opened_7up_can", "apple", "sponge"),
+            ("opened_coke_can", "opened_redbull_can", "apple"),
+            ("sponge", "blue_plastic_bottle", "baked_opened_7up_can"),
+            ("orange", "opened_pepsi_can", "opened_redbull_can"),
+        ]
+        self._source_obj_ids, self._target_obj_ids = [], []
+        for i in range(3):
+            for j in range(3):
+                if i != j:
+                    self._source_obj_ids.append(i)
+                    self._target_obj_ids.append(j)
+        self._xy_config_per_triplet = [
+            ([-0.33, 0.04], [-0.33, 0.34], [-0.13, 0.19]),
+            ([-0.13, 0.04], [-0.33, 0.19], [-0.13, 0.34]),
+        ]
+        self.obj_init_quat_dict = {
+            "blue_plastic_bottle": euler2quat(np.pi/2, 0, np.pi/2),
+            "opened_pepsi_can": euler2quat(np.pi/2, 0, 0),
+            "orange": euler2quat(0, 0, np.pi/2),
+            "baked_opened_7up_can": euler2quat(np.pi/2, 0, 0),
+            "apple": [1.0, 0.0, 0.0, 0.0],
+            "sponge": euler2quat(0, 0, np.pi/2),
+            "opened_coke_can": euler2quat(np.pi/2, 0, 0),
+            "opened_redbull_can": euler2quat(np.pi/2, 0, 0),
+        }
+        self.special_density_dict = {
+            "apple": 200, # toy apple as in real eval
+            "orange": 200
+            # by default, opened cans have density 50; blue plastic bottle has density 50; sponge has density 150
+        }
+        
+        
+
+
+@register_env("MoveNearAltGoogleCameraInScene-v0", max_episode_steps=200)
+class MoveNearAltGoogleCameraInSceneEnv(MoveNearGoogleInSceneEnv):
+    def reset(self, seed=None, options=None):
+        if 'robot_init_options' not in options:
+            options['robot_init_options'] = {}
+        options['robot_init_options']['qpos'] = np.array([
+                -0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0, 0,
+                -0.00285961, 0.9351361
+        ])
+        
+        return super().reset(seed=seed, options=options)
