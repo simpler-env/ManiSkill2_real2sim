@@ -22,6 +22,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         distractor_model_ids: Optional[List[str]] = None,
         original_lighting: bool = False,
         slightly_darker_lighting: bool = False,
+        slightly_brighter_lighting: bool = False,
         darker_lighting: bool = False,
         alt_dir_lighting_1: bool = False,
         **kwargs,
@@ -50,6 +51,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         
         self.original_lighting = original_lighting
         self.slightly_darker_lighting = slightly_darker_lighting
+        self.slightly_brighter_lighting = slightly_brighter_lighting
         self.darker_lighting = darker_lighting
         self.alt_dir_lighting_1 = alt_dir_lighting_1
         
@@ -111,6 +113,17 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
                 [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
+            return
+        elif self.slightly_brighter_lighting:
+            self._scene.add_directional_light(
+                [0, 0, -1], [3.6, 3.6, 3.6], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light(
+                [-1, -0.5, -1], [1.3, 1.3, 1.3]
+            )
+            self._scene.add_directional_light(
+                [1, 1, -1], [1.3, 1.3, 1.3]
+            )
             return
         elif self.slightly_darker_lighting:
             self._scene.add_directional_light(
@@ -578,12 +591,57 @@ class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCan
         ])
         
         return super().reset(seed=seed, options=options)
+    
+    
+@register_env("GraspSingleOpenedCokeCanAltGoogleCameraMediumInScene-v0", max_episode_steps=200)
+class GraspSingleOpenedCokeCanAltGoogleCameraMediumInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
+    def reset(self, seed=None, options=None):
+        if 'robot_init_options' not in options:
+            options['robot_init_options'] = {}
+        options['robot_init_options']['qpos'] = np.array([
+                -0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0, 0,
+                -0.00285961, 0.9151361
+        ])
+        
+        return super().reset(seed=seed, options=options)
+    
+    
+@register_env("GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0", max_episode_steps=200)
+class GraspSingleOpenedCokeCanAltGoogleCamera2InSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
+    def reset(self, seed=None, options=None):
+        if 'robot_init_options' not in options:
+            options['robot_init_options'] = {}
+        options['robot_init_options']['qpos'] = np.array([
+                -0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0, 0,
+                -0.00285961, 0.6651361
+        ])
+        
+        return super().reset(seed=seed, options=options)
         
         
 @register_env("GraspSingleOpenedCokeCanDistractorInScene-v0", max_episode_steps=200)
 class GraspSingleOpenedCokeCanDistractorInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
-    def __init__(self, **kwargs):
-        self.distractor_model_ids = ['opened_pepsi_can', 'apple', 'sponge', 'orange']
+    def __init__(self, distractor_config="less", **kwargs):
+        if distractor_config == "less":
+            self.distractor_model_ids = ['opened_pepsi_can', 'apple', 'sponge', 'orange']
+        elif distractor_config == "more":
+            self.distractor_model_ids = ['opened_7up_can', 'opened_sprite_can', 'sponge', 'orange', 'opened_fanta_can', 'bridge_spoon_generated_modified']
+        else:
+            raise NotImplementedError()
         kwargs['distractor_model_ids'] = self.distractor_model_ids
         super().__init__(**kwargs)
         

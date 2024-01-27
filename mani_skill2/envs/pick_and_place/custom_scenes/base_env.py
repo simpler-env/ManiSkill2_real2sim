@@ -234,6 +234,8 @@ class CustomYCBInSceneEnv(CustomSceneEnv):
         visual_file = str(model_dir / "textured.obj")
         if not os.path.exists(visual_file):
             visual_file = str(model_dir / "textured.dae")
+            if not os.path.exists(visual_file):
+                visual_file = str(model_dir / "textured.glb")
         builder.add_visual_from_file(filename=visual_file, scale=[scale] * 3)
 
         actor = builder.build()

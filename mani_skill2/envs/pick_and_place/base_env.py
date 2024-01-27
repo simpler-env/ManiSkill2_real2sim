@@ -220,7 +220,7 @@ class StationaryManipulationEnv(BaseEnv):
                 seg = obs['image'][camera_name]['Segmentation'] # (H, W, 4); [..., 0] is mesh-level; [..., 1] is actor-level; [..., 2:] is zero (unused)
                 actor_seg = seg[..., 1]
                 mask = np.ones_like(actor_seg, dtype=np.float32)
-                if 'background' in self.rgb_overlay_mode and 'object' not in self.rgb_overlay_mode:
+                if ('background' in self.rgb_overlay_mode and 'object' not in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
                     mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids]))] = 0.0
                 elif 'background' in self.rgb_overlay_mode:
                     mask[np.isin(actor_seg, robot_link_ids)] = 0.0
@@ -231,6 +231,7 @@ class StationaryManipulationEnv(BaseEnv):
                     obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
                 else:
                     # debug
+                    # obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
                     obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * 0.5 + rgb_overlay_img * 0.5
                 
         return obs
