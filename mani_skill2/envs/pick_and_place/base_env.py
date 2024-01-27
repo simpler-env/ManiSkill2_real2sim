@@ -214,6 +214,14 @@ class StationaryManipulationEnv(BaseEnv):
             robot_links = self.agent.robot.get_links() # e.g., [Actor(name="root", id="1"), Actor(name="root_arm_1_link_1", id="2"), Actor(name="root_arm_1_link_2", id="3"), ...]
             robot_link_ids = np.array([x.id for x in robot_links], dtype=np.int32)
 
+            other_link_ids = []
+            for art_obj in self._scene.get_all_articulations():
+                if art_obj is self.agent.robot:
+                    continue
+                for link in art_obj.get_links():
+                    other_link_ids.append(link.id)
+            other_link_ids = np.array(other_link_ids, dtype=np.int32)
+
             # obtain segmentations of the target object(s) and the robot
             for camera_name in self.rgb_overlay_cameras:
                 assert 'Segmentation' in obs['image'][camera_name].keys(), 'Image overlay requires segment info in the observation!'
@@ -221,7 +229,7 @@ class StationaryManipulationEnv(BaseEnv):
                 actor_seg = seg[..., 1]
                 mask = np.ones_like(actor_seg, dtype=np.float32)
                 if ('background' in self.rgb_overlay_mode and 'object' not in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
-                    mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids]))] = 0.0
+                    mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids, other_link_ids]))] = 0.0
                 elif 'background' in self.rgb_overlay_mode:
                     mask[np.isin(actor_seg, robot_link_ids)] = 0.0
                 mask = mask[..., np.newaxis]
