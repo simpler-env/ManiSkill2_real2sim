@@ -215,8 +215,8 @@ class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
                 if i != j:
                     xy_configs.append(np.array([grid_pos_1, grid_pos_2]))
         
-        quat_configs = [np.array([[1, 0, 0, 0], [1, 0, 0, 0]]), 
-                        np.array([euler2quat(0, 0, np.pi/2), [1, 0, 0, 0]])]
+        quat_configs = [np.array([euler2quat(0, 0, np.pi), [1, 0, 0, 0]]), 
+                        np.array([euler2quat(0, 0, -np.pi/2), [1, 0, 0, 0]])]
         
         super().__init__(
             source_obj_name=source_obj_name,

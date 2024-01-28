@@ -120,8 +120,8 @@ def main():
     obs, _ = env.reset(options=env_reset_options)
     after_reset = True
     
-    print("camera pose", env.unwrapped._cameras['overhead_camera'].camera.pose)
-    print("robot pose", env.agent.robot.pose)
+    # print("camera pose", env.unwrapped._cameras['overhead_camera'].camera.pose)
+    # print("robot pose", env.agent.robot.pose)
     # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution # object material properties
 
     # Viewer
