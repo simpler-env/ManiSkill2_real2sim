@@ -76,6 +76,8 @@ class CustomSceneEnv(StationaryManipulationEnv):
                 scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v4.glb") # hardcoded for now
             elif self.robot_uid == "widowx":
                 scene_path = str(self.scene_root / "stages/bridge_table_1_v1.glb") # hardcoded for now
+        elif self.scene_name == "dummy":
+            scene_path = None  # no scene
         else:
             scene_path = str(self.scene_root / "stages" / f"{self.scene_name}.glb")
         if self.scene_offset is None:
@@ -90,10 +92,11 @@ class CustomSceneEnv(StationaryManipulationEnv):
         else:
             scene_pose = sapien.Pose(q=self.scene_pose)
         
-        # NOTE: use nonconvex collision for static scene
-        if add_collision:
-            builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
-        builder.add_visual_from_file(scene_path, scene_pose)
+        if self.scene_name != "dummy":
+            # NOTE: use nonconvex collision for static scene
+            if add_collision:
+                builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
+            builder.add_visual_from_file(scene_path, scene_pose)
         self.arena = builder.build_static()
         # Add offset so that the workspace is next to the table
         

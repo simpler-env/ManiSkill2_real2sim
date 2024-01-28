@@ -76,21 +76,21 @@
   </link>
   <link name="top_drawer">
     <visual name="handle0">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.34250 0.00000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.34250 0.00000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.005000 0.10000 0.00500"/>
       </geometry>
     </visual>
     <visual name="handle1">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 -0.05000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 -0.05000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.020000 0.00500 0.00500"/>
       </geometry>
     </visual>
     <visual name="handle2">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 0.05000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 0.05000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.020000 0.00500 0.00500"/>
@@ -177,21 +177,21 @@
   </link>
   <link name="middle_drawer">
     <visual name="handle0">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.34250 0.00000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.34250 0.00000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.005000 0.10000 0.00500"/>
       </geometry>
     </visual>
     <visual name="handle1">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 -0.05000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 -0.05000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.020000 0.00500 0.00500"/>
       </geometry>
     </visual>
     <visual name="handle2">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 0.05000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 0.05000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.020000 0.00500 0.00500"/>
@@ -278,21 +278,21 @@
   </link>
   <link name="bottom_drawer">
     <visual name="handle0">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.34250 0.00000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.34250 0.00000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.005000 0.10000 0.00500"/>
       </geometry>
     </visual>
     <visual name="handle1">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 -0.05000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 -0.05000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.020000 0.00500 0.00500"/>
       </geometry>
     </visual>
     <visual name="handle2">
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 0.05000 0.0"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.33250 0.05000 0.02"/>
       <material name="black"/>
       <geometry>
         <box size="0.020000 0.00500 0.00500"/>

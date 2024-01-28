@@ -24,6 +24,11 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self.camera_mode = camera_mode
         super().__init__(**kwargs)
 
+    # def _get_default_scene_config(self):
+    #     scene_config = super()._get_default_scene_config()
+    #     scene_config.enable_pcm = True
+    #     return scene_config
+
     def _initialize_agent(self):
         init_qpos = np.array(
             [
