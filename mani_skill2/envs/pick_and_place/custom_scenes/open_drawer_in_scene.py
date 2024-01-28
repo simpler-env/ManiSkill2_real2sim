@@ -19,9 +19,10 @@ from .base_env import CustomOtherObjectsInSceneEnv, CustomSceneEnv
 class OpenDrawerInSceneEnv(CustomSceneEnv):
     drawer_id: str
 
-    def __init__(self, light_mode=None, camera_mode=None, **kwargs):
+    def __init__(self, light_mode=None, camera_mode=None, station_name="mk_station", **kwargs):
         self.light_mode = light_mode
         self.camera_mode = camera_mode
+        self.station_name  = station_name
         super().__init__(**kwargs)
 
     # def _get_default_scene_config(self):
@@ -79,7 +80,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self._load_arena_helper(add_collision=False)
 
     def _load_articulations(self):
-        filename = str(self.asset_root / "mk_station.urdf")
+        filename = str(self.asset_root / f"{self.station_name}.urdf")
         loader = self._scene.create_urdf_loader()
         loader.fix_root_link = True
         self.art_obj = loader.load(filename)

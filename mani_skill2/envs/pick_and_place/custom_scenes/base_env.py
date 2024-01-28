@@ -97,6 +97,8 @@ class CustomSceneEnv(StationaryManipulationEnv):
             if add_collision:
                 builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
             builder.add_visual_from_file(scene_path, scene_pose)
+        else:
+            builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017/2]))
         self.arena = builder.build_static()
         # Add offset so that the workspace is next to the table
         
