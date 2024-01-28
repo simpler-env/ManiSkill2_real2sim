@@ -19,35 +19,53 @@ from .base_env import CustomOtherObjectsInSceneEnv, CustomSceneEnv
 class OpenDrawerInSceneEnv(CustomSceneEnv):
     drawer_id: str
 
+    def __init__(self, light_mode=None, camera_mode=None, **kwargs):
+        self.light_mode = light_mode
+        self.camera_mode = camera_mode
+        super().__init__(**kwargs)
+
     def _initialize_agent(self):
-        self.robot_init_options.setdefault(
-            "qpos",
-            np.array(
-                [
-                    -0.2639457174606611,
-                    0.0831913360274175,
-                    0.5017611504652179,
-                    1.156859026208673,
-                    0.028583671314766423,
-                    1.592598203487462,
-                    -1.080652960128774,
-                    0,
-                    0,
-                    -0.00285961 - 0.025,
-                    0.7851361 + 0.008,
-                ]
-            ),
+        init_qpos = np.array(
+            [
+                -0.2639457174606611,
+                0.0831913360274175,
+                0.5017611504652179,
+                1.156859026208673,
+                0.028583671314766423,
+                1.592598203487462,
+                -1.080652960128774,
+                0,
+                0,
+                -0.00285961,
+                0.7851361,
+            ]
         )
+        if self.camera_mode == "variant":
+            init_qpos[-2] += -0.025
+            init_qpos[-1] += 0.008
+        self.robot_init_options.setdefault("qpos", init_qpos)
         super()._initialize_agent()
 
     def _setup_lighting(self):
         # self.enable_shadow = True
         # super()._setup_lighting()
 
+        direction = [-0.2, 0, -1]
+        if self.light_mode == "vertical":
+            direction = [-0.1, 0, -1]
+
+        color = [1, 1, 1]
+        if self.light_mode == "darker":
+            color = [0.5, 0.5, 0.5]
+        elif self.light_mode == "brighter":
+            color = [2, 2, 2]
+        elif self.light_mode == "yellow":
+            color = np.array([186 / 255, 152 / 255,124 / 255]) ** (1 / 2.2)
+
         self._scene.set_ambient_light([0.3, 0.3, 0.3])
         # Only the first of directional lights can have shadow
         self._scene.add_directional_light(
-            [-0.2, 0, -1], [1, 1, 1], shadow=True, scale=5, shadow_map_size=2048
+            direction, color, shadow=True, scale=5, shadow_map_size=2048
         )
         self._scene.add_directional_light([-1, 1, -0.05], [0.5] * 3)
         self._scene.add_directional_light([-1, -1, -0.05], [0.5] * 3)
@@ -76,7 +94,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
 
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]
-        return dict(success=qpos >= 0.18, qpos=qpos)
+        return dict(success=qpos >= 0.15, qpos=qpos)
 
     def get_language_instruction(self):
         return f"open {self.drawer_id} drawer"
@@ -110,7 +128,7 @@ class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
 
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]
-        return dict(success=qpos < 0.05, qpos=qpos)
+        return dict(success=qpos <= 0.05, qpos=qpos)
 
     def get_language_instruction(self):
         return f"close {self.drawer_id} drawer"
