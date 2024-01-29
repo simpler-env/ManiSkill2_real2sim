@@ -46,7 +46,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         
         self.require_lifting_obj_for_success = require_lifting_obj_for_success
         self.consecutive_grasp = 0
-        self.lifted_obj_during_consecutive_grasp = False
+        self.lifted_obj = False
         self.obj_height_after_settle = None
         
         self.original_lighting = original_lighting
@@ -97,7 +97,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         options["reconfigure"] = reconfigure
         
         self.consecutive_grasp = 0
-        self.lifted_obj_during_consecutive_grasp = False
+        self.lifted_obj = False
         self.obj_height_after_settle = None
         
         return super().reset(seed=self._episode_seed, options=options)
@@ -391,7 +391,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             self.consecutive_grasp += 1
         else:
             self.consecutive_grasp = 0
-            self.lifted_obj_during_consecutive_grasp = False
+            self.lifted_obj = False
             
         contacts = self._scene.get_contacts()
         flag = True
@@ -414,17 +414,17 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 
         consecutive_grasp = (self.consecutive_grasp >= 5)
         diff_obj_height = self.obj.pose.p[2] - self.obj_height_after_settle
-        self.lifted_obj_during_consecutive_grasp = self.lifted_obj_during_consecutive_grasp or (flag and (diff_obj_height > 0.01))
+        self.lifted_obj = self.lifted_obj or (flag and (diff_obj_height > 0.01))
         
         if self.require_lifting_obj_for_success:
-            success = self.lifted_obj_during_consecutive_grasp
+            success = self.lifted_obj
         else:
             success = consecutive_grasp
         return dict(
             is_grasped=is_grasped,
             consecutive_grasp=consecutive_grasp,
-            lifted_object=self.lifted_obj_during_consecutive_grasp,
-            lifted_object_significantly=self.lifted_obj_during_consecutive_grasp and (diff_obj_height > 0.02),
+            lifted_object=self.lifted_obj,
+            lifted_object_significantly=self.lifted_obj and (diff_obj_height > 0.02),
             success=success,
         )
 
