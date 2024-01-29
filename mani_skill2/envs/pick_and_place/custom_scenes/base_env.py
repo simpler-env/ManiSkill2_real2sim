@@ -87,10 +87,16 @@ class CustomSceneEnv(StationaryManipulationEnv):
                 scene_offset = np.array([-2.0634, -2.8313, 0.0])
         else:
             scene_offset = np.array(self.scene_offset)
+     
         if self.scene_pose is None:
             scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         else:
             scene_pose = sapien.Pose(q=self.scene_pose)
+        # Harcode for other scenes
+        if "modern_bedroom" in self.scene_name:
+            scene_pose = sapien.Pose([0.178, -2.235, 1.669], [0.007, 0, 0, -1]) * scene_pose
+        elif "modern_office" in self.scene_name:
+            scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
         
         if self.scene_name != "dummy":
             # NOTE: use nonconvex collision for static scene
