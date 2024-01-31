@@ -76,7 +76,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
                 scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v4.glb") # hardcoded for now
             elif self.robot_uid == "widowx":
                 scene_path = str(self.scene_root / "stages/bridge_table_1_v1.glb") # hardcoded for now
-        elif self.scene_name == "dummy":
+        elif "dummy" in self.scene_name:
             scene_path = None  # no scene
         else:
             scene_path = str(self.scene_root / "stages" / f"{self.scene_name}.glb")
@@ -98,14 +98,21 @@ class CustomSceneEnv(StationaryManipulationEnv):
         elif "modern_office" in self.scene_name:
             scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
         
-        if self.scene_name != "dummy":
+        if "dummy" not in self.scene_name:
             # NOTE: use nonconvex collision for static scene
             if add_collision:
                 builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
             builder.add_visual_from_file(scene_path, scene_pose)
         else:
-            builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017/2]))
-        self.arena = builder.build_static()
+            if self.scene_name == "dummy":
+                # Should be 0.017 instead of 0.017/2
+                builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017/2]))
+            elif self.scene_name == "dummy2":
+                builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=[1, 1, 1])
+                # builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=[0.6054843 , 0.34402566, 0.17013837])
+            else:
+                raise NotImplementedError(self.scene_name)
+        self.arena = builder.build_static(name="arena")
         # Add offset so that the workspace is next to the table
         
         self.arena.set_pose(sapien.Pose(-scene_offset))

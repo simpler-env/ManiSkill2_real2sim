@@ -93,7 +93,8 @@ class StationaryManipulationEnv(BaseEnv):
         self.tcp: sapien.Link = get_entity_by_name(
             self.agent.robot.get_links(), self.agent.config.ee_link_name
         )
-        set_articulation_render_material(self.agent.robot, specular=0.9, roughness=0.3)
+        if not getattr(self, "disable_bad_material", False):
+            set_articulation_render_material(self.agent.robot, specular=0.9, roughness=0.3)
 
     def _initialize_agent(self):
         if self.robot_uid == "panda":
@@ -207,7 +208,7 @@ class StationaryManipulationEnv(BaseEnv):
         
         if self._obs_mode == "image" and self.rgb_overlay_img is not None:
             # get the actor ids of objects to manipulate; note that objects here are not articulated
-            target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '']]
+            target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '', 'arena']]
             target_object_actor_ids = np.array(target_object_actor_ids, dtype=np.int32)
 
             # get the robot link ids (links are subclass of actors)

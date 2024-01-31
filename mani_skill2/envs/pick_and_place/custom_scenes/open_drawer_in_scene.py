@@ -19,16 +19,33 @@ from .base_env import CustomOtherObjectsInSceneEnv, CustomSceneEnv
 class OpenDrawerInSceneEnv(CustomSceneEnv):
     drawer_id: str
 
-    def __init__(self, light_mode=None, camera_mode=None, station_name="mk_station", **kwargs):
+    def __init__(
+        self,
+        light_mode=None,
+        camera_mode=None,
+        station_name="mk_station",
+        disable_bad_material=False,
+        urdf_version="",
+        **kwargs,
+    ):
         self.light_mode = light_mode
         self.camera_mode = camera_mode
-        self.station_name  = station_name
+        self.station_name = station_name
+        self.disable_bad_material = disable_bad_material
+        self.urdf_version = urdf_version
         super().__init__(**kwargs)
 
     # def _get_default_scene_config(self):
     #     scene_config = super()._get_default_scene_config()
     #     scene_config.enable_pcm = True
     #     return scene_config
+
+    def _configure_agent(self):
+        super()._configure_agent()
+        if self.urdf_version != "":
+            self._agent_cfg.urdf_path = self._agent_cfg.urdf_path.replace(
+                ".urdf", f"_{self.urdf_version}.urdf"
+            )
 
     def _initialize_agent(self):
         init_qpos = np.array(
@@ -53,6 +70,17 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         super()._initialize_agent()
 
     def _setup_lighting(self):
+        if self.light_mode != "simple":
+            return self._setup_lighting_legacy()
+
+        self._scene.set_ambient_light([1.0, 1.0, 1.0])
+        angle = 75
+        self._scene.add_directional_light(
+            [-np.cos(np.deg2rad(angle)), 0, -np.sin(np.deg2rad(angle))],
+            [1.0, 1.0, 1.0],
+        )
+
+    def _setup_lighting_legacy(self):
         # self.enable_shadow = True
         # super()._setup_lighting()
 
@@ -65,8 +93,6 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
             color = [0.5, 0.5, 0.5]
         elif self.light_mode == "brighter":
             color = [2, 2, 2]
-        elif self.light_mode == "yellow":
-            color = np.array([186 / 255, 152 / 255,124 / 255]) ** (1 / 2.2)
 
         self._scene.set_ambient_light([0.3, 0.3, 0.3])
         # Only the first of directional lights can have shadow
