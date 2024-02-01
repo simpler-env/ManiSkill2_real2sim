@@ -566,9 +566,12 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
     """
     Opened cans are assumed to be empty, and therefore are (1) open, (2) have much lower density than unopened cans (50 vs 1000)
     """
-    def __init__(self, **kwargs):
+    def __init__(self, baked=False, **kwargs):
         kwargs.pop('model_ids', None)
-        kwargs['model_ids'] = ["opened_coke_can"]
+        if baked:
+            kwargs['model_ids'] = ["baked_opened_coke_can"]
+        else:
+            kwargs['model_ids'] = ["opened_coke_can"]
         super().__init__(**kwargs)
         
         

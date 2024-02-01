@@ -91,9 +91,9 @@ def main():
 
     env_reset_options = {}
     # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.015)) * Pose(q=[0, 0, 0, 1])).q
-    # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q # for GraspSingle env debugging and overlay
-    # env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
-    #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
+    init_rot_quat = (Pose(q=[0, 0, 0, 1])).q # for GraspSingle env debugging and overlay
+    env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
+                       'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
     # env_reset_options['robot_init_options']['qpos'] = [
     #             -0.2639457174606611,
     #             0.0831913360274175,
@@ -108,7 +108,7 @@ def main():
     # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q # for MoveSingle env debugging and overlay
     # env_reset_options={'obj_init_options': {},
     #                    'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}} # for MoveSingle env debugging and overlay
-    # env_reset_options['obj_init_options']['episode_id'] = 38 # for MoveSingle debugging and overlay
+    # env_reset_options['obj_init_options']['episode_id'] = 0 # for MoveSingle debugging and overlay
     # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q # for OpenDrawer env debugging and overlay
     # init_rot_quat = [0, 0, 0, 1]
     # env_reset_options={'obj_init_options': {'init_xy': [0.0, 0.0]},
@@ -121,6 +121,7 @@ def main():
     after_reset = True
     
     # print("camera pose", env.unwrapped._cameras['overhead_camera'].camera.pose)
+    # print("camera pose wrt robot base", env.agent.robot.pose.inv() * env.unwrapped._cameras['overhead_camera'].camera.pose)
     # print("robot pose", env.agent.robot.pose)
     # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution # object material properties
 

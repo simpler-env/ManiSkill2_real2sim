@@ -1,0 +1,110 @@
+{
+  "baked_bridge_carrot_generated": {
+    "bbox": {
+      "min": [
+        -0.0575,
+        -0.016,
+        -0.019
+      ],
+      "max": [
+        0.0575,
+        0.016,
+        0.019
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 700
+  },
+  "baked_bridge_plate_objaverse": {
+    "bbox": {
+      "min": [
+        -0.05,
+        -0.05,
+        -0.003
+      ],
+      "max": [
+        0.05,
+        0.05,
+        0.003
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 1000
+  },
+  "baked_bridge_spoon_generated_modified": {
+    "bbox": {
+      "min": [
+        -0.07,
+        -0.0173,
+        -0.013021
+      ],
+      "max": [
+        0.07,
+        0.0173,
+        0.013021
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 1200
+  },
+  "baked_table_cloth_generated": {
+    "bbox": {
+      "min": [
+        -0.05,
+        -0.05,
+        -0.0125
+      ],
+      "max": [
+        0.05,
+        0.05,
+        0.0125
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 330
+  },
+  "baked_green_cube_3cm": {
+    "bbox": {
+      "min": [
+        -0.015,
+        -0.015,
+        -0.015
+      ],
+      "max": [
+        0.015,
+        0.015,
+        0.015
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 1000
+  },
+  "baked_yellow_cube_3cm": {
+    "bbox": {
+      "min": [
+        -0.015,
+        -0.015,
+        -0.015
+      ],
+      "max": [
+        0.015,
+        0.015,
+        0.015
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 1000
+  }
+}

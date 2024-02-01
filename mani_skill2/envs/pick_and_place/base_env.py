@@ -10,7 +10,7 @@ from mani_skill2.agents.base_agent import BaseAgent
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.agents.robots.xmate3 import Xmate3Robotiq
 from mani_skill2.agents.robots.googlerobot import (
-    GoogleRobotStaticBase, 
+    GoogleRobotStaticBase, GoogleRobotStaticBaseColorAdjust,
     GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
     GoogleRobotStaticBaseWorseControl4, GoogleRobotStaticBaseWorseControl5
 )
@@ -28,6 +28,7 @@ from mani_skill2.utils.sapien_utils import (
 class StationaryManipulationEnv(BaseEnv):
     SUPPORTED_ROBOTS = {"panda": Panda, "xmate3_robotiq": Xmate3Robotiq, 
                         "google_robot_static": GoogleRobotStaticBase, 
+                        "google_robot_static_color_adjust": GoogleRobotStaticBaseColorAdjust,
                         "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
                         "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
                         "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
@@ -240,7 +241,7 @@ class StationaryManipulationEnv(BaseEnv):
                     obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
                 else:
                     # debug
-                    # obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
-                    obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * 0.5 + rgb_overlay_img * 0.5
+                    obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
+                    # obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * 0.5 + rgb_overlay_img * 0.5
                 
         return obs

@@ -186,6 +186,14 @@ class GoogleRobotStaticBase(GoogleRobot):
         assert active_joints[0].name == "joint_torso"
     
 
+class GoogleRobotStaticBaseColorAdjust(GoogleRobot):
+    _config: defaults.GoogleRobotStaticBaseColorAdjustConfig
+
+    @classmethod
+    def get_default_config(cls):
+        return defaults.GoogleRobotStaticBaseColorAdjustConfig()
+
+
 class GoogleRobotStaticBaseWorseControl1(GoogleRobotStaticBase):
     _config: defaults.GoogleRobotStaticBaseWorseControl1Config
 

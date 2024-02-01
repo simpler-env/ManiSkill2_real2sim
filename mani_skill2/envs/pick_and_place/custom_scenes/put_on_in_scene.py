@@ -161,11 +161,10 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
 class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
+        source_obj_name = "bridge_spoon_generated_modified",
+        target_obj_name = "table_cloth_generated",
         **kwargs,
     ):
-        source_obj_name = "bridge_spoon_generated_modified"
-        target_obj_name = "table_cloth_generated"
-        
         xy_center = np.array([-0.16, 0.00])
         half_edge_length_x = 0.075
         half_edge_length_y = 0.075
@@ -191,6 +190,24 @@ class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
     
     def get_language_instruction(self):
         return "put the spoon on the towel"
+    
+    
+@register_env("PutSpoonOnTableClothBakedTexInScene-v0", max_episode_steps=200)
+class PutSpoonOnTableClothBakedTexInScene(PutSpoonOnTableClothInScene):
+    DEFAULT_MODEL_JSON = "info_bridge_custom_baked_tex_v0.json"
+    
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        source_obj_name = "baked_bridge_spoon_generated_modified"
+        target_obj_name = "baked_table_cloth_generated"
+        super().__init__(
+            source_obj_name=source_obj_name,
+            target_obj_name=target_obj_name,
+            **kwargs
+        )
+
     
     
     
@@ -235,11 +252,10 @@ class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
 class StackGreenCubeOnYellowCubeInScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
+        source_obj_name = "green_cube_3cm",
+        target_obj_name = "yellow_cube_3cm",
         **kwargs,
     ):
-        source_obj_name = "green_cube_3cm"
-        target_obj_name = "yellow_cube_3cm"
-        
         xy_center = np.array([-0.16, 0.00])
         half_edge_length_xs = [0.05, 0.1]
         half_edge_length_ys = [0.05, 0.1]
@@ -266,3 +282,20 @@ class StackGreenCubeOnYellowCubeInScene(PutOnBridgeInSceneEnv):
         
     def get_language_instruction(self):
         return "stack the green block on the yellow block"
+    
+    
+@register_env("StackGreenCubeOnYellowCubeBakedTexInScene-v0", max_episode_steps=200)
+class StackGreenCubeOnYellowCubeBakedTexInScene(StackGreenCubeOnYellowCubeInScene):
+    DEFAULT_MODEL_JSON = "info_bridge_custom_baked_tex_v0.json"
+    
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        source_obj_name = "baked_green_cube_3cm"
+        target_obj_name = "baked_yellow_cube_3cm"
+        super().__init__(
+            source_obj_name=source_obj_name,
+            target_obj_name=target_obj_name,
+            **kwargs
+        )

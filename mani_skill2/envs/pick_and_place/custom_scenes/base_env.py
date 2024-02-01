@@ -80,6 +80,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
             scene_path = None  # no scene
         else:
             scene_path = str(self.scene_root / "stages" / f"{self.scene_name}.glb")
+        
         if self.scene_offset is None:
             if "google_robot_static" in self.robot_uid:
                 scene_offset = np.array([-1.6616, -3.0337, 0.0])
@@ -92,13 +93,15 @@ class CustomSceneEnv(StationaryManipulationEnv):
             scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         else:
             scene_pose = sapien.Pose(q=self.scene_pose)
-        # Harcode for other scenes
-        if "modern_bedroom" in self.scene_name:
-            scene_pose = sapien.Pose([0.178, -2.235, 1.669], [0.007, 0, 0, -1]) * scene_pose
-        elif "modern_office" in self.scene_name:
-            scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
         
-        if "dummy" not in self.scene_name:
+        if self.scene_name is not None:
+            # Hardcode for other scenes
+            if "modern_bedroom" in self.scene_name:
+                scene_pose = sapien.Pose([0.178, -2.235, 1.669], [0.007, 0, 0, -1]) * scene_pose
+            elif "modern_office" in self.scene_name:
+                scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
+        
+        if (self.scene_name is None) or ("dummy" not in self.scene_name):
             # NOTE: use nonconvex collision for static scene
             if add_collision:
                 builder.add_nonconvex_collision_from_file(scene_path, scene_pose)
