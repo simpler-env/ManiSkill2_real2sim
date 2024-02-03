@@ -423,7 +423,6 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
             self.episode_objs.append(obj)
 
 
-
 @register_env("MoveNearGoogleBakedTexInScene-v0", max_episode_steps=200)
 class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v0.json"
@@ -461,8 +460,81 @@ class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
             "apple": 200, 
             "orange": 200
         }
-        
-        
+
+
+@register_env("MoveNearGoogleBakedTexInScene-v1", max_episode_steps=200)
+class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
+    DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v1.json"
+
+    def __init__(self, light_mode=None, urdf_version="", **kwargs):
+        self.light_mode = light_mode
+        self.urdf_version = urdf_version
+        super().__init__(**kwargs)
+
+    def _configure_agent(self):
+        super()._configure_agent()
+        if self.urdf_version != "":
+            self._agent_cfg.urdf_path = self._agent_cfg.urdf_path.replace(
+                ".urdf", f"_{self.urdf_version}.urdf"
+            )
+
+    def _setup_lighting(self):
+        if "simple" not in self.light_mode:
+            super()._setup_lighting()
+        elif self.light_mode == "simple":
+            self._scene.set_ambient_light([1.0] * 3)
+        elif self.light_mode == "simple2":
+            self._scene.set_ambient_light([1.0] * 3)
+            angle = 90
+            self._scene.add_directional_light(
+                [-np.cos(np.deg2rad(angle)), 0, -np.sin(np.deg2rad(angle))],
+                [0.5] * 3,
+            )
+    
+    def _setup_obj_configs(self):
+        # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
+        self.triplets = [
+            ("blue_plastic_bottle_v2", "opened_pepsi_can_v2", "orange_v2"),
+            ("opened_7up_can_v2", "apple_v2", "sponge_v2"),
+            ("opened_coke_can_v2", "opened_redbull_can_v2", "apple_v2"),
+            ("sponge_v2", "blue_plastic_bottle_v2", "opened_7up_can_v2"),
+            ("orange_v2", "opened_pepsi_can_v2", "opened_redbull_can_v2"),
+        ]
+        self._source_obj_ids, self._target_obj_ids = [], []
+        for i in range(3):
+            for j in range(3):
+                if i != j:
+                    self._source_obj_ids.append(i)
+                    self._target_obj_ids.append(j)
+        self._xy_config_per_triplet = [
+            ([-0.33, 0.04], [-0.33, 0.34], [-0.13, 0.19]),
+            ([-0.13, 0.04], [-0.33, 0.19], [-0.13, 0.34]),
+        ]
+        self.obj_init_quat_dict = {
+            "blue_plastic_bottle_v2": euler2quat(np.pi/2, 0, np.pi/2),
+            "opened_pepsi_can_v2": euler2quat(np.pi/2, 0, 0),
+            "orange_v2": euler2quat(0, 0, np.pi/2),
+            "opened_7up_can_v2": euler2quat(np.pi/2, 0, 0),
+            "apple_v2": [1.0, 0.0, 0.0, 0.0],
+            "sponge_v2": euler2quat(0, 0, np.pi/2),
+            "opened_coke_can_v2": euler2quat(np.pi/2, 0, 0),
+            "opened_redbull_can_v2": euler2quat(np.pi/2, 0, 0),
+        }
+        self.special_density_dict = {
+            "apple_v2": 200, 
+            "orange_v2": 200
+        }
+
+    def _load_model(self):
+        super()._load_model()
+        for obj in self.episode_objs:
+            for visual in obj.get_visual_bodies():
+                for rs in visual.get_render_shapes():
+                    mtl = rs.material
+                    mtl.set_roughness(1.0)
+                    mtl.set_metallic(0.0)
+                    mtl.set_specular(0.0)
+                    rs.set_material(mtl)
 
 
 @register_env("MoveNearAltGoogleCameraInScene-v0", max_episode_steps=200)

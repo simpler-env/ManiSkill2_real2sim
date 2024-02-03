@@ -24,14 +24,12 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         light_mode=None,
         camera_mode=None,
         station_name="mk_station",
-        disable_bad_material=False,
         urdf_version="",
         **kwargs,
     ):
         self.light_mode = light_mode
         self.camera_mode = camera_mode
         self.station_name = station_name
-        self.disable_bad_material = disable_bad_material
         self.urdf_version = urdf_version
         super().__init__(**kwargs)
 

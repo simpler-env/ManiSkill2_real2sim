@@ -37,8 +37,15 @@ class StationaryManipulationEnv(BaseEnv):
                         "widowx": WidowX}
     agent: Union[Panda, Xmate3Robotiq, GoogleRobotStaticBase, WidowX]
 
-    def __init__(self, *args, robot="panda", robot_init_qpos_noise=0.02, 
-                 rgb_overlay_path=None, rgb_overlay_cameras=[], rgb_overlay_mode='background', **kwargs):
+    def __init__(self, 
+                 *args, 
+                 robot="panda", 
+                 robot_init_qpos_noise=0.02, 
+                 rgb_overlay_path=None, 
+                 rgb_overlay_cameras=[], 
+                 rgb_overlay_mode='background',
+                 disable_bad_material=False,
+                 **kwargs):
         self.robot_uid = robot
         self.robot_init_qpos_noise = robot_init_qpos_noise
         
@@ -50,6 +57,8 @@ class StationaryManipulationEnv(BaseEnv):
             rgb_overlay_cameras = [rgb_overlay_cameras]
         self.rgb_overlay_cameras = rgb_overlay_cameras
         self.rgb_overlay_mode = rgb_overlay_mode
+
+        self.disable_bad_material = disable_bad_material
         
         super().__init__(*args, **kwargs)
 
@@ -94,7 +103,7 @@ class StationaryManipulationEnv(BaseEnv):
         self.tcp: sapien.Link = get_entity_by_name(
             self.agent.robot.get_links(), self.agent.config.ee_link_name
         )
-        if not getattr(self, "disable_bad_material", False):
+        if not self.disable_bad_material:
             set_articulation_render_material(self.agent.robot, specular=0.9, roughness=0.3)
 
     def _initialize_agent(self):

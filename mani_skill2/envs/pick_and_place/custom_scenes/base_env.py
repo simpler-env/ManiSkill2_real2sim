@@ -100,7 +100,10 @@ class CustomSceneEnv(StationaryManipulationEnv):
                 scene_pose = sapien.Pose([0.178, -2.235, 1.669], [0.007, 0, 0, -1]) * scene_pose
             elif "modern_office" in self.scene_name:
                 scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
-        
+            elif self.scene_name == "dummy3":  # For MoveNear
+                scene_pose = sapien.Pose()
+                scene_offset = np.array([0, -0.21, 0])
+
         if (self.scene_name is None) or ("dummy" not in self.scene_name):
             # NOTE: use nonconvex collision for static scene
             if add_collision:
@@ -113,6 +116,22 @@ class CustomSceneEnv(StationaryManipulationEnv):
             elif self.scene_name == "dummy2":
                 builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=[1, 1, 1])
                 # builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=[0.6054843 , 0.34402566, 0.17013837])
+            elif self.scene_name == "dummy3":
+                _pose = sapien.Pose([-0.295, 0, 0.017 + 0.865 / 2])
+                _half_size = np.array([0.63, 0.615, 0.865]) / 2
+                # _color = [0.325, 0.187, 0.1166]
+                _color = (np.array([168, 120, 79]) / 255) ** 2.2
+                rend_mtl = self._renderer.create_material()
+                rend_mtl.base_color = np.hstack([_color, 1.0])
+                rend_mtl.metallic = 0.0
+                rend_mtl.roughness = 0.3
+                rend_mtl.specular = 0.8
+                builder.add_box_visual(pose=_pose, half_size=_half_size, material=rend_mtl)
+                if add_collision:
+                    builder.add_box_collision(pose=_pose, half_size=_half_size)
+                # Ground
+                _color = (np.array([70, 46, 34]) / 255) ** 2.2
+                builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=_color)
             else:
                 raise NotImplementedError(self.scene_name)
         self.arena = builder.build_static(name="arena")
@@ -195,7 +214,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
     @staticmethod
     def _get_instruction_obj_name(s):
         s = s.split('_')
-        rm_list = ['opened', 'light', 'generated', 'modified', 'objaverse', 'bridge', 'baked']
+        rm_list = ['opened', 'light', 'generated', 'modified', 'objaverse', 'bridge', 'baked', 'v2']
         cleaned = []
         for w in s:
             if w not in rm_list:
