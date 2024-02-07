@@ -541,12 +541,13 @@ class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
         if obj_init_options is None:
             obj_init_options = dict()
             
-        if self.obj_upright:
-            obj_init_options['init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
-        elif self.obj_laid_vertically:
-            obj_init_options['init_rot_quat'] = euler2quat(0, 0, np.pi/2)
-        elif self.obj_lr_switch:
-            obj_init_options['init_rot_quat'] = euler2quat(0, 0, np.pi)
+        if obj_init_options.get('init_rot_quat', None) is None:
+            if self.obj_upright:
+                obj_init_options['init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
+            elif self.obj_laid_vertically:
+                obj_init_options['init_rot_quat'] = euler2quat(0, 0, np.pi/2)
+            elif self.obj_lr_switch:
+                obj_init_options['init_rot_quat'] = euler2quat(0, 0, np.pi)
             
         options['obj_init_options'] = obj_init_options
             
@@ -567,12 +568,36 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
     Opened cans are assumed to be empty, and therefore are (1) open, (2) have much lower density than unopened cans (50 vs 1000)
     """
     def __init__(self, baked=False, **kwargs):
+        self.baked = baked
         kwargs.pop('model_ids', None)
-        if baked:
+        if self.baked:
             kwargs['model_ids'] = ["baked_opened_coke_can"]
         else:
             kwargs['model_ids'] = ["opened_coke_can"]
         super().__init__(**kwargs)
+        
+    # def reset(self, seed=None, options=None):
+    #     if not self.baked:
+    #         return super().reset(seed=seed, options=options)
+        
+    #     if options is None:
+    #         options = dict()
+            
+    #     obj_init_options = options.get("obj_init_options", None)
+    #     if obj_init_options is None:
+    #         obj_init_options = dict()
+            
+    #     if obj_init_options.get('init_rot_quat', None) is None:
+    #         if self.obj_upright:
+    #             obj_init_options['init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
+    #         elif self.obj_laid_vertically:
+    #             obj_init_options['init_rot_quat'] = euler2quat(0, -np.pi * 0.8, np.pi/2)
+    #         elif self.obj_lr_switch:
+    #             obj_init_options['init_rot_quat'] = euler2quat(0, -np.pi * 0.88, np.pi)
+            
+    #     options['obj_init_options'] = obj_init_options
+            
+    #     return super().reset(seed=seed, options=options)
         
         
         

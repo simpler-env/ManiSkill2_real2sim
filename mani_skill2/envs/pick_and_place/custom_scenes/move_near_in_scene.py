@@ -431,9 +431,9 @@ class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
         # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
         self.triplets = [
             ("blue_plastic_bottle", "baked_opened_pepsi_can", "orange"),
-            ("baked_opened_7up_can", "apple", "sponge"),
-            ("opened_coke_can", "baked_opened_redbull_can", "apple"),
-            ("sponge", "blue_plastic_bottle", "baked_opened_7up_can"),
+            ("baked_opened_7up_can", "baked_apple", "baked_sponge"),
+            ("baked_opened_coke_can", "baked_opened_redbull_can", "baked_apple"),
+            ("baked_sponge", "blue_plastic_bottle", "baked_opened_7up_can"),
             ("orange", "baked_opened_pepsi_can", "baked_opened_redbull_can"),
         ]
         self._source_obj_ids, self._target_obj_ids = [], []
@@ -451,13 +451,13 @@ class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
             "baked_opened_pepsi_can": euler2quat(np.pi/2, 0, 0),
             "orange": euler2quat(0, 0, np.pi/2),
             "baked_opened_7up_can": euler2quat(np.pi/2, 0, 0),
-            "apple": [1.0, 0.0, 0.0, 0.0],
-            "sponge": euler2quat(0, 0, np.pi/2),
-            "opened_coke_can": euler2quat(np.pi/2, 0, 0),
+            "baked_apple": [1.0, 0.0, 0.0, 0.0],
+            "baked_sponge": euler2quat(0, 0, np.pi/2),
+            "baked_opened_coke_can": euler2quat(np.pi/2, 0, 0),
             "baked_opened_redbull_can": euler2quat(np.pi/2, 0, 0),
         }
         self.special_density_dict = {
-            "apple": 200, 
+            "baked_apple": 200, 
             "orange": 200
         }
 

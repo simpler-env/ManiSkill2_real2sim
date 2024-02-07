@@ -168,7 +168,7 @@ class CustomSceneEnv(StationaryManipulationEnv):
             # qpos = np.array([-0.00153398, 0.04448544, -0.21629129, -3.14466056, 1.36524296, np.pi, 0.037, 0.037]) # 1.31324296 for fully perpendicular-to-table init
             qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
             # qpos = np.array([-0.002, 0.025, -0.21, -3.139, 1.308, 3.031, 0.037, 0.037])
-            robot_init_height = 0.87 # 0.888
+            robot_init_height = 0.870 # 0.888
             robot_init_rot_quat = [0, 0, 0, 1]
         else:
             raise NotImplementedError(self.robot_uid)
