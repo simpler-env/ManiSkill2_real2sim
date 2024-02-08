@@ -14,6 +14,13 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
     
     def reset(self, *args, **kwargs):
         self.consecutive_grasp = 0
+        self.episode_stats = {
+            'moved_correct_obj': False,
+            'moved_wrong_obj': False,
+            'is_src_obj_grasped': False,
+            'consecutive_grasp': False,
+            'src_on_target': False,
+        }
         return super().reset(*args, **kwargs)
         
     def _set_model(self, model_ids, model_scales):
@@ -84,12 +91,20 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         src_on_target = src_on_target and flag
         
         success = src_on_target
+        
+        self.episode_stats['moved_correct_obj'] = moved_correct_obj
+        self.episode_stats['moved_wrong_obj'] = moved_wrong_obj
+        self.episode_stats['src_on_target'] = src_on_target
+        self.episode_stats['is_src_obj_grasped'] = self.episode_stats['is_src_obj_grasped'] or is_src_obj_grasped
+        self.episode_stats['consecutive_grasp'] = self.episode_stats['consecutive_grasp'] or consecutive_grasp
+        
         return dict(
             moved_correct_obj=moved_correct_obj,
             moved_wrong_obj=moved_wrong_obj,
             is_src_obj_grasped=is_src_obj_grasped,
             consecutive_grasp=consecutive_grasp,
             src_on_target=src_on_target,
+            episode_stats=self.episode_stats,
             success=success,
         )
 

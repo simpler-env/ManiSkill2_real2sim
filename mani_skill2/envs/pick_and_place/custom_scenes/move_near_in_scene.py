@@ -62,13 +62,11 @@ class MoveNearInSceneEnv(CustomSceneEnv):
                 [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
-            return
         elif self.slightly_darker_lighting:
             self._scene.add_directional_light(
                 [1, 1, -1], [0.8, 0.8, 0.8], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [0.8, 0.8, 0.8])
-            return
         elif self.slightly_brighter_lighting:
             self._scene.add_directional_light(
                 [0, 0, -1], [3.6, 3.6, 3.6], shadow=shadow, scale=5, shadow_map_size=2048
@@ -79,17 +77,16 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             self._scene.add_directional_light(
                 [1, 1, -1], [1.3, 1.3, 1.3]
             )
-            return
-        
-        self._scene.add_directional_light(
-            [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
-        )
-        self._scene.add_directional_light(
-            [-1, -0.5, -1], [0.7, 0.7, 0.7]
-        )
-        self._scene.add_directional_light(
-            [1, 1, -1], [0.7, 0.7, 0.7]
-        )
+        else:
+            self._scene.add_directional_light(
+                [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
+            )
+            self._scene.add_directional_light(
+                [-1, -0.5, -1], [0.7, 0.7, 0.7]
+            )
+            self._scene.add_directional_light(
+                [1, 1, -1], [0.7, 0.7, 0.7]
+            )
         
     def _load_actors(self):
         self._load_arena_helper()        
@@ -116,13 +113,16 @@ class MoveNearInSceneEnv(CustomSceneEnv):
                 
         options["reconfigure"] = reconfigure
         
-        return super().reset(seed=self._episode_seed, options=options)
-
-    # def _setup_lighting(self):
-    #     super()._setup_lighting()
-    #     # self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
-    #     self._scene.add_point_light([-0.2, 0.0, 1.4], [1, 1, 1])
+        self.episode_stats = {
+            'all_obj_keep_height': False,
+            'moved_correct_obj': False,
+            'moved_wrong_obj': False,
+            'near_tgt_obj': False,
+            'is_closest_to_tgt': False,
+        }
         
+        return super().reset(seed=self._episode_seed, options=options)
+    
     @staticmethod
     def _list_equal(l1, l2):
         if len(l1) != len(l2):
@@ -269,15 +269,17 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         source_obj_pose = self.source_obj_pose
         target_obj_pose = self.target_obj_pose
         
+        # Check if objects are knocked down or knocked off table
         other_obj_ids = [i for (i, obj) in enumerate(self.episode_objs) if (obj.name != self.episode_source_obj.name) and (obj.name != self.episode_target_obj.name)]
         other_obj_heights = [self.episode_objs[i].pose.p[2] for i in other_obj_ids]
         other_obj_heights_after_settle = [self.episode_obj_xyzs_after_settle[i][2] for i in other_obj_ids]
         other_obj_diff_heights = [x - y for (x, y) in zip(other_obj_heights, other_obj_heights_after_settle)]
         other_obj_keep_height = all([x > -0.02 for x in other_obj_diff_heights]) # require other objects to not be knocked down on the table
-        source_obj_diff_height = source_obj_pose.p[2] - self.episode_source_obj_xyz_after_settle[2] # source object should not be knocked down off the table
-        target_obj_diff_height = target_obj_pose.p[2] - self.episode_target_obj_xyz_after_settle[2]
+        source_obj_diff_height = source_obj_pose.p[2] - self.episode_source_obj_xyz_after_settle[2] # source object should not be knocked off the table
+        target_obj_diff_height = target_obj_pose.p[2] - self.episode_target_obj_xyz_after_settle[2] # target object should not be knocked off the table
         all_obj_keep_height = other_obj_keep_height and (source_obj_diff_height > -0.15) and (target_obj_diff_height > -0.15)
         
+        # Check if moving correct source object
         source_obj_xy_move_dist = np.linalg.norm(self.episode_source_obj_xyz_after_settle[:2] - self.episode_source_obj.pose.p[:2])
         other_obj_xy_move_dist = []
         for obj, obj_xyz_after_settle in zip(self.episode_objs, self.episode_obj_xyzs_after_settle):
@@ -287,12 +289,14 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         moved_correct_obj = (source_obj_xy_move_dist > 0.03) and (all([x < source_obj_xy_move_dist for x in other_obj_xy_move_dist]))
         moved_wrong_obj = any([x > 0.03 for x in other_obj_xy_move_dist]) and any([x > source_obj_xy_move_dist for x in other_obj_xy_move_dist])
         
+        # Check if source object is near target object
         dist_to_tgt_obj = np.linalg.norm(source_obj_pose.p[:2] - target_obj_pose.p[:2])
         tgt_obj_bbox_xy_dist = np.linalg.norm(self.episode_target_obj_bbox_world[:2]) / 2 # get half-length of bbox xy diagonol distance in the world frame at timestep=0
         src_obj_bbox_xy_dist = np.linalg.norm(self.episode_source_obj_bbox_world[:2]) / 2
         # print(dist_to_tgt_obj, tgt_obj_bbox_xy_dist, src_obj_bbox_xy_dist)
         near_tgt_obj = (dist_to_tgt_obj < tgt_obj_bbox_xy_dist + src_obj_bbox_xy_dist + 0.10)
         
+        # Check if source object is closest to target object
         dist_to_other_objs = []
         for obj in self.episode_objs:
             if obj.name == self.episode_source_obj.name:
@@ -301,7 +305,8 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         is_closest_to_tgt = all([dist_to_tgt_obj < x + 0.01 for x in dist_to_other_objs])
         
         success = all_obj_keep_height and moved_correct_obj and near_tgt_obj and is_closest_to_tgt
-        return dict(
+        
+        ret_info = dict(
             all_obj_keep_height=all_obj_keep_height,
             moved_correct_obj=moved_correct_obj,
             moved_wrong_obj=moved_wrong_obj,
@@ -309,6 +314,11 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             is_closest_to_tgt=is_closest_to_tgt,
             success=success,
         )
+        for k in self.episode_stats:
+            self.episode_stats[k] = ret_info[k] # episode stats equal to the current step stats for this environment
+        ret_info["episode_stats"] = self.episode_stats
+        
+        return ret_info
 
     def compute_dense_reward(self, info, **kwargs):
         reward = 0.0
@@ -556,28 +566,7 @@ class MoveNearAltGoogleCameraInSceneEnv(MoveNearGoogleInSceneEnv):
         
         return super().reset(seed=seed, options=options)
     
-    
-    
-@register_env("MoveNearAltGoogleCameraMediumInScene-v0", max_episode_steps=200)
-class MoveNearAltGoogleCameraMediumInSceneEnv(MoveNearGoogleInSceneEnv):
-    def reset(self, seed=None, options=None):
-        if 'robot_init_options' not in options:
-            options['robot_init_options'] = {}
-        options['robot_init_options']['qpos'] = np.array([
-                -0.2639457174606611,
-                0.0831913360274175,
-                0.5017611504652179,
-                1.156859026208673,
-                0.028583671314766423,
-                1.592598203487462,
-                -1.080652960128774,
-                0, 0,
-                -0.00285961, 0.9151361
-        ])
-        
-        return super().reset(seed=seed, options=options)
-    
-    
+
 
 @register_env("MoveNearAltGoogleCamera2InScene-v0", max_episode_steps=200)
 class MoveNearAltGoogleCamera2InSceneEnv(MoveNearGoogleInSceneEnv):

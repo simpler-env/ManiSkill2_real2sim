@@ -122,9 +122,16 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         joint_names = [j.name for j in self.art_obj.get_active_joints()]
         self.joint_idx = joint_names.index(f"{self.drawer_id}_drawer_joint")
 
+    def reset(self, *args, **kwargs):
+        self.episode_stats = {
+            'qpos': 0.0,
+        }
+        return super().reset(*args, **kwargs)
+    
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]
-        return dict(success=qpos >= 0.15, qpos=qpos)
+        self.episode_stats['qpos'] = '{:.3f}'.format(qpos)
+        return dict(success=qpos >= 0.15, qpos=qpos, episode_stats=self.episode_stats)
 
     def get_language_instruction(self):
         return f"open {self.drawer_id} drawer"
@@ -158,7 +165,8 @@ class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
 
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]
-        return dict(success=qpos <= 0.05, qpos=qpos)
+        self.episode_stats['qpos'] = '{:.3f}'.format(qpos)
+        return dict(success=qpos <= 0.05, qpos=qpos, episode_stats=self.episode_stats)
 
     def get_language_instruction(self):
         return f"close {self.drawer_id} drawer"

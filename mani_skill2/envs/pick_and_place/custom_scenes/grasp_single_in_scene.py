@@ -20,11 +20,9 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self,
         require_lifting_obj_for_success: bool = True,
         distractor_model_ids: Optional[List[str]] = None,
-        original_lighting: bool = False,
         slightly_darker_lighting: bool = False,
         slightly_brighter_lighting: bool = False,
         darker_lighting: bool = False,
-        alt_dir_lighting_1: bool = False,
         **kwargs,
     ):
         if isinstance(distractor_model_ids, str):
@@ -49,17 +47,12 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.lifted_obj = False
         self.obj_height_after_settle = None
         
-        self.original_lighting = original_lighting
         self.slightly_darker_lighting = slightly_darker_lighting
         self.slightly_brighter_lighting = slightly_brighter_lighting
         self.darker_lighting = darker_lighting
-        self.alt_dir_lighting_1 = alt_dir_lighting_1
         
         super().__init__(**kwargs)
 
-    # def _setup_lighting(self):
-    #     super()._setup_lighting()
-    #     self._scene.add_directional_light([-1, 1, -1], [1, 1, 1])
         
     def _load_actors(self):
         self._load_arena_helper()        
@@ -99,6 +92,12 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.consecutive_grasp = 0
         self.lifted_obj = False
         self.obj_height_after_settle = None
+        # episode-level info
+        self.episode_stats = {
+            "n_lift_significant": 0,
+            "consec_grasp": False,
+            "grasped": False,
+        }
         
         return super().reset(seed=self._episode_seed, options=options)
 
@@ -108,13 +107,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 
         shadow = self.enable_shadow
         self._scene.set_ambient_light([0.3, 0.3, 0.3])
-        if self.original_lighting:
-            self._scene.add_directional_light(
-                [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
-            )
-            self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
-            return
-        elif self.slightly_brighter_lighting:
+        if self.slightly_brighter_lighting:
             self._scene.add_directional_light(
                 [0, 0, -1], [3.6, 3.6, 3.6], shadow=shadow, scale=5, shadow_map_size=2048
             )
@@ -124,21 +117,17 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             self._scene.add_directional_light(
                 [1, 1, -1], [1.3, 1.3, 1.3]
             )
-            return
         elif self.slightly_darker_lighting:
             self._scene.add_directional_light(
                 [1, 1, -1], [0.8, 0.8, 0.8], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [0.8, 0.8, 0.8])
-            return
         elif self.darker_lighting:
             self._scene.add_directional_light(
                 [1, 1, -1], [0.3, 0.3, 0.3], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [0.3, 0.3, 0.3])
-            return
-        elif self.alt_dir_lighting_1:
-            raise NotImplementedError()
+        else:
             self._scene.add_directional_light(
                 [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
             )
@@ -148,85 +137,6 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             self._scene.add_directional_light(
                 [1, 1, -1], [0.7, 0.7, 0.7]
             )
-        
-        # add_directional_light: direction vec, color vec
-        # Only the first of directional lights can have shadow
-        # self._scene.add_directional_light(
-        #     [0.05, 0, -1], [100, 100, 100], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        
-        # all below results are after overlaying google_pick_coke_can_1.png, not using simulation background observation
-        # 84% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [0.05, 0, -1], [3, 3, 3], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        
-        # 88% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        # self._scene.add_directional_light(
-        #     [0.05, 0, -1], [2, 2, 2]
-        # )
-        
-        # 84% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [0.05, 0, -1], [2, 2, 2]
-        # )
-        
-        # 60% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        # self._scene.add_directional_light(
-        #     [0.05, 0, -1], [1, 1, 1]
-        # )
-        
-        # 72% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [-1, -0.5, -1], [0.7, 0.7, 0.7], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        # self._scene.add_directional_light(
-        #     [1, 1, -1], [0.7, 0.7, 0.7]
-        # )
-        # self._scene.add_directional_light(
-        #     [0, 0, -1], [1.6, 1.6, 1.6]
-        # )
-        
-        # 92% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [-1, -0.5, -1], [0.7, 0.7, 0.7], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        # self._scene.add_directional_light(
-        #     [1, 1, -1], [0.7, 0.7, 0.7]
-        # )
-        # self._scene.add_directional_light(
-        #     [0, 0, -1], [2, 2, 2]
-        # )
-        
-        # 92% for rt-1-new-best standing coke can
-        # self._scene.add_directional_light(
-        #     [0, 0, -1], [2.5, 2.5, 2.5], shadow=shadow, scale=5, shadow_map_size=2048
-        # )
-        # self._scene.add_directional_light(
-        #     [-1, -0.5, -1], [0.7, 0.7, 0.7]
-        # )
-        # self._scene.add_directional_light(
-        #     [1, 1, -1], [0.7, 0.7, 0.7]
-        # )
-        
-        # 80% for rt-1-new-best standing coke can 
-        self._scene.add_directional_light(
-            [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
-        )
-        self._scene.add_directional_light(
-            [-1, -0.5, -1], [0.7, 0.7, 0.7]
-        )
-        self._scene.add_directional_light(
-            [1, 1, -1], [0.7, 0.7, 0.7]
-        )
-        
-        # self._scene.add_directional_light([0, -1, -1], [50, 50, 50])
         
     def _set_model(self, model_id, model_scale):
         """Set the model id and scale. If not provided, choose one randomly."""
@@ -415,17 +325,24 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         consecutive_grasp = (self.consecutive_grasp >= 5)
         diff_obj_height = self.obj.pose.p[2] - self.obj_height_after_settle
         self.lifted_obj = self.lifted_obj or (flag and (diff_obj_height > 0.01))
+        lifted_object_significantly = self.lifted_obj and (diff_obj_height > 0.02)
         
         if self.require_lifting_obj_for_success:
             success = self.lifted_obj
         else:
             success = consecutive_grasp
+            
+        self.episode_stats["n_lift_significant"] += int(lifted_object_significantly)
+        self.episode_stats["consec_grasp"] = self.episode_stats["consec_grasp"] or consecutive_grasp
+        self.episode_stats["grasped"] = self.episode_stats["grasped"] or is_grasped
+        
         return dict(
             is_grasped=is_grasped,
             consecutive_grasp=consecutive_grasp,
             lifted_object=self.lifted_obj,
-            lifted_object_significantly=self.lifted_obj and (diff_obj_height > 0.02),
+            lifted_object_significantly=lifted_object_significantly,
             success=success,
+            episode_stats=self.episode_stats,
         )
 
 
@@ -576,29 +493,6 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
             kwargs['model_ids'] = ["opened_coke_can"]
         super().__init__(**kwargs)
         
-    # def reset(self, seed=None, options=None):
-    #     if not self.baked:
-    #         return super().reset(seed=seed, options=options)
-        
-    #     if options is None:
-    #         options = dict()
-            
-    #     obj_init_options = options.get("obj_init_options", None)
-    #     if obj_init_options is None:
-    #         obj_init_options = dict()
-            
-    #     if obj_init_options.get('init_rot_quat', None) is None:
-    #         if self.obj_upright:
-    #             obj_init_options['init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
-    #         elif self.obj_laid_vertically:
-    #             obj_init_options['init_rot_quat'] = euler2quat(0, -np.pi * 0.8, np.pi/2)
-    #         elif self.obj_lr_switch:
-    #             obj_init_options['init_rot_quat'] = euler2quat(0, -np.pi * 0.88, np.pi)
-            
-    #     options['obj_init_options'] = obj_init_options
-            
-    #     return super().reset(seed=seed, options=options)
-        
         
         
 @register_env("GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0", max_episode_steps=200)
@@ -620,25 +514,6 @@ class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCan
         
         return super().reset(seed=seed, options=options)
     
-    
-@register_env("GraspSingleOpenedCokeCanAltGoogleCameraMediumInScene-v0", max_episode_steps=200)
-class GraspSingleOpenedCokeCanAltGoogleCameraMediumInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
-    def reset(self, seed=None, options=None):
-        if 'robot_init_options' not in options:
-            options['robot_init_options'] = {}
-        options['robot_init_options']['qpos'] = np.array([
-                -0.2639457174606611,
-                0.0831913360274175,
-                0.5017611504652179,
-                1.156859026208673,
-                0.028583671314766423,
-                1.592598203487462,
-                -1.080652960128774,
-                0, 0,
-                -0.00285961, 0.9151361
-        ])
-        
-        return super().reset(seed=seed, options=options)
     
     
 @register_env("GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0", max_episode_steps=200)
