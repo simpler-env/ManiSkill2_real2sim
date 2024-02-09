@@ -113,15 +113,18 @@ class MoveNearInSceneEnv(CustomSceneEnv):
                 
         options["reconfigure"] = reconfigure
         
-        self.episode_stats = {
-            'all_obj_keep_height': False,
-            'moved_correct_obj': False,
-            'moved_wrong_obj': False,
-            'near_tgt_obj': False,
-            'is_closest_to_tgt': False,
-        }
+        self._initialize_episode_stats()
         
         return super().reset(seed=self._episode_seed, options=options)
+    
+    def _initialize_episode_stats(self):
+        self.episode_stats = OrderedDict(
+            all_obj_keep_height=False,
+            moved_correct_obj=False,
+            moved_wrong_obj=False,
+            near_tgt_obj=False,
+            is_closest_to_tgt=False,
+        )
     
     @staticmethod
     def _list_equal(l1, l2):

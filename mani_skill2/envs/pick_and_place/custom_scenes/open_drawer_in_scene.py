@@ -121,12 +121,13 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         )
         joint_names = [j.name for j in self.art_obj.get_active_joints()]
         self.joint_idx = joint_names.index(f"{self.drawer_id}_drawer_joint")
-
+       
     def reset(self, *args, **kwargs):
-        self.episode_stats = {
-            'qpos': 0.0,
-        }
+        self._initialize_episode_stats()
         return super().reset(*args, **kwargs)
+    
+    def _initialize_episode_stats(self):
+        self.episode_stats = OrderedDict(qpos=0.0)
     
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]

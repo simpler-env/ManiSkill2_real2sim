@@ -93,13 +93,16 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.lifted_obj = False
         self.obj_height_after_settle = None
         # episode-level info
-        self.episode_stats = {
-            "n_lift_significant": 0,
-            "consec_grasp": False,
-            "grasped": False,
-        }
+        self._initialize_episode_stats()
         
         return super().reset(seed=self._episode_seed, options=options)
+    
+    def _initialize_episode_stats(self):
+        self.episode_stats =  OrderedDict(
+            n_lift_significant=0,
+            consec_grasp=False,
+            grasped=False,
+        )
 
     def _setup_lighting(self):
         if self.bg_name is not None:

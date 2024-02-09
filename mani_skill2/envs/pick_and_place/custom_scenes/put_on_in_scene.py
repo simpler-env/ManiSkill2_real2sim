@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List
 import numpy as np
 import sapien.core as sapien
@@ -14,14 +15,16 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
     
     def reset(self, *args, **kwargs):
         self.consecutive_grasp = 0
-        self.episode_stats = {
-            'moved_correct_obj': False,
-            'moved_wrong_obj': False,
-            'is_src_obj_grasped': False,
-            'consecutive_grasp': False,
-            'src_on_target': False,
-        }
         return super().reset(*args, **kwargs)
+    
+    def _initialize_episode_stats(self):
+        self.episode_stats = OrderedDict(
+            moved_correct_obj=False,
+            moved_wrong_obj=False,
+            is_src_obj_grasped=False,
+            consecutive_grasp=False,
+            src_on_target=False,
+        )
         
     def _set_model(self, model_ids, model_scales):
         """Set the model id and scale. If not provided, choose one randomly."""
