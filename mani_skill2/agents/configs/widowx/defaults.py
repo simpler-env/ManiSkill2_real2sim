@@ -10,7 +10,7 @@ class WidowXDefaultConfig:
     def __init__(self) -> None:
         self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/widowx_description/wx250s.urdf"
         
-        finger_min_patch_radius = 0.01
+        finger_min_patch_radius = 0.01 # used to calculate torsional friction
         self.urdf_config = dict(
             _materials=dict(
                 gripper=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0)

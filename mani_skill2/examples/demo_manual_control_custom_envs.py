@@ -31,7 +31,7 @@ If --enable-sapien-viewer, press "0" to switch to sapien viewer;
     You can click on an object / articulation link and press "f" to focus on it; 
     Use right mouse button to rotate; middle-mouth-button + shift to translate;
     Under "scene hierarchy" on the bottom left, you can select different actors and articulation links;
-    When an articulated object is selected (e.g., robot / cabinet), then under "articulation" on the bottom right, you can change its joint positions / angles; 
+    When an articulated object is selected (e.g., robot / cabinet), then under "articulation" on the bottom right, you can move the scrollbar to change each of its joint positions / angles; 
     Press "pause" on the top left to pause the simulation;
     Press "g" to grab object; "g" + "x"/"y"/"z" to move object along x/y/z axis;
     

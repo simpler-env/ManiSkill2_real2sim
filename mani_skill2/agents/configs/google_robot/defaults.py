@@ -16,7 +16,7 @@ class GoogleRobotDefaultConfig:
             else:
                 self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_wheel_fix_fingertip.urdf"
         
-        finger_min_patch_radius = 0.1
+        finger_min_patch_radius = 0.1 # used to calculate torsional friction
         finger_nail_min_patch_radius = 0.01
         # standard urdf does not support <contact> tag, so we manually define friction here
         self.urdf_config = dict(

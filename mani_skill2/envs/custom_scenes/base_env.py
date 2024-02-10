@@ -120,30 +120,37 @@ class CustomSceneEnv(BaseEnv):
                 scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v4.glb") # hardcoded for now
             elif self.robot_uid == "widowx":
                 scene_path = str(self.scene_root / "stages/bridge_table_1_v1.glb") # hardcoded for now
+            else:
+                raise NotImplementedError(f"Default scene path for {self.robot_uid} is not yet set")
         elif "dummy" in self.scene_name:
             scene_path = None  # no scene; we will add a dummy scene with ground and optionally a fake tabletop
         else:
             scene_path = str(self.scene_root / "stages" / f"{self.scene_name}.glb")
         
-        # scene offset
+        # scene offset and pose
         if self.scene_offset is None:
             if "google_robot_static" in self.robot_uid:
                 scene_offset = np.array([-1.6616, -3.0337, 0.0]) # corresponds to the default offset of google_pick_coke_can_1_v4.glb
             elif self.robot_uid == "widowx":
                 scene_offset = np.array([-2.0634, -2.8313, 0.0])# corresponds to the default offset of bridge_table_1_v1.glb
+            else:
+                raise NotImplementedError(f"Default scene offset for {self.robot_uid} is not yet set")
         else:
             scene_offset = np.array(self.scene_offset)
-     
-        # scene pose
+            
         if self.scene_pose is None:
             scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         else:
             scene_pose = sapien.Pose(q=self.scene_pose)
+            
+        # Further process scene offset and scene pose for some specific scenes
         if self.scene_name is not None:
             # Hardcoded for other scenes
             if "modern_bedroom" in self.scene_name:
+                scene_offset = np.array([-1.6616, -3.0337, 0.0])
                 scene_pose = sapien.Pose([0.178, -2.235, 1.669], [0.007, 0, 0, -1]) * scene_pose
             elif "modern_office" in self.scene_name:
+                scene_offset = np.array([-1.6616, -3.0337, 0.0])
                 scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
             elif self.scene_name == "dummy_tabletop":
                 scene_pose = sapien.Pose()
