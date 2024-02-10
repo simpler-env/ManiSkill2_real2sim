@@ -71,7 +71,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         z_flag = (offset[2] > 0) and (offset[2] - tgt_obj_half_length_bbox[2] - src_obj_half_length_bbox[2] <= 0.02)
         src_on_target = (xy_flag and z_flag)
         
-        # whether the source object is on the target object based on contact
+        # whether the source object is on the target object based on contact information
         contacts = self._scene.get_contacts()
         flag = True
         robot_link_names = [x.name for x in self.agent.robot.get_links()]

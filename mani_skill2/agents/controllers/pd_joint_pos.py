@@ -96,21 +96,23 @@ class PDJointPosController(BaseController):
     def _setup_qpos_interpolation(self):
         if self.config.interpolate_by_planner:
             if self.config.interpolate_planner_init_no_vel:
+                # use zero joint velocity as the initial condition for joint trajectory planning
                 init_qvel = 0.0
             else:
+                # use the currently sensed joint velocity as the initial condition for joint trajectory planning
                 init_qvel = np.clip(
                     self.articulation.get_qvel()[self.joint_indices], 
                     -self.config.interpolate_planner_vlim, 
                     self.config.interpolate_planner_vlim
                 )
             if self.config.use_target or self._interpolation_path is None:
-                init_qpos = self.qpos # plan from current sensed qpos (and qvel) to target qpos
+                init_qpos = self.qpos # plan from the current sensed joint position (self.qpos) to the target joint position (self._target_qpos)
             else:
-                # the interpolation waypoints for this control step start from the "terminal intermediate target" of last control step's planned path
-                len_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) + 1 # including start and end point
-                init_qpos = self._interpolation_path[len_last_path - 1]
+                # plan from the "terminal intermediate waypoint" of the last control step's planned path to the target joint position (self._target_qpos)
+                len_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) # self._interpolation_path includes the start joint position, so we decrease by 1
+                init_qpos = self._interpolation_path[len_last_path]
                 if not self.config.interpolate_planner_init_no_vel:
-                    init_qvel = self._interpolation_path_vel[len_last_path - 1]
+                    init_qvel = self._interpolation_path_vel[len_last_path]
             
             self._interpolation_path, vel_path = self.plan_joint_path(
                 init_qpos, self._target_qpos, 
@@ -121,8 +123,8 @@ class PDJointPosController(BaseController):
             if not self.config.interpolate_planner_init_no_vel:
                 self._interpolation_path_vel = vel_path
         else:
-            step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
             # linear interpolation
+            step_size = (self._target_qpos - self._start_qpos) / self._sim_steps
             self._interpolation_path = np.array(
                 [self._start_qpos + step_size * i for i in range(self._sim_steps + 1)]
             )
@@ -139,6 +141,7 @@ class PDJointPosController(BaseController):
             targets = self._interpolation_path[interp_path_idx]
             self.set_drive_targets(targets)
             if self.config.interpolate_by_planner and self.config.interpolate_planner_exec_set_target_vel:
+                # set the target joint velocity
                 if self._interpolation_path_vel is not None:
                     self.set_drive_velocity_targets(self._interpolation_path_vel[interp_path_idx])
                                 
@@ -164,13 +167,13 @@ class PDJointPosControllerConfig(ControllerConfig):
     drive_mode: str = "force"
     use_delta: bool = False
     use_target: bool = False
-    delta_target_from_last_drive_target: bool = False
+    delta_target_from_last_drive_target: bool = False 
     clip_target: bool = False
     clip_target_thres: float = 0.01
     interpolate: bool = False
-    interpolate_by_planner: bool = False
-    interpolate_planner_init_no_vel: bool = False
-    interpolate_planner_exec_set_target_vel: bool = False
+    interpolate_by_planner: bool = False # whether to use joint trajectory planning to interpolate between the current joint position and the target joint position
+    interpolate_planner_init_no_vel: bool = False # whether to use zero joint velocity as the initial condition for joint trajectory planning
+    interpolate_planner_exec_set_target_vel: bool = False # whether to set the target joint velocity during the execution of the planned joint trajectory
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     interpolate_planner_jerklim: float = 50.0

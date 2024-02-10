@@ -15,7 +15,7 @@ class WidowX(BaseAgent):
     _config: defaults.WidowXDefaultConfig
     
     """
-        WidowX250 robot
+        WidowX250 6DoF robot
         links:
             [Actor(name="base_link", id="2"), Actor(name="shoulder_link", id="3"), Actor(name="upper_arm_link", id="4"), Actor(name="upper_forearm_link", id="5"), 
             Actor(name="lower_forearm_link", id="6"), Actor(name="wrist_link", id="7"), Actor(name="gripper_link", id="8"), Actor(name="ee_arm_link", id="9"), 

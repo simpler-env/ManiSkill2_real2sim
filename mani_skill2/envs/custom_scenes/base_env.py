@@ -10,13 +10,12 @@ import cv2
 from mani_skill2 import ASSET_DIR, format_path
 from mani_skill2.utils.io_utils import load_json
 from mani_skill2.agents.base_agent import BaseAgent
-from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.agents.robots.googlerobot import (
     GoogleRobotStaticBase, GoogleRobotStaticBaseColorAdjust,
     GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
-    GoogleRobotStaticBaseWorseControl4, GoogleRobotStaticBaseWorseControl5
 )
 from mani_skill2.agents.robots.widowx import WidowX
+from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.sensors.camera import CameraConfig
 from mani_skill2.utils.sapien_utils import (
@@ -27,16 +26,14 @@ from mani_skill2.utils.sapien_utils import (
 )
 
 class CustomSceneEnv(BaseEnv):
-    SUPPORTED_ROBOTS = {"panda": Panda, 
-                        "google_robot_static": GoogleRobotStaticBase, 
+    SUPPORTED_ROBOTS = {"google_robot_static": GoogleRobotStaticBase, 
                         "google_robot_static_color_adjust": GoogleRobotStaticBaseColorAdjust,
                         "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
                         "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
                         "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
-                        "google_robot_static_worse_control4": GoogleRobotStaticBaseWorseControl4,
-                        "google_robot_static_worse_control5": GoogleRobotStaticBaseWorseControl5,
-                        "widowx": WidowX}
-    agent: Union[Panda, GoogleRobotStaticBase, WidowX]
+                        "widowx": WidowX,
+                        "panda": Panda}
+    agent: Union[GoogleRobotStaticBase, WidowX, Panda]
     DEFAULT_ASSET_ROOT: str
     DEFAULT_SCENE_ROOT: str
     DEFAULT_MODEL_JSON: str
@@ -71,7 +68,7 @@ class CustomSceneEnv(BaseEnv):
         self.scene_pose = scene_pose
         self.scene_table_height = scene_table_height
 
-        # load object model database
+        # Load object model database
         if model_json is None:
             model_json = self.DEFAULT_MODEL_JSON
         # NOTE(jigu): absolute path will overwrite asset_root
@@ -93,15 +90,16 @@ class CustomSceneEnv(BaseEnv):
         self.model_ids = model_ids
         self._check_assets()
         
-        # "greenscreen" image used to overlay the background from simulation observation
+        # Load the "greenscreen" image, which is used to overlay the background portions of simulation observation
         if rgb_overlay_path is not None:
             self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
         else:
             self.rgb_overlay_img = None
         if not isinstance(rgb_overlay_cameras, list):
             rgb_overlay_cameras = [rgb_overlay_cameras]
-        self.rgb_overlay_cameras = rgb_overlay_cameras
-        self.rgb_overlay_mode = rgb_overlay_mode
+        self.rgb_overlay_cameras = rgb_overlay_cameras # perform "greenscreen" on the specified camera(s) observations
+        self.rgb_overlay_mode = rgb_overlay_mode # 'background' or 'object' or 'debug' or combinations of them
+        assert ('background' in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode), 'Invalid rgb_overlay_mode'
 
         self.arena = None
         self.robot_init_options = {}
@@ -116,39 +114,42 @@ class CustomSceneEnv(BaseEnv):
     
     def _load_arena_helper(self, add_collision=True):
         builder = self._scene.create_actor_builder()
+        # scene path
         if self.scene_name is None:
             if "google_robot_static" in self.robot_uid:
                 scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v4.glb") # hardcoded for now
             elif self.robot_uid == "widowx":
                 scene_path = str(self.scene_root / "stages/bridge_table_1_v1.glb") # hardcoded for now
         elif "dummy" in self.scene_name:
-            scene_path = None  # no scene
+            scene_path = None  # no scene; we will add a dummy scene with ground and optionally a fake tabletop
         else:
             scene_path = str(self.scene_root / "stages" / f"{self.scene_name}.glb")
         
+        # scene offset
         if self.scene_offset is None:
             if "google_robot_static" in self.robot_uid:
-                scene_offset = np.array([-1.6616, -3.0337, 0.0])
+                scene_offset = np.array([-1.6616, -3.0337, 0.0]) # corresponds to the default offset of google_pick_coke_can_1_v4.glb
             elif self.robot_uid == "widowx":
-                scene_offset = np.array([-2.0634, -2.8313, 0.0])
+                scene_offset = np.array([-2.0634, -2.8313, 0.0])# corresponds to the default offset of bridge_table_1_v1.glb
         else:
             scene_offset = np.array(self.scene_offset)
      
+        # scene pose
         if self.scene_pose is None:
             scene_pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         else:
             scene_pose = sapien.Pose(q=self.scene_pose)
-        
         if self.scene_name is not None:
-            # Hardcode for other scenes
+            # Hardcoded for other scenes
             if "modern_bedroom" in self.scene_name:
                 scene_pose = sapien.Pose([0.178, -2.235, 1.669], [0.007, 0, 0, -1]) * scene_pose
             elif "modern_office" in self.scene_name:
                 scene_pose = sapien.Pose([-0.192, -1.728, 1.48], [0.709, 0, 0, -0.705]) * scene_pose
-            elif self.scene_name == "dummy3":  # For MoveNear
+            elif self.scene_name == "dummy_tabletop":
                 scene_pose = sapien.Pose()
                 scene_offset = np.array([0, -0.21, 0])
 
+        # Build scene
         if (self.scene_name is None) or ("dummy" not in self.scene_name):
             # NOTE: use nonconvex collision for static scene
             if add_collision:
@@ -158,10 +159,10 @@ class CustomSceneEnv(BaseEnv):
             if self.scene_name == "dummy":
                 # Should be 0.017 instead of 0.017/2
                 builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017/2]))
-            elif self.scene_name == "dummy2":
+            elif self.scene_name == "dummy_drawer":
                 builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=[1, 1, 1])
                 # builder.add_box_visual(half_size=np.array([10.0, 10.0, 0.017]), color=[0.6054843 , 0.34402566, 0.17013837])
-            elif self.scene_name == "dummy3":
+            elif self.scene_name == "dummy_tabletop":
                 _pose = sapien.Pose([-0.295, 0, 0.017 + 0.865 / 2])
                 _half_size = np.array([0.63, 0.615, 0.865]) / 2
                 # _color = [0.325, 0.187, 0.1166]
@@ -185,6 +186,7 @@ class CustomSceneEnv(BaseEnv):
         self.arena.set_pose(sapien.Pose(-scene_offset))
         
     def _settle(self, t):
+        # step the simulation and let the scene settle for t seconds
         sim_steps = int(self.sim_freq * t)
         for _ in range(sim_steps):
             self._scene.step()
@@ -198,17 +200,19 @@ class CustomSceneEnv(BaseEnv):
         self._agent_cfg = agent_cls.get_default_config()
 
     def _load_agent(self):
-        agent_cls: Type[Panda] = self.SUPPORTED_ROBOTS[self.robot_uid]
+        agent_cls: Type[GoogleRobotStaticBase] = self.SUPPORTED_ROBOTS[self.robot_uid]
         self.agent = agent_cls(
             self._scene, self._control_freq, self._control_mode, config=self._agent_cfg
         )
         self.tcp: sapien.Link = get_entity_by_name(
             self.agent.robot.get_links(), self.agent.config.ee_link_name
-        )
+        ) # tool-center point, usually the midpoint between the gripper fingers
         if not self.disable_bad_material:
             set_articulation_render_material(self.agent.robot, specular=0.9, roughness=0.3)
             
     def _initialize_agent(self):
+        # initialize agent joint position and 6d pose
+        
         if "google_robot_static" in self.robot_uid:
             qpos = np.array(
                 [-0.2639457174606611,
@@ -221,7 +225,7 @@ class CustomSceneEnv(BaseEnv):
                 0, 0,
                 -0.00285961, 0.7851361]
             )
-            robot_init_height = 0.06205 + 0.017 # base height + ground offset
+            robot_init_height = 0.06205 + 0.017 # base height + ground offset in default scene
             robot_init_rot_quat = [0, 0, 0, 1]
         elif self.robot_uid == 'widowx':
             qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
@@ -255,12 +259,17 @@ class CustomSceneEnv(BaseEnv):
         self.agent.robot.set_pose(sapien.Pose(robot_init_xyz, robot_init_rot_quat))
         
     def _register_cameras(self):
+        # this camera below is not really used; 
+        # the used cameras (mounted with respect to the robot agent) are specified under agents/configs/{robot_name}/defaults.py
+        
         pose = look_at([0.3, 0, 0.6], [-0.1, 0, 0.1])
         return CameraConfig(
             "base_camera", pose.p, pose.q, 128, 128, np.pi / 2, 0.01, 10
         )
 
     def _register_render_cameras(self):
+        # camera for visualization and debugging purposes
+        
         pose = look_at([0.5, 0.5, 1.0], [0.0, 0.0, 0.5])
         return CameraConfig("render_camera", pose.p, pose.q, 512, 512, 1, 0.01, 10)
 
@@ -277,6 +286,7 @@ class CustomSceneEnv(BaseEnv):
     def get_obs(self):
         obs = super().get_obs()
         
+        # "greenscreen" process
         if self._obs_mode == "image" and self.rgb_overlay_img is not None:
             # get the actor ids of objects to manipulate; note that objects here are not articulated
             target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '', 'arena']]
@@ -286,6 +296,7 @@ class CustomSceneEnv(BaseEnv):
             robot_links = self.agent.robot.get_links() # e.g., [Actor(name="root", id="1"), Actor(name="root_arm_1_link_1", id="2"), Actor(name="root_arm_1_link_2", id="3"), ...]
             robot_link_ids = np.array([x.id for x in robot_links], dtype=np.int32)
 
+            # get the link ids of other articulated objects
             other_link_ids = []
             for art_obj in self._scene.get_all_articulations():
                 if art_obj is self.agent.robot:
@@ -294,18 +305,24 @@ class CustomSceneEnv(BaseEnv):
                     other_link_ids.append(link.id)
             other_link_ids = np.array(other_link_ids, dtype=np.int32)
 
-            # obtain segmentations of the target object(s) and the robot
             for camera_name in self.rgb_overlay_cameras:
+                # obtain overlay mask based on segmentation info
                 assert 'Segmentation' in obs['image'][camera_name].keys(), 'Image overlay requires segment info in the observation!'
                 seg = obs['image'][camera_name]['Segmentation'] # (H, W, 4); [..., 0] is mesh-level; [..., 1] is actor-level; [..., 2:] is zero (unused)
                 actor_seg = seg[..., 1]
                 mask = np.ones_like(actor_seg, dtype=np.float32)
-                if ('background' in self.rgb_overlay_mode and 'object' not in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
-                    mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids, other_link_ids]))] = 0.0
-                elif 'background' in self.rgb_overlay_mode:
-                    mask[np.isin(actor_seg, robot_link_ids)] = 0.0
+                if ('background' in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
+                    if ('object' not in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
+                        # only overlay the background and keep the foregrounds rendered in simulation
+                        mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids, other_link_ids]))] = 0.0
+                    else:
+                        # overlay everything except the robot links
+                        mask[np.isin(actor_seg, robot_link_ids)] = 0.0
+                else:
+                    raise NotImplementedError(self.rgb_overlay_mode)
                 mask = mask[..., np.newaxis]
                 
+                # perform overlay on the RGB observation image
                 rgb_overlay_img = cv2.resize(self.rgb_overlay_img, (obs['image'][camera_name]['Color'].shape[1], obs['image'][camera_name]['Color'].shape[0]))
                 if 'debug' not in self.rgb_overlay_mode:
                     obs['image'][camera_name]['Color'][..., :3] = obs['image'][camera_name]['Color'][..., :3] * (1 - mask) + rgb_overlay_img * mask
@@ -316,12 +333,8 @@ class CustomSceneEnv(BaseEnv):
                 
         return obs
 
-    def check_robot_static(self, thresh=0.2):
-        # Assume that the last two DoF is gripper
-        qvel = self.agent.robot.get_qvel()[:-2]
-        return np.max(np.abs(qvel)) <= thresh
-    
     def compute_dense_reward(self, info, **kwargs):
+        # sparse reward for now
         reward = 0.0
         if info["success"]:
             reward = 1.0
@@ -332,6 +345,7 @@ class CustomSceneEnv(BaseEnv):
     
     @staticmethod
     def _get_instruction_obj_name(s):
+        # given an object name, process its name to be used for language instruction
         s = s.split('_')
         rm_list = ['opened', 'light', 'generated', 'modified', 'objaverse', 'bridge', 'baked', 'v2']
         cleaned = []

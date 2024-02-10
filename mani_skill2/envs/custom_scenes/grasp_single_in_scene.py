@@ -14,7 +14,7 @@ from .base_env import CustomSceneEnv, CustomYCBInSceneEnv, CustomOtherObjectsInS
 
 
 class GraspSingleInSceneEnv(CustomSceneEnv):
-    obj: sapien.Actor  # target object
+    obj: sapien.Actor  # target object to grasp 
 
     def __init__(
         self,
@@ -42,14 +42,15 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.obj_init_options = {}
         self.distractor_obj_init_options = {}
         
+        self.slightly_darker_lighting = slightly_darker_lighting
+        self.slightly_brighter_lighting = slightly_brighter_lighting
+        self.darker_lighting = darker_lighting
+        
         self.require_lifting_obj_for_success = require_lifting_obj_for_success
         self.consecutive_grasp = 0
         self.lifted_obj = False
         self.obj_height_after_settle = None
-        
-        self.slightly_darker_lighting = slightly_darker_lighting
-        self.slightly_brighter_lighting = slightly_brighter_lighting
-        self.darker_lighting = darker_lighting
+        self.episode_stats = None
         
         super().__init__(**kwargs)
 
@@ -64,6 +65,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         raise NotImplementedError
     
     def reset(self, seed=None, options=None):
+        # remove distractor objects
         for distractor_obj in self.distractor_objs:
             self._scene.remove_actor(distractor_obj)
         self.distractor_objs = []
@@ -74,6 +76,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.obj_init_options = options.get("obj_init_options", {})
         self.distractor_obj_init_options = options.get("distractor_obj_init_options", {})
         
+        # set objects and distractor objects
         self.set_episode_rng(seed)
         model_scale = options.get("model_scale", None)
         model_id = options.get("model_id", None)
@@ -131,6 +134,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             )
             self._scene.add_directional_light([0, 0, -1], [0.3, 0.3, 0.3])
         else:
+            # default lighting
             self._scene.add_directional_light(
                 [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
             )
@@ -142,7 +146,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             )
         
     def _set_model(self, model_id, model_scale):
-        """Set the model id and scale. If not provided, choose one randomly."""
+        """Set the model id and scale. If not provided, choose one randomly from self.model_ids."""
         reconfigure = False
 
         if model_id is None:
@@ -213,10 +217,10 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.obj.set_pose(sapien.Pose(p, q))
 
         # Move the robot far away to avoid collision
-        # The robot should be initialized later
+        # The robot should be initialized later in _initialize_agent (in base_env.py)
         self.agent.robot.set_pose(sapien.Pose([-10, 0, 0]))
 
-        # Lock rotation around x and y
+        # Lock rotation around x and y to let the target object fall onto the table
         self.obj.lock_motion(0, 0, 0, 1, 1, 0)
         self._settle(0.5)
 
@@ -234,9 +238,11 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         if lin_vel > 1e-3 or ang_vel > 1e-2:
             self._settle(1.5)
         
+        # Record the object height after it settles
         self.obj_height_after_settle = self.obj.pose.p[2]
         
         if len(self.distractor_objs) > 0:
+            # Set distractor objects
             for distractor_obj in self.distractor_objs:
                 distractor_obj_init_options = self.distractor_obj_init_options.get(distractor_obj.name, {})
 
@@ -256,6 +262,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
                 # Lock rotation around x and y
                 distractor_obj.lock_motion(1, 1, 0, 1, 1, 0)
                 
+                # debug
                 # sim_steps = int(self.sim_freq * 0.5)
                 # for _ in range(sim_steps):
                 #     print(distractor_obj.pose)
@@ -265,6 +272,8 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
                 #         if sapien_viewer.window.key_down("0"):
                 #             break
                 #     self._scene.step()
+                
+                # Let distractor objects fall onto the table
                 self._settle(0.5)
                 
             # Unlock motion
@@ -299,6 +308,8 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         return obs
 
     def evaluate(self, **kwargs):
+        # evaluate the success of the task
+        
         is_grasped = self.agent.check_grasp(self.obj, max_angle=80)
         if is_grasped:
             self.consecutive_grasp += 1
@@ -499,7 +510,7 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
         
 @register_env("GraspSingleDummy-v0", max_episode_steps=200)
 class GraspSingleDummyEnv(GraspSingleOpenedCokeCanInSceneEnv):
-    # A dummy environment where the robot is free from collision with the scene
+    # A dummy environment where the robot is set to a faraway position such that it is free from collisions with the scene
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
@@ -524,8 +535,8 @@ class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCan
                 1.592598203487462,
                 -1.080652960128774,
                 0, 0,
-                -0.00285961, 0.9351361
-        ])
+                -0.00285961, 0.9351361 
+        ]) # the last two values are for the camera orientation
         
         return super().reset(seed=seed, options=options)
     
@@ -576,6 +587,7 @@ class GraspSinglePepsiCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         kwargs['model_ids'] = ["pepsi_can"]
         super().__init__(**kwargs)
         
+
 @register_env("GraspSingleOpenedPepsiCanInScene-v0", max_episode_steps=200)
 class GraspSingleOpenedPepsiCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):

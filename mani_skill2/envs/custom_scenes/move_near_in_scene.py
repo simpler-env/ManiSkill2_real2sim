@@ -37,6 +37,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         self.episode_obj_xyzs_after_settle = [None] * 3
         self.episode_source_obj_xyz_after_settle = None
         self.episode_target_obj_xyz_after_settle = None
+        self.episode_stats = None
         
         self.obj_init_options = {}
         
@@ -78,6 +79,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
                 [1, 1, -1], [1.3, 1.3, 1.3]
             )
         else:
+            # Default lighting
             self._scene.add_directional_light(
                 [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
             )
@@ -136,9 +138,10 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         return True
     
     def _set_model(self, model_ids, model_scales):
-        """Set the model id and scale. If not provided, choose one randomly."""
+        """Set the model id and scale. If not provided, choose a triplet randomly from self.model_ids."""
         reconfigure = False
 
+        # model ids
         if model_ids is None:
             model_ids = []
             for _ in range(3):
@@ -147,6 +150,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             self.episode_model_ids = model_ids
             reconfigure = True
 
+        # model scales
         if model_scales is None:
             model_scales = []
             for model_id in self.episode_model_ids:
@@ -159,6 +163,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             self.episode_model_scales = model_scales
             reconfigure = True
         
+        # model bbox sizes
         model_bbox_sizes = []
         for model_id, model_scale in zip(self.episode_model_ids, self.episode_model_scales):
             model_info = self.model_db[model_id]
@@ -172,21 +177,16 @@ class MoveNearInSceneEnv(CustomSceneEnv):
 
         return reconfigure
     
-    def _settle(self, t):
-        sim_steps = int(self.sim_freq * t)
-        for _ in range(sim_steps):
-            self._scene.step()
-
     def _initialize_actors(self):
         source_obj_id: int = self.obj_init_options.get("source_obj_id", None)
         target_obj_id: int = self.obj_init_options.get("target_obj_id", None)
         assert source_obj_id is not None and target_obj_id is not None
         self.episode_source_obj = self.episode_objs[source_obj_id]
         self.episode_target_obj = self.episode_objs[target_obj_id]
-        self.episode_source_obj_bbox_world = self.episode_model_bbox_sizes[source_obj_id]
+        self.episode_source_obj_bbox_world = self.episode_model_bbox_sizes[source_obj_id] # bbox xyz extents in the world frame at timestep=0
         self.episode_target_obj_bbox_world = self.episode_model_bbox_sizes[target_obj_id]
         
-        # The object will fall from a certain initial height
+        # Objects will fall from a certain initial height onto the table
         obj_init_xys = self.obj_init_options.get("init_xys", None) 
         assert obj_init_xys is not None
         obj_init_xys = np.array(obj_init_xys) # [n_objects, 2]
@@ -211,7 +211,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             obj.lock_motion(0, 0, 0, 1, 1, 0)
             
         # Move the robot far away to avoid collision
-        # The robot should be initialized later
+        # The robot should be initialized later in _initialize_agent (in base_env.py)
         self.agent.robot.set_pose(sapien.Pose([-10, 0, 0]))
         
         self._settle(0.5)
@@ -263,11 +263,6 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             )
         return obs
 
-    def check_robot_static(self, thresh=0.2):
-        # Assume that the last two DoF is gripper
-        qvel = self.agent.robot.get_qvel()[:-2]
-        return np.max(np.abs(qvel)) <= thresh
-
     def evaluate(self, **kwargs):
         source_obj_pose = self.source_obj_pose
         target_obj_pose = self.target_obj_pose
@@ -282,7 +277,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         target_obj_diff_height = target_obj_pose.p[2] - self.episode_target_obj_xyz_after_settle[2] # target object should not be knocked off the table
         all_obj_keep_height = other_obj_keep_height and (source_obj_diff_height > -0.15) and (target_obj_diff_height > -0.15)
         
-        # Check if moving correct source object
+        # Check if moving the correct source object
         source_obj_xy_move_dist = np.linalg.norm(self.episode_source_obj_xyz_after_settle[:2] - self.episode_source_obj.pose.p[:2])
         other_obj_xy_move_dist = []
         for obj, obj_xyz_after_settle in zip(self.episode_objs, self.episode_obj_xyzs_after_settle):
@@ -292,14 +287,14 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         moved_correct_obj = (source_obj_xy_move_dist > 0.03) and (all([x < source_obj_xy_move_dist for x in other_obj_xy_move_dist]))
         moved_wrong_obj = any([x > 0.03 for x in other_obj_xy_move_dist]) and any([x > source_obj_xy_move_dist for x in other_obj_xy_move_dist])
         
-        # Check if source object is near target object
+        # Check if the source object is near the target object
         dist_to_tgt_obj = np.linalg.norm(source_obj_pose.p[:2] - target_obj_pose.p[:2])
         tgt_obj_bbox_xy_dist = np.linalg.norm(self.episode_target_obj_bbox_world[:2]) / 2 # get half-length of bbox xy diagonol distance in the world frame at timestep=0
         src_obj_bbox_xy_dist = np.linalg.norm(self.episode_source_obj_bbox_world[:2]) / 2
         # print(dist_to_tgt_obj, tgt_obj_bbox_xy_dist, src_obj_bbox_xy_dist)
         near_tgt_obj = (dist_to_tgt_obj < tgt_obj_bbox_xy_dist + src_obj_bbox_xy_dist + 0.10)
         
-        # Check if source object is closest to target object
+        # Check if the source object is closest to the target object
         dist_to_other_objs = []
         for obj in self.episode_objs:
             if obj.name == self.episode_source_obj.name:
@@ -318,7 +313,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             success=success,
         )
         for k in self.episode_stats:
-            self.episode_stats[k] = ret_info[k] # episode stats equal to the current step stats for this environment
+            self.episode_stats[k] = ret_info[k] # for this environment, episode stats equal to the current step stats 
         ret_info["episode_stats"] = self.episode_stats
         
         return ret_info

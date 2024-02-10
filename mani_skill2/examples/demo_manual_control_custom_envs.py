@@ -1,3 +1,46 @@
+"""
+Example Scripts:
+
+python mani_skill2/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
+    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd --enable-sapien-viewer \
+    robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
+    rgb_overlay_mode debug rgb_overlay_path data/real_impainting/google_coke_can_real_eval_1.png rgb_overlay_cameras overhead_camera
+    
+python mani_skill2/examples/demo_manual_control_custom_envs.py -e MoveNearGoogleInScene-v0 \
+    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
+    -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
+    rgb_overlay_mode debug rgb_overlay_path data/real_impainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
+    
+python mani_skill2/examples/demo_manual_control_custom_envs.py -e OpenTopDrawerCustomInScene-v0 \
+    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
+    -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name frl_apartment_stage_simple \
+    rgb_overlay_mode debug rgb_overlay_path data/real_impainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera
+    
+python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
+    -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 \
+    scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
+    
+Controls:
+xyz: "i": +x, "k": -x, "j": +y, "l": -y, "u": +z, "o": -z
+rotation rpy: "1": +r, "2": -r, "3": +p, "4": -p, "5": +y, "6": -y
+reset environment: "r"
+gripper open: "f", gripper close: "g"
+
+If --enable-sapien-viewer, press "0" to switch to sapien viewer; 
+    In the viewer, press "coordinate axes" option on the left twice to activate it;
+    You can click on an object / articulation link and press "f" to focus on it; 
+    Use right mouse button to rotate; middle-mouth-button + shift to translate;
+    Under "scene hierarchy" on the bottom left, you can select different actors and articulation links;
+    When an articulated object is selected (e.g., robot / cabinet), then under "articulation" on the bottom right, you can change its joint positions / angles; 
+    Press "pause" on the top left to pause the simulation;
+    Press "g" to grab object; "g" + "x"/"y"/"z" to move object along x/y/z axis;
+    
+If rgb_overlay_path is given, Press "v" to visualize the "greenscreened" image overlayed on top of simulation observation;
+    this visualization can be used to debug e.g., the alignment of real and simulation proxy tables
+
+To debug an environment, you can modify the "env_reset_options" in the main function to change the initial state of the environment.
+"""
+
 import argparse
 
 import gymnasium as gym
@@ -17,10 +60,6 @@ MS1_ENV_IDS = [
     "MoveBucket-v1",
 ]
 
-# python mani_skill2/examples/demo_manual_control.py -e GraspSingleOpenedCokeCanInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/google_coke_can_real_eval_1.png rgb_overlay_cameras overhead_camera
-# python mani_skill2/examples/demo_manual_control.py -e MoveNearGoogleInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name google_pick_coke_can_1_v4  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
-# python mani_skill2/examples/demo_manual_control.py -e PutCarrotOnPlateInScene-v0 -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
-# python mani_skill2/examples/demo_manual_control.py -e OpenDrawerCustomInScene-v0 -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd robot google_robot_static sim_freq @500 control_freq @3 scene_name frl_apartment_stage_simple  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera scene_offset @[-1.8,-2.5,0.0]
 
 
 def parse_args():
@@ -87,33 +126,41 @@ def main():
     print("Reward mode", env.reward_mode)
 
     env_reset_options = {}
-    # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.015)) * Pose(q=[0, 0, 0, 1])).q
-    # init_rot_quat = (Pose(q=[0, 0, 0, 1])).q # for GraspSingle env debugging and overlay
-    # env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
-    #                    'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}} # for GraspSingle env debugging and overlay
-    # env_reset_options['robot_init_options']['qpos'] = [
-    #             -0.2639457174606611,
-    #             0.0831913360274175,
-    #             0.5017611504652179,
-    #             1.156859026208673,
-    #             0.028583671314766423,
-    #             1.592598203487462,
-    #             -1.080652960128774,
-    #             0, 0,
-    #             -0.00285961, 0.9351361
-    # ]
-    # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q # for MoveSingle env debugging and overlay
-    # env_reset_options={'obj_init_options': {},
-    #                    'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}} # for MoveSingle env debugging and overlay
-    # env_reset_options['obj_init_options']['episode_id'] = 0 # for MoveSingle debugging and overlay
-    # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q # for OpenDrawer env debugging and overlay
-    # init_rot_quat = [0, 0, 0, 1]
-    # env_reset_options={'obj_init_options': {'init_xy': [0.0, 0.0]},
-    #                    'robot_init_options': {'init_xy': [0.85, 0.0], 'init_rot_quat': init_rot_quat}} # for OpenDrawer env debugging and overlay
-    # init_rot_quat = Pose(q=[0, 0, 0, 1]).q # Bridge
-    # env_reset_options={'obj_init_options': {},
-    #                    'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}} # for Bridge env debugging and overlay
-    # env_reset_options['obj_init_options']['episode_id'] = 16 # for Bridge env debugging and overlay
+    """
+    Change the following reset options as you want to debug the environment
+    """
+    if 'GraspSingle' in args.env_id:
+        init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
+        env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
+                        'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}}
+        # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.015)) * Pose(q=[0, 0, 0, 1])).q
+        # env_reset_options['robot_init_options']['qpos'] = [
+        #             -0.2639457174606611,
+        #             0.0831913360274175,
+        #             0.5017611504652179,
+        #             1.156859026208673,
+        #             0.028583671314766423,
+        #             1.592598203487462,
+        #             -1.080652960128774,
+        #             0, 0,
+        #             -0.00285961, 0.9351361
+        # ]
+    elif 'MoveNear' in args.env_id:
+        init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q
+        env_reset_options={'obj_init_options': {},
+                           'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}}
+        env_reset_options['obj_init_options']['episode_id'] = 0
+    elif 'Drawer' in args.env_id:
+        init_rot_quat = [0, 0, 0, 1]
+        # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q 
+        env_reset_options={'obj_init_options': {'init_xy': [0.0, 0.0]},
+                           'robot_init_options': {'init_xy': [0.851, 0.035], 'init_rot_quat': init_rot_quat}}
+    elif 'PutCarrotOnPlate' in args.env_id or 'StackGreenCubeOnYellowCube' in args.env_id:
+        init_rot_quat = Pose(q=[0, 0, 0, 1]).q
+        env_reset_options={'obj_init_options': {},
+                           'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
+        env_reset_options['obj_init_options']['episode_id'] = 0
+    
     obs, _ = env.reset(options=env_reset_options)
     after_reset = True
     

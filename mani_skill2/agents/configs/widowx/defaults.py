@@ -27,33 +27,31 @@ class WidowXDefaultConfig:
         
         self.arm_joint_names = ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate']
         self.gripper_joint_names = ['left_finger', 'right_finger']
+               
+        # # arm_pd_ee_delta_pose_align_interpolate_gripper_pd_joint_pos, 3hz
+        # self.arm_stiffness = [1193.2765654645982, 800.0, 784.3309604605763, 1250.3737197881153, 1392.0546244178072, 1038.3774360126893]
+        # self.arm_damping = [75.5250991585983, 20.0, 23.646570105574618, 23.825760721440837, 67.97737990215525, 78.14407359073823]
+        # # arm_pd_ee_delta_pose_align_gripper_pd_joint_pos, 3hz
+        # self.arm_stiffness = [1214.6340906847158, 804.5146660467828, 801.9841311029891, 1110.0, 1310.0, 988.4499396558518]
+        # self.arm_damping = [175.18652498291488, 73.04563998424553, 62.47429885911165, 104.4069151351231, 108.3230540691408, 136.87526713617873]
+        # # arm_pd_ee_target_delta_pose_align_gripper_pd_joint_pos, 5hz non-blocking
+        # self.arm_stiffness = [1215.4327150032293, 730.0, 860.0, 1133.9675494142102, 1413.3815895525422, 930.0]
+        # self.arm_damping = [285.5831564748846, 118.83365148810542, 126.05256283235089, 142.0533158479584, 142.85223328752122, 96.00503592486184]
         
-        
-        self.arm_friction = 0.0
-        
-        # arm_pd_ee_delta_pose_align_interpolate_gripper_pd_joint_pos, 3hz
-        self.arm_stiffness = [1193.2765654645982, 800.0, 784.3309604605763, 1250.3737197881153, 1392.0546244178072, 1038.3774360126893]
-        self.arm_damping = [75.5250991585983, 20.0, 23.646570105574618, 23.825760721440837, 67.97737990215525, 78.14407359073823]
-        # arm_pd_ee_delta_pose_align_gripper_pd_joint_pos, 3hz
-        self.arm_stiffness = [1214.6340906847158, 804.5146660467828, 801.9841311029891, 1110.0, 1310.0, 988.4499396558518]
-        self.arm_damping = [175.18652498291488, 73.04563998424553, 62.47429885911165, 104.4069151351231, 108.3230540691408, 136.87526713617873]
-        # arm_pd_ee_target_delta_pose_align_gripper_pd_joint_pos, 5hz non-blocking
-        self.arm_stiffness = [1215.4327150032293, 730.0, 860.0, 1133.9675494142102, 1413.3815895525422, 930.0]
-        self.arm_damping = [285.5831564748846, 118.83365148810542, 126.05256283235089, 142.0533158479584, 142.85223328752122, 96.00503592486184]
         # arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos, 5hz non-blocking
-        # self.arm_stiffness = [1152.0108282835388, 771.7861981881418, 781.1904387419295, 1216.5626711702032, 1240.0554964267146, 971.3689326671778]
-        # self.arm_damping = [229.373162585023, 146.08337886179476, 135.92403426235794, 152.50791375322535, 256.0298757787416, 174.12470246546948]
         self.arm_stiffness = [1169.7891719504198, 730.0, 808.4601346394447, 1229.1299089624076, 1272.2760456418862, 1056.3326605132252]
         self.arm_damping = [330.0, 180.0, 152.12036565582588, 309.6215302722146, 201.04998711007383, 269.51458932695414]
+        # TODO: collision on table? 5hz delta pose sysid; check octo implementation
         
         self.arm_force_limit = [200, 200, 100, 100, 100, 100]
+        self.arm_friction = 0.0
         self.arm_vel_limit = 1.5
         self.arm_acc_limit = 2.0
         
-        self.gripper_stiffness = 1000 # 200
-        self.gripper_damping = 200 # 1000 # 700 # 60
-        self.gripper_pid_stiffness = 1000 # 4000
-        self.gripper_pid_damping = 200 # 1000
+        self.gripper_stiffness = 1000 
+        self.gripper_damping = 200 
+        self.gripper_pid_stiffness = 1000 
+        self.gripper_pid_damping = 200 
         self.gripper_pid_integral = 300
         self.gripper_force_limit = 60
         self.gripper_vel_limit = 0.12
@@ -88,48 +86,14 @@ class WidowXDefaultConfig:
             frame="ee",
             **arm_common_kwargs
         )
-        arm_pd_ee_delta_pose_align = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="ee_align",
-            **arm_common_kwargs,
-        )
         arm_pd_ee_delta_pose_align2 = PDEEPoseControllerConfig(
             *arm_common_args,
             frame="ee_align2",
             **arm_common_kwargs,
         )
-        arm_pd_ee_delta_pose_align_interpolate = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="ee_align",
-            interpolate=True,
-            **arm_common_kwargs,
-        )
-        arm_pd_ee_delta_pose_align_interpolate_by_planner = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="ee_align",
-            interpolate=True,
-            interpolate_by_planner = True,
-            interpolate_planner_vlim = self.arm_vel_limit,
-            interpolate_planner_alim = self.arm_acc_limit,
-            **arm_common_kwargs,
-        )
         arm_pd_ee_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
             *arm_common_args,
             frame="ee_align2",
-            interpolate=True,
-            interpolate_by_planner = True,
-            interpolate_planner_vlim = self.arm_vel_limit,
-            interpolate_planner_alim = self.arm_acc_limit,
-            **arm_common_kwargs,
-        )
-        arm_pd_ee_delta_pose_base = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="base",
-            **arm_common_kwargs,
-        )
-        arm_pd_ee_delta_pose_base_interpolate_by_planner = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="base",
             interpolate=True,
             interpolate_by_planner = True,
             interpolate_planner_vlim = self.arm_vel_limit,
@@ -142,34 +106,10 @@ class WidowXDefaultConfig:
             use_target=True,
             **arm_common_kwargs,
         )
-        arm_pd_ee_target_delta_pose_align = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="ee_align",
-            use_target=True,
-            **arm_common_kwargs,
-        )
         arm_pd_ee_target_delta_pose_align2 = PDEEPoseControllerConfig(
             *arm_common_args,
             frame="ee_align2",
             use_target=True,
-            **arm_common_kwargs,
-        )
-        arm_pd_ee_target_delta_pose_align_interpolate = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="ee_align",
-            use_target=True,
-            interpolate=True,
-            **arm_common_kwargs,
-        )
-        arm_pd_ee_target_delta_pose_align_interpolate_by_planner = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="ee_align",
-            use_target=True,
-            interpolate=True,
-            delta_target_from_last_drive_target=True,
-            interpolate_by_planner = True,
-            interpolate_planner_vlim = self.arm_vel_limit,
-            interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
         arm_pd_ee_target_delta_pose_align2_interpolate_by_planner = PDEEPoseControllerConfig(
@@ -183,50 +123,23 @@ class WidowXDefaultConfig:
             interpolate_planner_alim = self.arm_acc_limit,
             **arm_common_kwargs,
         )
-        arm_pd_ee_target_delta_pose_base = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="base",
-            use_target=True,
-            **arm_common_kwargs,
-        )
-        arm_pd_ee_target_delta_pose_base_interpolate_by_planner = PDEEPoseControllerConfig(
-            *arm_common_args,
-            frame="base",
-            use_target=True,
-            interpolate=True,
-            delta_target_from_last_drive_target=True,
-            interpolate_by_planner = True,
-            interpolate_planner_vlim = self.arm_vel_limit,
-            interpolate_planner_alim = self.arm_acc_limit,
-            **arm_common_kwargs,
-        )
         _C["arm"] = dict(
             arm_pd_ee_delta_pose=arm_pd_ee_delta_pose,
-            arm_pd_ee_delta_pose_align=arm_pd_ee_delta_pose_align,
             arm_pd_ee_delta_pose_align2=arm_pd_ee_delta_pose_align2,
-            arm_pd_ee_delta_pose_align_interpolate=arm_pd_ee_delta_pose_align_interpolate,
-            arm_pd_ee_delta_pose_align_interpolate_by_planner=arm_pd_ee_delta_pose_align_interpolate_by_planner,
             arm_pd_ee_delta_pose_align2_interpolate_by_planner=arm_pd_ee_delta_pose_align2_interpolate_by_planner,
-            arm_pd_ee_delta_pose_base=arm_pd_ee_delta_pose_base,
-            arm_pd_ee_delta_pose_base_interpolate_by_planner=arm_pd_ee_delta_pose_base_interpolate_by_planner,
             arm_pd_ee_target_delta_pose=arm_pd_ee_target_delta_pose,
-            arm_pd_ee_target_delta_pose_align=arm_pd_ee_target_delta_pose_align,
             arm_pd_ee_target_delta_pose_align2=arm_pd_ee_target_delta_pose_align2,
-            arm_pd_ee_target_delta_pose_align_interpolate=arm_pd_ee_target_delta_pose_align_interpolate,
-            arm_pd_ee_target_delta_pose_align_interpolate_by_planner=arm_pd_ee_target_delta_pose_align_interpolate_by_planner,
             arm_pd_ee_target_delta_pose_align2_interpolate_by_planner=arm_pd_ee_target_delta_pose_align2_interpolate_by_planner,
-            arm_pd_ee_target_delta_pose_base=arm_pd_ee_target_delta_pose_base,
-            arm_pd_ee_target_delta_pose_base_interpolate_by_planner=arm_pd_ee_target_delta_pose_base_interpolate_by_planner,
         )
 
         # -------------------------------------------------------------------------- #
         # Gripper
         # -------------------------------------------------------------------------- #
-        extra_gripper_clearance = 0.001 # since real gripper is PID, we use extra clearance to mitigate PD small errors
+        extra_gripper_clearance = 0.001 # since real gripper is PID, we use extra clearance to mitigate PD small errors; also a trick to have force when grasping
         gripper_pd_joint_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
             0.015 - extra_gripper_clearance,
-            0.037 + extra_gripper_clearance, # a trick to have force when grasping
+            0.037 + extra_gripper_clearance, 
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
@@ -236,7 +149,7 @@ class WidowXDefaultConfig:
         gripper_pd_joint_target_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
             0.015 - extra_gripper_clearance,
-            0.037 + extra_gripper_clearance, # a trick to have force when grasping
+            0.037 + extra_gripper_clearance, 
             self.gripper_stiffness,
             self.gripper_damping,
             self.gripper_force_limit,
@@ -244,25 +157,6 @@ class WidowXDefaultConfig:
             clip_target=True,
             clip_target_thres=extra_gripper_clearance,
             normalize_action=True,
-            drive_mode="force",
-        )
-        gripper_pd_joint_target_pos_interpolate_by_planner = PDJointPosMimicControllerConfig(
-            self.gripper_joint_names,
-            0.015 - extra_gripper_clearance,
-            0.037 + extra_gripper_clearance, # a trick to have force when grasping
-            self.gripper_stiffness,
-            self.gripper_damping,
-            self.gripper_force_limit,
-            use_target=True,
-            clip_target=True,
-            clip_target_thres=extra_gripper_clearance,
-            normalize_action=True,
-            interpolate=True,
-            interpolate_by_planner=True,
-            interpolate_planner_exec_set_target_vel=True,
-            interpolate_planner_vlim=self.gripper_vel_limit,
-            interpolate_planner_alim=self.gripper_acc_limit,
-            interpolate_planner_jerklim=self.gripper_jerk_limit,
             drive_mode="force",
         )
         gripper_pd_joint_delta_pos = PDJointPosMimicControllerConfig(
@@ -304,7 +198,6 @@ class WidowXDefaultConfig:
         _C["gripper"] = dict(
             gripper_pd_joint_pos=gripper_pd_joint_pos,
             gripper_pd_joint_target_pos=gripper_pd_joint_target_pos,
-            gripper_pd_joint_target_pos_interpolate_by_planner=gripper_pd_joint_target_pos_interpolate_by_planner,
             gripper_pd_joint_delta_pos=gripper_pd_joint_delta_pos,
             gripper_pd_joint_target_delta_pos=gripper_pd_joint_target_delta_pos,
             gripper_pid_joint_pos=gripper_pid_joint_pos,
@@ -326,14 +219,11 @@ class WidowXDefaultConfig:
     def cameras(self):
         return [
             CameraConfig(
-                uid="3rd_view_camera",
-                # p=[0.00, -0.16, 0.36],
+                uid="3rd_view_camera", # the camera used for real evaluation
                 p=[0.0, -0.16, 0.36],
-                # q=look_at([0, 0, 0], [1, 0.58, -1.0]).q, # p=[0.0, -0.16, 0.36], env_reset_options={'robot_init_options': {'init_xy': [0.16, 0.08], 'init_rot_quat': [0, 0, 0, 1]}}
-                # q=look_at([0, 0, 0], [1, 0.55, -1.04]).q, # p=[0.0, -0.16, 0.36], 'robot_init_options': {'init_xy': [0.13, 0.05], 'init_rot_quat': [0, 0, 0, 1]}
-                # q=look_at([0, 0, 0], [1, 0.553, -1.085]).q, # p=[0.0, -0.16, 0.36], 'robot_init_options': {'init_xy': [0.104, 0.028], 'init_rot_quat': [0, 0, 0, 1]}
-                q=look_at([0, 0, 0], [1, 0.553, -1.085]).q, # p=[0.0, -0.16, 0.36], 'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': [0, 0, 0, 1]}
-                # q=look_at([0, 0, 0], [1, 0.58, -0.96]).q,
+                # this rotation allows simulation proxy table to align almost perfectly with real table 
+                # when calling env.reset(options={'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': [0, 0, 0, 1]}})
+                q=look_at([0, 0, 0], [1, 0.553, -1.085]).q, 
                 width=640,
                 height=480,
                 fov=1.5,
@@ -343,12 +233,8 @@ class WidowXDefaultConfig:
                 intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
             ),
             CameraConfig(
-                uid="3rd_view_camera_bridge",
-                # p=[-0.0765 - 0.03, -0.0765 - 0.12, 0.20],
-                # p=[0.00, -0.14, 0.34],
+                uid="3rd_view_camera_bridge", # the camera used in the Bridge dataset
                 p=[0.00, -0.16, 0.336],
-                # q=[ 0.88047624, -0.11591689,  0.27984813,  0.3647052],
-                # q=[0.892258, -0.107725, 0.3071, 0.312987],
                 q=[0.909182, -0.0819809, 0.347277, 0.214629],
                 width=640,
                 height=480,

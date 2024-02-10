@@ -1,10 +1,3 @@
-"""
-python -m mani_skill2.examples.demo_manual_control \
-    -e OpenDrawerCustomInScene-v0 \
-    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner \
-    -o rgbd robot google_robot_static \
-    sim_freq @500 control_freq @15 scene_name frl_apartment_stage_simple scene_offset @[-1.8,-2.5,0.0]
-"""
 from collections import OrderedDict
 from typing import List, Optional
 
@@ -31,6 +24,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self.camera_mode = camera_mode
         self.station_name = station_name
         self.urdf_version = urdf_version
+        self.episode_stats = None
         super().__init__(**kwargs)
 
     # def _get_default_scene_config(self):

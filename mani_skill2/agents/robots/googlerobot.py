@@ -14,8 +14,8 @@ from mani_skill2.utils.sapien_utils import (
 class GoogleRobot(BaseAgent):
     
     """
-        Google Robot w/ the following modifications:
-            - Left / right finger tip joints are set as fixed joints w/ a fixed rotation from the finger link (see urdf)
+        Google Robot with the following modifications from the original :
+            - "joint_finger_{left/right}" are set as fixed joints with a fixed rotation from their corresponding "link_finger_{left/right}" (see urdf), in order to simulate the actual gripper during real evaluation
             - Manually-specified friction on the finger, finger tip and finger nail (see defaults.py)
             - Wheels are fixed if the robot is static (see urdf)
         robot.qpos is 13-dimensional if the robot is mobile, 11-dimensional if the robot is static
@@ -24,7 +24,7 @@ class GoogleRobot(BaseAgent):
             'joint_bicep', 'joint_elbow', 'joint_forearm', 'joint_wrist', 'joint_gripper', 
             'joint_finger_right', 'joint_finger_left', 
             'joint_head_pan', 'joint_head_tilt']
-        If robot is static, the first two joints are removed from the list of active joints.
+        If the robot is static, the first two joints are removed from the list of active joints.
     """
         
     def _after_init(self):
@@ -69,6 +69,8 @@ class GoogleRobot(BaseAgent):
         }
 
     def check_grasp(self, actor: sapien.ActorBase, min_impulse=1e-6, max_angle=80):
+        # check if the actor is grasped by the gripper
+        
         assert isinstance(actor, sapien.ActorBase), type(actor)
         contacts = self.scene.get_contacts()
 
@@ -216,21 +218,6 @@ class GoogleRobotStaticBaseWorseControl3(GoogleRobotStaticBase):
         return defaults.GoogleRobotStaticBaseWorseControl3Config()
     
 
-class GoogleRobotStaticBaseWorseControl4(GoogleRobotStaticBase):
-    _config: defaults.GoogleRobotStaticBaseWorseControl4Config
-
-    @classmethod
-    def get_default_config(cls):
-        return defaults.GoogleRobotStaticBaseWorseControl4Config()
-    
-    
-class GoogleRobotStaticBaseWorseControl5(GoogleRobotStaticBase):
-    _config: defaults.GoogleRobotStaticBaseWorseControl5Config
-
-    @classmethod
-    def get_default_config(cls):
-        return defaults.GoogleRobotStaticBaseWorseControl5Config()
-    
     
     
 class GoogleRobotMobileBase(GoogleRobot):
