@@ -362,14 +362,15 @@ class CustomSceneEnv(BaseEnv):
         return ' '.join(cleaned)
     
     
+    
 # ---------------------------------------------------------------------------- #
-# YCB
+# Custom Assets
 # ---------------------------------------------------------------------------- #
 
-class CustomYCBInSceneEnv(CustomSceneEnv):
-    DEFAULT_ASSET_ROOT = "{ASSET_DIR}/mani_skill2_ycb"
+class CustomOtherObjectsInSceneEnv(CustomSceneEnv):
+    DEFAULT_ASSET_ROOT = "{ASSET_DIR}/custom"
     DEFAULT_SCENE_ROOT = "{ASSET_DIR}/hab2_bench_assets"
-    DEFAULT_MODEL_JSON = "info_pick_v0.json"
+    DEFAULT_MODEL_JSON = "info_pick_custom_v0.json"
     obj_static_friction = 0.5
     obj_dynamic_friction = 0.5
 
@@ -380,17 +381,14 @@ class CustomYCBInSceneEnv(CustomSceneEnv):
             if not model_dir.exists():
                 raise FileNotFoundError(
                     f"{model_dir} is not found."
-                    "Please download (ManiSkill2) YCB models:"
-                    "`python -m mani_skill2.utils.download_asset ycb`."
                 )
 
             collision_file = model_dir / "collision.obj"
             if not collision_file.exists():
                 raise FileNotFoundError(
                     "convex.obj has been renamed to collision.obj. "
-                    "Please re-download YCB models."
                 )
-
+                
     @staticmethod
     def _build_actor_helper(
         model_id: str,
@@ -398,7 +396,7 @@ class CustomYCBInSceneEnv(CustomSceneEnv):
         scale: float = 1.0,
         physical_material: sapien.PhysicalMaterial = None,
         density: float = 1000.0,
-        root_dir: str = ASSET_DIR / "mani_skill2_ycb",
+        root_dir: str = ASSET_DIR / "custom",
     ):
         builder = scene.create_actor_builder()
         model_dir = Path(root_dir) / "models" / model_id
@@ -420,33 +418,6 @@ class CustomYCBInSceneEnv(CustomSceneEnv):
 
         actor = builder.build()
         return actor
-    
-    
-# ---------------------------------------------------------------------------- #
-# Custom Assets
-# ---------------------------------------------------------------------------- #
-
-class CustomOtherObjectsInSceneEnv(CustomYCBInSceneEnv):
-    DEFAULT_ASSET_ROOT = "{ASSET_DIR}/custom"
-    DEFAULT_SCENE_ROOT = "{ASSET_DIR}/hab2_bench_assets"
-    DEFAULT_MODEL_JSON = "info_pick_custom_v0.json"
-    obj_static_friction = 0.5
-    obj_dynamic_friction = 0.5
-
-    def _check_assets(self):
-        models_dir = self.asset_root / "models"
-        for model_id in self.model_ids:
-            model_dir = models_dir / model_id
-            if not model_dir.exists():
-                raise FileNotFoundError(
-                    f"{model_dir} is not found."
-                )
-
-            collision_file = model_dir / "collision.obj"
-            if not collision_file.exists():
-                raise FileNotFoundError(
-                    "convex.obj has been renamed to collision.obj. "
-                )
                 
                 
 

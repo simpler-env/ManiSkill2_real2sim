@@ -10,7 +10,7 @@ from mani_skill2.utils.common import random_choice
 from mani_skill2.utils.registration import register_env
 from mani_skill2.utils.sapien_utils import vectorize_pose
 
-from .base_env import CustomSceneEnv, CustomYCBInSceneEnv, CustomOtherObjectsInSceneEnv
+from .base_env import CustomSceneEnv, CustomOtherObjectsInSceneEnv
 
 
 class GraspSingleInSceneEnv(CustomSceneEnv):
@@ -361,12 +361,12 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 
 
 # ---------------------------------------------------------------------------- #
-# YCB
+# Custom Assets
 # ---------------------------------------------------------------------------- #
 
-@register_env("GraspSingleYCBInScene-v0", max_episode_steps=200)
-class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv, CustomYCBInSceneEnv):
-
+@register_env("GraspSingleCustomInScene-v0", max_episode_steps=200)
+class GraspSingleCustomInSceneEnv(GraspSingleInSceneEnv, CustomOtherObjectsInSceneEnv):
+    
     def _load_model(self):
         density = self.model_db[self.model_id].get("density", 1000)
         
@@ -400,56 +400,6 @@ class GraspSingleYCBInSceneEnv(GraspSingleInSceneEnv, CustomYCBInSceneEnv):
     def _get_init_z(self):
         bbox_min = self.model_db[self.model_id]["bbox"]["min"]
         return -bbox_min[2] * self.model_scale + 0.05
-    
-    def get_language_instruction(self):
-        obj_name = ' '.join(self.obj.name.split('_')[1:]) # remove the leading number from YCB object name
-        task_description = f"pick {obj_name}"
-        return task_description
-        
-
-@register_env("GraspSingleYCBCanInScene-v0", max_episode_steps=200)
-class GraspSingleYCBCanInSceneEnv(GraspSingleYCBInSceneEnv):
-    
-    def __init__(self, **kwargs):
-        kwargs.pop('model_ids', None)
-        kwargs['model_ids'] = ["002_master_chef_can", "005_tomato_soup_can", "007_tuna_fish_can", "010_potted_meat_can"]
-        super().__init__(**kwargs)
-        
-    def get_language_instruction(self):
-        return "pick can"
-    
-
-@register_env("GraspSingleYCBTomatoCanInScene-v0", max_episode_steps=200)
-class GraspSingleYCBTomatoCanInSceneEnv(GraspSingleYCBInSceneEnv):
-    
-    def __init__(self, **kwargs):
-        kwargs.pop('model_ids', None)
-        kwargs['model_ids'] = ["005_tomato_soup_can"]
-        super().__init__(**kwargs)
-        
-    def get_language_instruction(self):
-        return "pick can"
-    
-    
-@register_env("GraspSingleYCBBoxInScene-v0", max_episode_steps=200)
-class GraspSingleYCBBoxInSceneEnv(GraspSingleYCBInSceneEnv):
-    
-    def __init__(self, **kwargs):
-        kwargs.pop('model_ids', None)
-        kwargs['model_ids'] = ["003_cracker_box", "004_sugar_box", "008_pudding_box", "009_gelatin_box"]
-        super().__init__(**kwargs)
-        
-    def get_language_instruction(self):
-        return "pick box"
-    
-        
-        
-# ---------------------------------------------------------------------------- #
-# Custom Assets
-# ---------------------------------------------------------------------------- #
-
-@register_env("GraspSingleCustomInScene-v0", max_episode_steps=200)
-class GraspSingleCustomInSceneEnv(GraspSingleYCBInSceneEnv, CustomOtherObjectsInSceneEnv):
     
     def get_language_instruction(self):
         obj_name = self._get_instruction_obj_name(self.obj.name)
