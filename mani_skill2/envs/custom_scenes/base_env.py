@@ -77,6 +77,8 @@ class CustomSceneEnv(BaseEnv):
         if not model_json.exists():
             raise FileNotFoundError(
                 f"{model_json} is not found."
+                "Please make sure the environment variable is set: export MS2_ASSET_DIR={path_to_ManiSkill2_real2sim}/data ."
+                "If you have already set the environment variable, and if the missing dataset is provided by the original ManiSkill2 repo, "
                 "Please download the corresponding assets:"
                 "`python -m mani_skill2.utils.download_asset ${ENV_ID}`."
             )
