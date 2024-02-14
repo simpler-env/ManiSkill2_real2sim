@@ -11,10 +11,10 @@ from mani_skill2 import ASSET_DIR, format_path
 from mani_skill2.utils.io_utils import load_json
 from mani_skill2.agents.base_agent import BaseAgent
 from mani_skill2.agents.robots.googlerobot import (
-    GoogleRobotStaticBase, GoogleRobotStaticBaseColorAdjust,
+    GoogleRobotStaticBase, 
     GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
 )
-from mani_skill2.agents.robots.widowx import WidowX
+from mani_skill2.agents.robots.widowx import WidowX, WidowXCameraSetup2
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.sensors.camera import CameraConfig
@@ -27,11 +27,11 @@ from mani_skill2.utils.sapien_utils import (
 
 class CustomSceneEnv(BaseEnv):
     SUPPORTED_ROBOTS = {"google_robot_static": GoogleRobotStaticBase, 
-                        "google_robot_static_color_adjust": GoogleRobotStaticBaseColorAdjust,
                         "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
                         "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
                         "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
                         "widowx": WidowX,
+                        "widowx_camera_setup2": WidowXCameraSetup2,
                         "panda": Panda}
     agent: Union[GoogleRobotStaticBase, WidowX, Panda]
     DEFAULT_ASSET_ROOT: str
@@ -41,18 +41,19 @@ class CustomSceneEnv(BaseEnv):
     def __init__(
             self, 
             robot: str = "panda", 
-            rgb_overlay_path: str = None, 
+            rgb_overlay_path: Optional[str] = None, 
             rgb_overlay_cameras: list = [], 
             rgb_overlay_mode: str = 'background',
             disable_bad_material: bool = False,
-            asset_root: str = None,
-            scene_root: str = None,
-            scene_name: str = None,
+            asset_root: Optional[str] = None,
+            scene_root: Optional[str] = None,
+            scene_name: Optional[str] = None,
             scene_offset: Optional[List[float]] = None,
             scene_pose: Optional[List[float]] = None,
             scene_table_height: float = 0.85,
-            model_json: str = None,
+            model_json: Optional[str] = None,
             model_ids: List[str] = (),
+            urdf_version: str = "",
             **kwargs
         ):
         # Assets and scene
@@ -106,6 +107,7 @@ class CustomSceneEnv(BaseEnv):
         self.arena = None
         self.robot_init_options = {}
         self.robot_uid = robot
+        self.urdf_version = urdf_version
         self.disable_bad_material = disable_bad_material
         
         super().__init__(**kwargs)
@@ -118,9 +120,9 @@ class CustomSceneEnv(BaseEnv):
         builder = self._scene.create_actor_builder()
         # scene path
         if self.scene_name is None:
-            if "google_robot_static" in self.robot_uid:
+            if 'google_robot_static' in self.robot_uid:
                 scene_path = str(self.scene_root / "stages/google_pick_coke_can_1_v4.glb") # hardcoded for now
-            elif self.robot_uid == "widowx":
+            elif 'widowx' in self.robot_uid:
                 scene_path = str(self.scene_root / "stages/bridge_table_1_v1.glb") # hardcoded for now
             else:
                 raise NotImplementedError(f"Default scene path for {self.robot_uid} is not yet set")
@@ -131,9 +133,9 @@ class CustomSceneEnv(BaseEnv):
         
         # scene offset and pose
         if self.scene_offset is None:
-            if "google_robot_static" in self.robot_uid:
+            if 'google_robot_static' in self.robot_uid:
                 scene_offset = np.array([-1.6616, -3.0337, 0.0]) # corresponds to the default offset of google_pick_coke_can_1_v4.glb
-            elif self.robot_uid == "widowx":
+            elif 'widowx' in self.robot_uid:
                 scene_offset = np.array([-2.0634, -2.8313, 0.0])# corresponds to the default offset of bridge_table_1_v1.glb
             else:
                 raise NotImplementedError(f"Default scene offset for {self.robot_uid} is not yet set")
@@ -207,6 +209,10 @@ class CustomSceneEnv(BaseEnv):
     def _configure_agent(self):
         agent_cls: Type[BaseAgent] = self.SUPPORTED_ROBOTS[self.robot_uid]
         self._agent_cfg = agent_cls.get_default_config()
+        if self.urdf_version != "":
+            self._agent_cfg.urdf_path = self._agent_cfg.urdf_path.replace(
+                ".urdf", f"_{self.urdf_version}.urdf"
+            )
 
     def _load_agent(self):
         agent_cls: Type[GoogleRobotStaticBase] = self.SUPPORTED_ROBOTS[self.robot_uid]
@@ -236,8 +242,10 @@ class CustomSceneEnv(BaseEnv):
             )
             robot_init_height = 0.06205 + 0.017 # base height + ground offset in default scene
             robot_init_rot_quat = [0, 0, 0, 1]
-        elif self.robot_uid == 'widowx':
+        elif 'widowx' in self.robot_uid:
             qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
+            # qpos = np.array([0.0, 0.5, -0.5, 0.0, 1.5707963267948966, 0.0, 0.037, 0.037])
+            # qpos = np.array([-0.13192235, -0.76238847,  0.44485444, -0.01994175,  1.7564081,  -0.15953401, 0.037, 0.037])
             robot_init_height = 0.870
             robot_init_rot_quat = [0, 0, 0, 1]
         else:

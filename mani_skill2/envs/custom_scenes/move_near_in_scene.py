@@ -474,17 +474,9 @@ class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
 class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v1.json"
 
-    def __init__(self, light_mode=None, urdf_version="", **kwargs):
+    def __init__(self, light_mode=None, **kwargs):
         self.light_mode = light_mode
-        self.urdf_version = urdf_version
         super().__init__(**kwargs)
-
-    def _configure_agent(self):
-        super()._configure_agent()
-        if self.urdf_version != "":
-            self._agent_cfg.urdf_path = self._agent_cfg.urdf_path.replace(
-                ".urdf", f"_{self.urdf_version}.urdf"
-            )
 
     def _setup_lighting(self):
         if "simple" not in self.light_mode:

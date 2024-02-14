@@ -6,15 +6,11 @@ from mani_skill2.sensors.camera import CameraConfig
 
 
 class GoogleRobotDefaultConfig:
-    def __init__(self, mobile_base=False, base_arm_drive_mode='force', color_adjust=False) -> None:
-        if color_adjust:
-            assert not mobile_base, "Not Implemented"
-            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description_color_adjust/google_robot_meta_sim_fix_wheel_fix_fingertip.urdf"
+    def __init__(self, mobile_base=False, base_arm_drive_mode='force') -> None:
+        if mobile_base:
+            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_fingertip.urdf"
         else:
-            if mobile_base:
-                self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_fingertip.urdf"
-            else:
-                self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_wheel_fix_fingertip.urdf"
+            self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_wheel_fix_fingertip.urdf"
         
         finger_min_patch_radius = 0.1 # used to calculate torsional friction
         finger_nail_min_patch_radius = 0.01
@@ -315,12 +311,6 @@ class GoogleRobotStaticBaseConfig(GoogleRobotDefaultConfig):
     
     def __init__(self) -> None:
         super().__init__(mobile_base=False)
-        
-
-class GoogleRobotStaticBaseColorAdjustConfig(GoogleRobotDefaultConfig):
-    
-    def __init__(self) -> None:
-        super().__init__(mobile_base=False, color_adjust=True)
         
 
 class GoogleRobotStaticBaseWorseControl1Config(GoogleRobotDefaultConfig):

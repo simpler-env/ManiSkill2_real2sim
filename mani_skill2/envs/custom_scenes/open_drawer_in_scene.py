@@ -17,13 +17,11 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         light_mode=None,
         camera_mode=None,
         station_name="mk_station",
-        urdf_version="",
         **kwargs,
     ):
         self.light_mode = light_mode
         self.camera_mode = camera_mode
         self.station_name = station_name
-        self.urdf_version = urdf_version
         self.episode_stats = None
         super().__init__(**kwargs)
 
@@ -31,13 +29,6 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
     #     scene_config = super()._get_default_scene_config()
     #     scene_config.enable_pcm = True
     #     return scene_config
-
-    def _configure_agent(self):
-        super()._configure_agent()
-        if self.urdf_version != "":
-            self._agent_cfg.urdf_path = self._agent_cfg.urdf_path.replace(
-                ".urdf", f"_{self.urdf_version}.urdf"
-            )
 
     def _initialize_agent(self):
         init_qpos = np.array(
