@@ -139,3 +139,11 @@ class WidowX(BaseAgent):
     @property
     def base_pose(self):
         return self.base_link.get_pose()
+    
+    
+class WidowXCameraSetup2(WidowX):
+    _config: defaults.WidowXCameraSetup2Config
+    
+    @classmethod
+    def get_default_config(cls):
+        return defaults.WidowXCameraSetup2Config()

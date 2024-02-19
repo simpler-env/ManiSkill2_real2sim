@@ -22,6 +22,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         original_lighting: bool = False,
         slightly_darker_lighting: bool = False,
         slightly_brighter_lighting: bool = False,
+        ambient_only_lighting: bool = False,
         **kwargs,
     ):
         self.episode_objs = [None] * 3
@@ -44,6 +45,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         self.original_lighting = original_lighting
         self.slightly_darker_lighting = slightly_darker_lighting
         self.slightly_brighter_lighting = slightly_brighter_lighting
+        self.ambient_only_lighting = ambient_only_lighting
         
         super().__init__(**kwargs)
 
@@ -57,18 +59,20 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             return
 
         shadow = self.enable_shadow
-        self._scene.set_ambient_light([0.3, 0.3, 0.3])
         if self.original_lighting:
+            self._scene.set_ambient_light([0.3, 0.3, 0.3])
             self._scene.add_directional_light(
                 [1, 1, -1], [1, 1, 1], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [1, 1, 1])
         elif self.slightly_darker_lighting:
+            self._scene.set_ambient_light([0.3, 0.3, 0.3])
             self._scene.add_directional_light(
                 [1, 1, -1], [0.8, 0.8, 0.8], shadow=shadow, scale=5, shadow_map_size=2048
             )
             self._scene.add_directional_light([0, 0, -1], [0.8, 0.8, 0.8])
         elif self.slightly_brighter_lighting:
+            self._scene.set_ambient_light([0.3, 0.3, 0.3])
             self._scene.add_directional_light(
                 [0, 0, -1], [3.6, 3.6, 3.6], shadow=shadow, scale=5, shadow_map_size=2048
             )
@@ -78,8 +82,11 @@ class MoveNearInSceneEnv(CustomSceneEnv):
             self._scene.add_directional_light(
                 [1, 1, -1], [1.3, 1.3, 1.3]
             )
+        elif self.ambient_only_lighting:
+            self._scene.set_ambient_light([1.0, 1.0, 1.0])
         else:
             # Default lighting
+            self._scene.set_ambient_light([0.3, 0.3, 0.3])
             self._scene.add_directional_light(
                 [0, 0, -1], [2.2, 2.2, 2.2], shadow=shadow, scale=5, shadow_map_size=2048
             )
@@ -479,7 +486,7 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
         super().__init__(**kwargs)
 
     def _setup_lighting(self):
-        if "simple" not in self.light_mode:
+        if (self.light_mode is None) or ("simple" not in self.light_mode):
             super()._setup_lighting()
         elif self.light_mode == "simple":
             self._scene.set_ambient_light([1.0] * 3)
@@ -494,11 +501,11 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
     def _setup_obj_configs(self):
         # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
         self.triplets = [
-            ("blue_plastic_bottle_v2", "opened_pepsi_can_v2", "orange_v2"),
+            ("blue_plastic_bottle", "opened_pepsi_can_v2", "orange"),
             ("opened_7up_can_v2", "apple_v2", "sponge_v2"),
             ("opened_coke_can_v2", "opened_redbull_can_v2", "apple_v2"),
-            ("sponge_v2", "blue_plastic_bottle_v2", "opened_7up_can_v2"),
-            ("orange_v2", "opened_pepsi_can_v2", "opened_redbull_can_v2"),
+            ("sponge_v2", "blue_plastic_bottle", "opened_7up_can_v2"),
+            ("orange", "opened_pepsi_can_v2", "opened_redbull_can_v2"),
         ]
         self._source_obj_ids, self._target_obj_ids = [], []
         for i in range(3):
@@ -511,9 +518,9 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
             ([-0.13, 0.04], [-0.33, 0.19], [-0.13, 0.34]),
         ]
         self.obj_init_quat_dict = {
-            "blue_plastic_bottle_v2": euler2quat(np.pi/2, 0, np.pi/2),
+            "blue_plastic_bottle": euler2quat(np.pi/2, 0, np.pi/2),
             "opened_pepsi_can_v2": euler2quat(np.pi/2, 0, 0),
-            "orange_v2": euler2quat(0, 0, np.pi/2),
+            "orange": euler2quat(0, 0, np.pi/2),
             "opened_7up_can_v2": euler2quat(np.pi/2, 0, 0),
             "apple_v2": [1.0, 0.0, 0.0, 0.0],
             "sponge_v2": euler2quat(0, 0, np.pi/2),
@@ -522,7 +529,7 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
         }
         self.special_density_dict = {
             "apple_v2": 200, 
-            "orange_v2": 200
+            "orange": 200
         }
 
     def _load_model(self):
