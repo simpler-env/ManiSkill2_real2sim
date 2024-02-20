@@ -41,7 +41,6 @@ class WidowXDefaultConfig:
         # arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos, 5hz non-blocking
         self.arm_stiffness = [1169.7891719504198, 730.0, 808.4601346394447, 1229.1299089624076, 1272.2760456418862, 1056.3326605132252]
         self.arm_damping = [330.0, 180.0, 152.12036565582588, 309.6215302722146, 201.04998711007383, 269.51458932695414]
-        # TODO: collision on table? 5hz delta pose sysid; check octo implementation
         
         self.arm_force_limit = [200, 200, 100, 100, 100, 100]
         self.arm_friction = 0.0
@@ -224,6 +223,8 @@ class WidowXDefaultConfig:
     
     @property
     def cameras(self):
+        # Table width: about 36cm
+        
         return [
             CameraConfig(
                 uid="3rd_view_camera", # the camera used for real evaluation
@@ -254,69 +255,37 @@ class WidowXDefaultConfig:
         ]
         
 class WidowXCameraSetup2Config(WidowXDefaultConfig):
-    # Table 40cm x 60cm
+    # Table dim: 33.8cm x 59.2cm
+    
     @property
     def cameras(self):
         return [
-            # CameraConfig(
-            #     uid="3rd_view_camera", # the camera used for real evaluation
-            #     # p=[-0.028, -0.171, 0.363], 
-            #     p=[-0.01, -0.181, 0.383], 
-            #     # q=look_at([0, 0, 0], [0.638, 0.398, -0.659]).q,
-            #     q=look_at([0, 0, 0], [0.638, 0.398, -0.669]).q,
-            #     width=640,
-            #     height=480,
-            #     fov=1.5,
-            #     near=0.01,
-            #     far=10,
-            #     actor_uid="base_link",
-            #     intrinsic=np.array([[652.1, 0, 316.45], [0, 652.1, 230.87], [0, 0, 1]]),
-            #     # intrinsic=np.array([[646.1, 0, 321], [0, 646.1, 234], [0, 0, 1]]),
-            #     # intrinsic=np.array([[640.6, 0, 320], [0, 640.6, 240], [0, 0, 1]]), # logitech C920
-            # ),
-            # CameraConfig(
-            #     uid="3rd_view_camera", # the camera used for real evaluation
-            #     # p=[0.202, 0.268, 1.26], # 40cm x 60cm
-            #     # p=[0.175, 0.199, 1.183], # 33.8cm x 59.2cm
-            #     p=[0.165, 0.220, 1.210], 
-            #     # this rotation allows simulation proxy table to align almost perfectly with real table for bridge_real_eval_2.png
-            #     # when calling env.reset(options={'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': [0, 0, 0, 1]}})
-            #     # q=look_at([0, 0, 0], [-0.624, -0.384, -0.680]).q, # 40cm x 60cm
-            #     # q=look_at([0, 0, 0], [-0.61, -0.38, -0.630]).q, # 33.8cm x 59.2cm
-            #     q=look_at([0, 0, 0], [-0.61, -0.36, -0.650]).q,
-            #     # q=look_at([0, 0, 0], [-0.626, -0.38, -0.650]).q,
-            #     width=640,
-            #     height=480,
-            #     fov=1.5,
-            #     near=0.01,
-            #     far=10,
-            #     actor_uid=None,
-            #     # intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
-            #     # intrinsic=np.array([[657.456169763, 0, 282.7315], [0, 657.456122806, 241.4635], [0, 0, 1]]), # logitech C920
-            #     intrinsic=np.array([[652.1, 0, 316.45], [0, 652.1, 230.87], [0, 0, 1]]), # logitech C920
-            # ),
             CameraConfig(
                 uid="3rd_view_camera", # the camera used for real evaluation
-                # p=[-0.055, -0.24, 0.39],
-                p=[-0.0223413, -0.144395, 0.37],
-                # p=[-0.028, -0.22, 0.377],
+                p=[-0.023, -0.150, 0.340], 
                 # this rotation allows simulation proxy table to align almost perfectly with real table for bridge_real_eval_2.png
-                # when calling env.reset(options={'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': [0, 0, 0, 1]}})
-                # q=look_at([0, 0, 0], [1, 0.600, -1.085]).q, 
-                # q=look_at([0, 0, 0], [1, 0.615, -1.090]).q, 
-                q=[-0.902541, 0.0903076, -0.35136, -0.231974],
-                # q=look_at([0, 0, 0], [1, 0.600, -1.070]).q, 
+                # when calling env.reset(options={'robot_init_options': {'init_xy': [0.147, 0.070], 'init_rot_quat': [0, 0, 0, 1]}})
+                q=look_at([0, 0, 0], [0.642, 0.385, -0.663]).q,
                 width=640,
                 height=480,
                 fov=1.5,
                 near=0.01,
                 far=10,
                 actor_uid="base_link",
-                # intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
-                # intrinsic=np.array([[657.456169763, 0, 282.7315], [0, 657.456122806, 241.4635], [0, 0, 1]]), # logitech C920
-                intrinsic=np.array([[652.1, 0, 316.45], [0, 652.1, 230.87], [0, 0, 1]]),
-                # intrinsic=np.array([[652.1, 0, 243], [0, 652.1, 213.6], [0, 0, 1]]),
+                intrinsic=np.array([[655.7, 0, 302.0], [0, 655.7, 223.5], [0, 0, 1]]), # logitech C920
             ),
+            # CameraConfig(
+            #     uid="3rd_view_camera", # the camera used for real evaluation
+            #     p=[0.170, 0.220, 1.210], 
+            #     q=look_at([0, 0, 0], [-0.60, -0.36, -0.620]).q,
+            #     width=640,
+            #     height=480,
+            #     fov=1.5,
+            #     near=0.01,
+            #     far=10,
+            #     actor_uid=None,
+            #     intrinsic=np.array([[655.7, 0, 302.0], [0, 655.7, 223.5], [0, 0, 1]]), # logitech C920
+            # ),
             CameraConfig(
                 uid="3rd_view_camera_bridge", # the camera used in the Bridge dataset
                 p=[0.00, -0.16, 0.336],

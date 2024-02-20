@@ -304,6 +304,27 @@ class GoogleRobotDefaultConfig:
             far=10,
             actor_uid="link_camera",
             intrinsic=np.array([[425.0, 0, 320.0], [0, 425.0, 256.0], [0, 0, 1]]),
+            # intrinsic=np.array([[413.438870413, 0, 320.0], [0, 413.035493225, 256.0], [0, 0, 1]]),
+            # intrinsic=np.array([[413.038870413, 0, 310.0], [0, 395.035493225, 235.0], [0, 0, 1]]),
+            # intrinsic=np.array([[425.0, 0, 310.0], [0, 418.1, 230.0], [0, 0, 1]]),
+            # intrinsic=np.array([[425.0, 0, 305.0], [0, 413.1, 233.0], [0, 0, 1]]),
+            # intrinsic=np.array([[425.0, 0, 305.0], [0, 413.1, 233.0], [0, 0, 1]]),
+        )
+        
+class GoogleRobotManualTunedIntrinsicConfig(GoogleRobotDefaultConfig):
+    @property
+    def cameras(self):
+        return CameraConfig(
+            uid="overhead_camera",
+            p=[0, 0, 0],
+            q=[0.5, 0.5, -0.5, 0.5], 
+            width=640,
+            height=512,
+            fov=1.5,
+            near=0.01,
+            far=10,
+            actor_uid="link_camera",
+            intrinsic=np.array([[425.0, 0, 305.0], [0, 413.1, 233.0], [0, 0, 1]]),
         )
         
         
@@ -311,6 +332,10 @@ class GoogleRobotStaticBaseConfig(GoogleRobotDefaultConfig):
     
     def __init__(self) -> None:
         super().__init__(mobile_base=False)
+        
+
+class GoogleRobotStaticBaseManualTunedIntrinsicConfig(GoogleRobotStaticBaseConfig, GoogleRobotManualTunedIntrinsicConfig):
+    pass
         
 
 class GoogleRobotStaticBaseWorseControl1Config(GoogleRobotDefaultConfig):

@@ -187,6 +187,15 @@ class GoogleRobotStaticBase(GoogleRobot):
         active_joints = self.robot.get_active_joints()
         assert active_joints[0].name == "joint_torso"
     
+
+class GoogleRobotStaticBaseManualTunedIntrinsic(GoogleRobotStaticBase):
+    _config: defaults.GoogleRobotStaticBaseManualTunedIntrinsicConfig
+    
+    @classmethod
+    def get_default_config(cls):
+        return defaults.GoogleRobotStaticBaseManualTunedIntrinsicConfig()
+
+
 class GoogleRobotStaticBaseWorseControl1(GoogleRobotStaticBase):
     _config: defaults.GoogleRobotStaticBaseWorseControl1Config
 

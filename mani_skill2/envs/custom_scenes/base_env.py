@@ -11,7 +11,7 @@ from mani_skill2 import ASSET_DIR, format_path
 from mani_skill2.utils.io_utils import load_json
 from mani_skill2.agents.base_agent import BaseAgent
 from mani_skill2.agents.robots.googlerobot import (
-    GoogleRobotStaticBase, 
+    GoogleRobotStaticBase, GoogleRobotStaticBaseManualTunedIntrinsic,
     GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
 )
 from mani_skill2.agents.robots.widowx import WidowX, WidowXCameraSetup2
@@ -27,6 +27,7 @@ from mani_skill2.utils.sapien_utils import (
 
 class CustomSceneEnv(BaseEnv):
     SUPPORTED_ROBOTS = {"google_robot_static": GoogleRobotStaticBase, 
+                        "google_robot_static_manual_tuned_intrinsic": GoogleRobotStaticBaseManualTunedIntrinsic, 
                         "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
                         "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
                         "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
@@ -243,10 +244,10 @@ class CustomSceneEnv(BaseEnv):
             robot_init_height = 0.06205 + 0.017 # base height + ground offset in default scene
             robot_init_rot_quat = [0, 0, 0, 1]
         elif 'widowx' in self.robot_uid:
-            qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
-            # qpos = np.array([0.0, 0.5, -0.5, 0.0, 1.5707963267948966, 0.0, 0.037, 0.037])
-            # qpos = np.array([-0.13192235, -0.76238847,  0.44485444, -0.01994175,  1.7564081,  -0.15953401, 0.037, 0.037])
-            robot_init_height = 0.870
+            qpos = np.array([-0.0184078, 0.07292216, 0.29707832, -0.00474127, 1.24072885, 0.00202769, 0.037, 0.037])
+            # qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
+            # qpos = np.array([-0.01840777,  0.0398835,   0.22242722,  -0.00460194,  1.36524296,  0.00153398, 0.037, 0.037])
+            robot_init_height = 0.870 # 0.870
             robot_init_rot_quat = [0, 0, 0, 1]
         else:
             raise NotImplementedError(self.robot_uid)
@@ -268,7 +269,7 @@ class CustomSceneEnv(BaseEnv):
                 init_y = self._episode_rng.uniform(0.0, 0.2)
             elif 'widowx' in self.robot_uid:
                 init_x = 0.147
-                init_y = 0.028
+                init_y = 0.070 # 0.028
             else:
                 init_x, init_y = 0.0, 0.0
             robot_init_xyz = [init_x, init_y, robot_init_height]
