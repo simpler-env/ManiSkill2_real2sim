@@ -20,6 +20,12 @@ This file has been manually updated on <03/12/2019>.
       <origin xyz="-0.142542994624505 2.33339305547787E-03 0.130110970092973" rpy="0.0 0.0 0.0"/>
       <inertia ixx="2.78321475990223" ixy="1.02013636219535E-03" ixz="-0.544719331016329" iyy="3.24941132525702" iyz="7.51942241521894E-03" izz="1.33602142044359"/>
     </inertial>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="3obj/link_base.glb"/>
+      </geometry>
+    </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
       <geometry>
@@ -279,7 +285,7 @@ This file has been manually updated on <03/12/2019>.
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="3obj_recolor/link_finger_base_simplified.3obj.obj"/>
+        <mesh filename="3obj_recolor_cabinet_visual_matching_gripper_only/link_finger_base_simplified.3obj.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -304,7 +310,7 @@ This file has been manually updated on <03/12/2019>.
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="3obj_recolor/link_finger_tip_simplified.3obj.obj"/>
+        <mesh filename="3obj_recolor_cabinet_visual_matching_gripper_only/link_finger_tip_simplified.3obj.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -347,7 +353,7 @@ This file has been manually updated on <03/12/2019>.
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="3obj_recolor/link_finger_base_simplified.3obj.obj"/>
+        <mesh filename="3obj_recolor_cabinet_visual_matching_gripper_only/link_finger_base_simplified.3obj.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -372,7 +378,7 @@ This file has been manually updated on <03/12/2019>.
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="3obj_recolor/link_finger_tip_simplified.3obj.obj"/>
+        <mesh filename="3obj_recolor_cabinet_visual_matching_gripper_only/link_finger_tip_simplified.3obj.obj"/>
       </geometry>
     </visual>
     <collision>
