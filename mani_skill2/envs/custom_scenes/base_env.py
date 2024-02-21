@@ -108,6 +108,8 @@ class CustomSceneEnv(BaseEnv):
         self.arena = None
         self.robot_init_options = {}
         self.robot_uid = robot
+        if urdf_version is None or urdf_version == "None":
+            urdf_version = ""
         self.urdf_version = urdf_version
         self.disable_bad_material = disable_bad_material
         
