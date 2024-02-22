@@ -36,7 +36,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
             
         return super()._set_model(model_ids, model_scales)
     
-    def evaluate(self, **kwargs):
+    def evaluate(self, success_require_src_completely_on_target=True, **kwargs):
         source_obj_pose = self.source_obj_pose
         target_obj_pose = self.target_obj_pose
         
@@ -66,32 +66,33 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         pos_tgt = target_obj_pose.p
         offset = pos_src - pos_tgt
         xy_flag = (
-            np.linalg.norm(offset[:2]) <= np.linalg.norm(tgt_obj_half_length_bbox[:2]) - 0.005
+            np.linalg.norm(offset[:2]) <= np.linalg.norm(tgt_obj_half_length_bbox[:2]) + 0.01
         )
         z_flag = (offset[2] > 0) and (offset[2] - tgt_obj_half_length_bbox[2] - src_obj_half_length_bbox[2] <= 0.02)
         src_on_target = (xy_flag and z_flag)
         
-        # whether the source object is on the target object based on contact information
-        contacts = self._scene.get_contacts()
-        flag = True
-        robot_link_names = [x.name for x in self.agent.robot.get_links()]
-        tgt_obj_name = self.episode_target_obj.name
-        ignore_actor_names = [tgt_obj_name] + robot_link_names
-        for contact in contacts:
-            actor_0, actor_1 = contact.actor0, contact.actor1
-            other_obj_contact_actor_name = None
-            if actor_0.name == self.episode_source_obj.name:
-                other_obj_contact_actor_name = actor_1.name
-            elif actor_1.name == self.episode_source_obj.name:
-                other_obj_contact_actor_name = actor_0.name
-            if other_obj_contact_actor_name is not None:
-                # the object is in contact with an actor
-                contact_impulse = np.sum([point.impulse for point in contact.points], axis=0)
-                if (other_obj_contact_actor_name not in ignore_actor_names) and (np.linalg.norm(contact_impulse) > 1e-6):
-                    # the object has contact with an actor other than the robot link or the target object, so the object is not yet put on the target object
-                    flag = False
-                    break
-        src_on_target = src_on_target and flag
+        if success_require_src_completely_on_target:
+            # whether the source object is on the target object based on contact information
+            contacts = self._scene.get_contacts()
+            flag = True
+            robot_link_names = [x.name for x in self.agent.robot.get_links()]
+            tgt_obj_name = self.episode_target_obj.name
+            ignore_actor_names = [tgt_obj_name] + robot_link_names
+            for contact in contacts:
+                actor_0, actor_1 = contact.actor0, contact.actor1
+                other_obj_contact_actor_name = None
+                if actor_0.name == self.episode_source_obj.name:
+                    other_obj_contact_actor_name = actor_1.name
+                elif actor_1.name == self.episode_source_obj.name:
+                    other_obj_contact_actor_name = actor_0.name
+                if other_obj_contact_actor_name is not None:
+                    # the object is in contact with an actor
+                    contact_impulse = np.sum([point.impulse for point in contact.points], axis=0)
+                    if (other_obj_contact_actor_name not in ignore_actor_names) and (np.linalg.norm(contact_impulse) > 1e-6):
+                        # the object has contact with an actor other than the robot link or the target object, so the object is not yet put on the target object
+                        flag = False
+                        break
+            src_on_target = src_on_target and flag
         
         success = src_on_target
         
@@ -180,7 +181,7 @@ class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
         source_obj_name = "bridge_spoon_generated_modified",
-        target_obj_name = "table_cloth_generated",
+        target_obj_name = "table_cloth_generated_shorter",
         **kwargs,
     ):
         xy_center = np.array([-0.16, 0.00])
@@ -206,27 +207,15 @@ class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
             **kwargs
         )
     
+    def evaluate(self, success_require_src_completely_on_target=False, **kwargs):
+        # this environment allows spoons to be partially on the table cloth to be considered successful
+        return super().evaluate(success_require_src_completely_on_target, **kwargs)
+        
+    
     def get_language_instruction(self):
         return "put the spoon on the towel"
     
-    
-@register_env("PutSpoonOnTableClothBakedTexInScene-v0", max_episode_steps=200)
-class PutSpoonOnTableClothBakedTexInScene(PutSpoonOnTableClothInScene):
-    DEFAULT_MODEL_JSON = "info_bridge_custom_baked_tex_v0.json"
-    
-    def __init__(
-        self,
-        **kwargs,
-    ):
-        source_obj_name = "baked_bridge_spoon_generated_modified"
-        target_obj_name = "baked_table_cloth_generated"
-        super().__init__(
-            source_obj_name=source_obj_name,
-            target_obj_name=target_obj_name,
-            **kwargs
-        )
 
-    
     
     
 @register_env("PutCarrotOnPlateInScene-v0", max_episode_steps=200)

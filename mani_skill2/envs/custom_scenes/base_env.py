@@ -246,10 +246,14 @@ class CustomSceneEnv(BaseEnv):
             robot_init_height = 0.06205 + 0.017 # base height + ground offset in default scene
             robot_init_rot_quat = [0, 0, 0, 1]
         elif 'widowx' in self.robot_uid:
-            qpos = np.array([-0.0184078, 0.07292216, 0.29707832, -0.00474127, 1.24072885, 0.00202769, 0.037, 0.037])
+            if self.robot_uid == 'widowx':
+                qpos = np.array([-0.01840777,  0.0398835,   0.22242722,  -0.00460194,  1.36524296,  0.00153398, 0.037, 0.037])
+            elif self.robot_uid == 'widowx_camera_setup2':
+                qpos = np.array([-0.0184078, 0.07292216, 0.29707832, -0.00474127, 1.24072885, 0.00202769, 0.037, 0.037])
+            else:
+                raise NotImplementedError(self.robot_uid)
             # qpos = np.array([-0.00153398,  0.04448544,  0.21629129, -0.00306796,  1.36524296, 0., 0.037, 0.037])
-            # qpos = np.array([-0.01840777,  0.0398835,   0.22242722,  -0.00460194,  1.36524296,  0.00153398, 0.037, 0.037])
-            robot_init_height = 0.870 # 0.870
+            robot_init_height = 0.870
             robot_init_rot_quat = [0, 0, 0, 1]
         else:
             raise NotImplementedError(self.robot_uid)
@@ -271,7 +275,10 @@ class CustomSceneEnv(BaseEnv):
                 init_y = self._episode_rng.uniform(0.0, 0.2)
             elif 'widowx' in self.robot_uid:
                 init_x = 0.147
-                init_y = 0.070 # 0.028
+                if self.robot_uid == 'widowx':
+                    init_y = 0.028
+                elif self.robot_uid == 'widowx_camera_setup2':
+                    init_y = 0.070
             else:
                 init_x, init_y = 0.0, 0.0
             robot_init_xyz = [init_x, init_y, robot_init_height]

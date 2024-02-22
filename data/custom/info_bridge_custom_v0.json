@@ -71,6 +71,24 @@
     ],
     "density": 330
   },
+  "table_cloth_generated_shorter": {
+    "bbox": {
+      "min": [
+        -0.05,
+        -0.05,
+        -0.005
+      ],
+      "max": [
+        0.05,
+        0.05,
+        0.005
+      ]
+    },
+    "scales": [
+      1.0
+    ],
+    "density": 330
+  },
   "green_cube_3cm": {
     "bbox": {
       "min": [
