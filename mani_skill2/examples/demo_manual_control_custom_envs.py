@@ -29,30 +29,30 @@ cd {this_repo}/ManiSkill2_real2sim
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd --enable-sapien-viewer \
     robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
-    rgb_overlay_mode debug rgb_overlay_path data/real_impainting/google_coke_can_real_eval_1.png rgb_overlay_cameras overhead_camera
+    rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/google_coke_can_real_eval_1.png rgb_overlay_cameras overhead_camera
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e MoveNearGoogleInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
-    rgb_overlay_mode debug rgb_overlay_path data/real_impainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
+    rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e MoveNearGoogleBakedTexInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
-    rgb_overlay_path data/real_impainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera urdf_version recolor_tabletop_visual_matching_2
+    rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera urdf_version recolor_tabletop_visual_matching_2
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e OpenTopDrawerCustomInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name frl_apartment_stage_simple \
-    rgb_overlay_mode debug rgb_overlay_path data/real_impainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera
+    rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
     -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 \
-    scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
+    scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
     -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx_camera_setup2 sim_freq @500 control_freq @5 \
-    scene_name bridge_table_1_v2  rgb_overlay_mode debug rgb_overlay_path data/real_impainting/bridge_real_eval_2.png rgb_overlay_cameras 3rd_view_camera
+    scene_name bridge_table_1_v2  rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/bridge_real_eval_2.png rgb_overlay_cameras 3rd_view_camera
     
 
 """
