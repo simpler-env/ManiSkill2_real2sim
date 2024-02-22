@@ -234,9 +234,6 @@ class WidowXDefaultConfig:
                 q=look_at([0, 0, 0], [1, 0.553, -1.085]).q, 
                 width=640,
                 height=480,
-                fov=1.5,
-                near=0.01,
-                far=10,
                 actor_uid="base_link",
                 intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
             ),
@@ -246,9 +243,6 @@ class WidowXDefaultConfig:
                 q=[0.909182, -0.0819809, 0.347277, 0.214629],
                 width=640,
                 height=480,
-                fov=1.5,
-                near=0.01,
-                far=10,
                 actor_uid="base_link",
                 intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), # logitech C920
             )
@@ -268,9 +262,6 @@ class WidowXCameraSetup2Config(WidowXDefaultConfig):
                 q=look_at([0, 0, 0], [0.642, 0.385, -0.663]).q,
                 width=640,
                 height=480,
-                fov=1.5,
-                near=0.01,
-                far=10,
                 actor_uid="base_link",
                 intrinsic=np.array([[655.7, 0, 302.0], [0, 655.7, 223.5], [0, 0, 1]]), # logitech C920
             ),
@@ -280,9 +271,6 @@ class WidowXCameraSetup2Config(WidowXDefaultConfig):
             #     q=look_at([0, 0, 0], [-0.60, -0.36, -0.620]).q,
             #     width=640,
             #     height=480,
-            #     fov=1.5,
-            #     near=0.01,
-            #     far=10,
             #     actor_uid=None,
             #     intrinsic=np.array([[655.7, 0, 302.0], [0, 655.7, 223.5], [0, 0, 1]]), # logitech C920
             # ),
@@ -292,9 +280,6 @@ class WidowXCameraSetup2Config(WidowXDefaultConfig):
                 q=[0.909182, -0.0819809, 0.347277, 0.214629],
                 width=640,
                 height=480,
-                fov=1.5,
-                near=0.01,
-                far=10,
                 actor_uid="base_link",
                 intrinsic=np.array([[640.6, 0, 320], [0, 640.6, 240], [0, 0, 1]]), # logitech C920
                 # intrinsic=np.array([[623.588, 0, 319.501], [0, 623.588, 239.545], [0, 0, 1]]), 

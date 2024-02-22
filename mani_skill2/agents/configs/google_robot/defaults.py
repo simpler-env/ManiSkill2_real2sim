@@ -299,9 +299,6 @@ class GoogleRobotDefaultConfig:
             q=[0.5, 0.5, -0.5, 0.5], # SAPIEN uses ros camera convention; the rotation matrix of link_camera's pose is in opencv convention, so we need to transform it to ros convention
             width=640,
             height=512,
-            fov=1.5,
-            near=0.01,
-            far=10,
             actor_uid="link_camera",
             intrinsic=np.array([[425.0, 0, 320.0], [0, 425.0, 256.0], [0, 0, 1]]),
             # intrinsic=np.array([[413.438870413, 0, 320.0], [0, 413.035493225, 256.0], [0, 0, 1]]),
@@ -320,9 +317,6 @@ class GoogleRobotManualTunedIntrinsicConfig(GoogleRobotDefaultConfig):
             q=[0.5, 0.5, -0.5, 0.5], 
             width=640,
             height=512,
-            fov=1.5,
-            near=0.01,
-            far=10,
             actor_uid="link_camera",
             intrinsic=np.array([[425.0, 0, 305.0], [0, 413.1, 233.0], [0, 0, 1]]),
         )
