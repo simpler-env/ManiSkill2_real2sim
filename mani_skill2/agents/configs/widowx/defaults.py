@@ -253,6 +253,8 @@ class WidowXCameraSetup2Config(WidowXDefaultConfig):
     
     @property
     def cameras(self):
+        raise NotImplementedError("This config doesn't seem accurate.")
+    
         return [
             CameraConfig(
                 uid="3rd_view_camera", # the camera used for real evaluation

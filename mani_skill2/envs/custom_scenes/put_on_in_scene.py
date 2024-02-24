@@ -66,7 +66,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         pos_tgt = target_obj_pose.p
         offset = pos_src - pos_tgt
         xy_flag = (
-            np.linalg.norm(offset[:2]) <= np.linalg.norm(tgt_obj_half_length_bbox[:2]) + 0.01
+            np.linalg.norm(offset[:2]) <= np.linalg.norm(tgt_obj_half_length_bbox[:2]) + 0.003
         )
         z_flag = (offset[2] > 0) and (offset[2] - tgt_obj_half_length_bbox[2] - src_obj_half_length_bbox[2] <= 0.02)
         src_on_target = (xy_flag and z_flag)
@@ -224,8 +224,8 @@ class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
         self,
         **kwargs,
     ):
-        source_obj_name = "bridge_carrot_generated"
-        target_obj_name = "bridge_plate_objaverse"
+        source_obj_name = "bridge_carrot_generated_modified"
+        target_obj_name = "bridge_plate_objaverse_larger"
         
         xy_center = np.array([-0.16, 0.00])
         half_edge_length_x = 0.075
