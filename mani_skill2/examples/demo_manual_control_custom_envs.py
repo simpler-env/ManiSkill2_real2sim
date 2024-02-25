@@ -39,7 +39,7 @@ MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e MoveNearGoogleBakedTexInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
-    rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera urdf_version recolor_tabletop_visual_matching_2
+    rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera urdf_version recolor_tabletop_visual_matching_2
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e OpenTopDrawerCustomInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
@@ -148,9 +148,15 @@ def main():
         env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
                         'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}}
     elif names_in_env_id_fxn(['MoveNear']):
+        # data/real_inpainting/google_move_near_real_eval_1.png
         init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q
         env_reset_options={'obj_init_options': {},
                            'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}}
+        # data/real_inpainting/google_move_near_real_eval_2.png
+        # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.028)) * Pose(q=[0, 0, 0, 1])).q
+        # env_reset_options={'obj_init_options': {},
+        #                    'robot_init_options': {'init_xy': [0.36, 0.22], 'init_rot_quat': init_rot_quat}}
+        
         env_reset_options['obj_init_options']['episode_id'] = 0
     elif names_in_env_id_fxn(['Drawer']):
         init_rot_quat = [0, 0, 0, 1]
