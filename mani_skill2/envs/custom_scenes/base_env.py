@@ -340,7 +340,7 @@ class CustomSceneEnv(BaseEnv):
                 mask = np.ones_like(actor_seg, dtype=np.float32)
                 if ('background' in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
                     if ('object' not in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode):
-                        # only overlay the background and keep the foregrounds rendered in simulation
+                        # only overlay the background and keep the foregrounds (robot and target objects) rendered in simulation
                         mask[np.isin(actor_seg, np.concatenate([robot_link_ids, target_object_actor_ids, other_link_ids]))] = 0.0
                     else:
                         # overlay everything except the robot links
