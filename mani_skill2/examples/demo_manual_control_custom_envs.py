@@ -84,7 +84,6 @@ def parse_args():
     parser.add_argument("--render-mode", type=str, default="cameras")
     parser.add_argument("--add-segmentation", action="store_true")
     parser.add_argument("--enable-sapien-viewer", action="store_true")
-    parser.add_argument("--record-dir", type=str)
     args, opts = parser.parse_known_args()
 
     # Parse env kwargs
@@ -127,11 +126,6 @@ def main():
         camera_cfgs={'add_segmentation': args.add_segmentation},
         **args.env_kwargs
     )
-
-    record_dir = args.record_dir
-    if record_dir:
-        record_dir = record_dir.format(env_id=args.env_id)
-        env = RecordEpisode(env, record_dir, render_mode=args.render_mode)
 
     print("Observation space", env.observation_space)
     print("Action space", env.action_space)
