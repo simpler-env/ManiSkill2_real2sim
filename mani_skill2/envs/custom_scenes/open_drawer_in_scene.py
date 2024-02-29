@@ -13,7 +13,7 @@ from .base_env import CustomOtherObjectsInSceneEnv, CustomSceneEnv
 
 
 class OpenDrawerInSceneEnv(CustomSceneEnv):
-    drawer_id: str
+    drawer_ids: List[str]
 
     def __init__(
         self,
@@ -27,6 +27,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self.camera_mode = camera_mode
         self.station_name = station_name
         self.episode_stats = None
+        self.drawer_id = None
         
         self.prepackaged_config = prepackaged_config
         if self.prepackaged_config:
@@ -138,8 +139,11 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
+        options = options.copy()
+        
         reconfigure = options.get("reconfigure", False)
         self.set_episode_rng(seed)
+        self.drawer_id = self._episode_rng.choice(self.drawer_ids)
         
         if self.prepackaged_config:
             _reconfigure = self._additional_prepackaged_config_reset(options)
@@ -192,24 +196,24 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
     def get_language_instruction(self):
         return f"open {self.drawer_id} drawer"
 
-
+@register_env("OpenDrawerCustomInScene-v0", max_episode_steps=200)
 class OpenDrawerCustomInSceneEnv(OpenDrawerInSceneEnv, CustomOtherObjectsInSceneEnv):
-    pass
+    drawer_ids = ["top", "middle", "bottom"]
 
 
 @register_env("OpenTopDrawerCustomInScene-v0", max_episode_steps=200)
 class OpenTopDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
-    drawer_id = "top"
+    drawer_ids = ["top"]
 
 
 @register_env("OpenMiddleDrawerCustomInScene-v0", max_episode_steps=200)
 class OpenMiddleDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
-    drawer_id = "middle"
+    drawer_ids = ["middle"]
 
 
 @register_env("OpenBottomDrawerCustomInScene-v0", max_episode_steps=200)
 class OpenBottomDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
-    drawer_id = "bottom"
+    drawer_ids = ["bottom"]
 
 
 class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
@@ -227,21 +231,21 @@ class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
     def get_language_instruction(self):
         return f"close {self.drawer_id} drawer"
 
-
+@register_env("CloseDrawerCustomInScene-v0", max_episode_steps=200)
 class CloseDrawerCustomInSceneEnv(CloseDrawerInSceneEnv, CustomOtherObjectsInSceneEnv):
-    pass
+    drawer_ids = ["top", "middle", "bottom"]
 
 
 @register_env("CloseTopDrawerCustomInScene-v0", max_episode_steps=200)
 class CloseTopDrawerCustomInSceneEnv(CloseDrawerCustomInSceneEnv):
-    drawer_id = "top"
+    drawer_ids = ["top"]
 
 
 @register_env("CloseMiddleDrawerCustomInScene-v0", max_episode_steps=200)
 class CloseMiddleDrawerCustomInSceneEnv(CloseDrawerCustomInSceneEnv):
-    drawer_id = "middle"
+    drawer_ids = ["middle"]
 
 
 @register_env("CloseBottomDrawerCustomInScene-v0", max_episode_steps=200)
 class CloseBottomDrawerCustomInSceneEnv(CloseDrawerCustomInSceneEnv):
-    drawer_id = "bottom"
+    drawer_ids = ["bottom"]

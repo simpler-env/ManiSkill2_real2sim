@@ -151,10 +151,12 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
+        options = options.copy()
         
         self.set_episode_rng(seed)
         
         obj_init_options = options.pop("obj_init_options", {})
+        obj_init_options = obj_init_options.copy()
         episode_id = obj_init_options.get("episode_id", self._episode_rng.randint(len(self._xy_configs) * len(self._quat_configs)))
         xy_config = self._xy_configs[
             (episode_id % (len(self._xy_configs) * len(self._quat_configs))) // len(self._quat_configs)

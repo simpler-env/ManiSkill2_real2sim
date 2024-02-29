@@ -92,6 +92,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         
         if options is None:
             options = dict()
+        options = options.copy()
             
         self.obj_init_options = options.get("obj_init_options", {})
         self.distractor_obj_init_options = options.get("distractor_obj_init_options", {})
@@ -139,8 +140,8 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
             'init_rot_quat': [0, 0, 0, 1],
         }
         new_urdf_version = self._episode_rng.choice([
-            "", "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
-        )
+            "", "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"
+        ])
         if new_urdf_version != self.urdf_version:
             self.urdf_version = new_urdf_version
             self._configure_agent()
@@ -464,22 +465,28 @@ class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
-            
+        options = options.copy()
+        self.set_episode_rng(seed)
+        
         obj_init_options = options.get("obj_init_options", None)
         if obj_init_options is None:
             obj_init_options = dict()
-            
+        obj_init_options = obj_init_options.copy() # avoid modifying the original options
+        
         if obj_init_options.get('init_rot_quat', None) is None:
+            orientations = [euler2quat(np.pi/2, 0, 0), euler2quat(0, 0, np.pi/2), euler2quat(0, 0, np.pi)]
             if self.obj_upright:
-                obj_init_options['init_rot_quat'] = euler2quat(np.pi/2, 0, 0)
+                obj_init_options['init_rot_quat'] = orientations[0]
             elif self.obj_laid_vertically:
-                obj_init_options['init_rot_quat'] = euler2quat(0, 0, np.pi/2)
+                obj_init_options['init_rot_quat'] = orientations[1]
             elif self.obj_lr_switch:
-                obj_init_options['init_rot_quat'] = euler2quat(0, 0, np.pi)
+                obj_init_options['init_rot_quat'] = orientations[2]
+            else:
+                obj_init_options['init_rot_quat'] = orientations[self._episode_rng.choice(3)]
             
         options['obj_init_options'] = obj_init_options
             
-        return super().reset(seed=seed, options=options)
+        return super().reset(seed=self._episode_seed, options=options)
 
     
 @register_env("GraspSingleCokeCanInScene-v0", max_episode_steps=200)
@@ -511,6 +518,7 @@ class GraspSingleDummyEnv(GraspSingleOpenedCokeCanInSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
+        options = options.copy()
         options["robot_init_options"] = {
             'init_xy': [100.0, 100.0],
             'init_height': 50.0,
@@ -523,6 +531,7 @@ class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCan
     def reset(self, seed=None, options=None):
         if 'robot_init_options' not in options:
             options['robot_init_options'] = {}
+        options = options.copy()
         options['robot_init_options']['qpos'] = np.array([
                 -0.2639457174606611,
                 0.0831913360274175,
@@ -544,6 +553,7 @@ class GraspSingleOpenedCokeCanAltGoogleCamera2InSceneEnv(GraspSingleOpenedCokeCa
     def reset(self, seed=None, options=None):
         if 'robot_init_options' not in options:
             options['robot_init_options'] = {}
+        options = options.copy()
         options['robot_init_options']['qpos'] = np.array([
                 -0.2639457174606611,
                 0.0831913360274175,
@@ -572,6 +582,9 @@ class GraspSingleOpenedCokeCanDistractorInSceneEnv(GraspSingleOpenedCokeCanInSce
         super().__init__(**kwargs)
         
     def reset(self, seed=None, options=None):
+        if options is None:
+            options = dict()
+        options = options.copy()
         options['distractor_model_ids'] = self.distractor_model_ids
             
         return super().reset(seed=seed, options=options)

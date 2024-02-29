@@ -28,16 +28,15 @@ cd {this_repo}/ManiSkill2_real2sim
 
 # Prepackaged Envs
 # Hint: "prepackaged_config @True" means using the default visual matching environment configs;
-#       Press "v" to visualized the real background image overlayed on top of simulation observation; 
-#       Remove "rgb_overlay_mode debug" and press "v" to visualize policy observation under visual matching
+#       Press "v" to visualize policy observation under visual matching
 
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
-    --enable-sapien-viewer     prepackaged_config @True     rgb_overlay_mode debug  robot google_robot_static
-# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenTopDrawerCustomInScene-v0", "CloseTopDrawerCustomInScene-v0" to test other envs
+    --enable-sapien-viewer     prepackaged_config @True     robot google_robot_static
+# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenDrawerCustomInScene-v0", "CloseDrawerCustomInScene-v0" to test other envs
 
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
-    -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd --enable-sapien-viewer     prepackaged_config @True     rgb_overlay_mode debug  robot widowx
+    -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd --enable-sapien-viewer     prepackaged_config @True     robot widowx
 # replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeBakedTexInScene-v0" to test other Bridge environments
 
 # Envs requiring manual config setup:
@@ -57,7 +56,7 @@ MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera urdf_version recolor_tabletop_visual_matching_2
     
-MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e OpenTopDrawerCustomInScene-v0 \
+MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e OpenDrawerCustomInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name frl_apartment_stage_simple \
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera

@@ -131,6 +131,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
+        options = options.copy()
         
         self.obj_init_options = options.get("obj_init_options", {})
         
@@ -439,10 +440,12 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
+        options = options.copy()
         
         self.set_episode_rng(seed)
         
         obj_init_options = options.pop("obj_init_options", {})
+        obj_init_options = obj_init_options.copy()
         _num_episodes = len(self.triplets) * len(self._source_obj_ids) * len(self._xy_config_per_triplet)
         episode_id = obj_init_options.get("episode_id", self._episode_rng.randint(_num_episodes))
         triplet = self.triplets[episode_id // (len(self._source_obj_ids) * len(self._xy_config_per_triplet))]
@@ -603,6 +606,10 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
 @register_env("MoveNearAltGoogleCameraInScene-v0", max_episode_steps=200)
 class MoveNearAltGoogleCameraInSceneEnv(MoveNearGoogleInSceneEnv):
     def reset(self, seed=None, options=None):
+        if options is None:
+            options = dict()
+        options = options.copy()
+        
         if 'robot_init_options' not in options:
             options['robot_init_options'] = {}
         options['robot_init_options']['qpos'] = np.array([
@@ -624,6 +631,10 @@ class MoveNearAltGoogleCameraInSceneEnv(MoveNearGoogleInSceneEnv):
 @register_env("MoveNearAltGoogleCamera2InScene-v0", max_episode_steps=200)
 class MoveNearAltGoogleCamera2InSceneEnv(MoveNearGoogleInSceneEnv):
     def reset(self, seed=None, options=None):
+        if options is None:
+            options = dict()
+        options = options.copy()
+        
         if 'robot_init_options' not in options:
             options['robot_init_options'] = {}
         options['robot_init_options']['qpos'] = np.array([
