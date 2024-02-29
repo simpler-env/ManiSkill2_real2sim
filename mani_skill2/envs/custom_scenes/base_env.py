@@ -41,7 +41,7 @@ class CustomSceneEnv(BaseEnv):
     
     def __init__(
             self, 
-            robot: str = "panda", 
+            robot: str = "google_robot_static", 
             rgb_overlay_path: Optional[str] = None, 
             rgb_overlay_cameras: list = [], 
             rgb_overlay_mode: str = 'background',
@@ -51,7 +51,7 @@ class CustomSceneEnv(BaseEnv):
             scene_name: Optional[str] = None,
             scene_offset: Optional[List[float]] = None,
             scene_pose: Optional[List[float]] = None,
-            scene_table_height: float = 0.85,
+            scene_table_height: float = 0.87,
             model_json: Optional[str] = None,
             model_ids: List[str] = (),
             urdf_version: str = "",
@@ -96,6 +96,12 @@ class CustomSceneEnv(BaseEnv):
         
         # Load the "greenscreen" image, which is used to overlay the background portions of simulation observation
         if rgb_overlay_path is not None:
+            if not os.path.exists(rgb_overlay_path):
+                raise FileNotFoundError(
+                    f"rgb_overlay_path {rgb_overlay_path} is not found."
+                    "If you created the environment with 'prepackaged_config=True',"
+                    "Please make sure the environment variable is set: export MS2_ASSET_DIR={path_to_ManiSkill2_real2sim}/data ."
+                )
             self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
         else:
             self.rgb_overlay_img = None

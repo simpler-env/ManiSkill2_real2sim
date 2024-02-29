@@ -5,6 +5,7 @@ import sapien.core as sapien
 from transforms3d.euler import euler2quat
 from transforms3d.quaternions import quat2mat
 
+from mani_skill2 import ASSET_DIR
 from mani_skill2.utils.common import random_choice
 from mani_skill2.utils.registration import register_env
 
@@ -133,12 +134,28 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
         self._quat_configs = quat_configs
         super().__init__(**kwargs)
     
+    def _setup_prepackaged_env_init_config(self):
+        ret = {}
+        ret['robot'] = 'widowx'
+        ret['control_freq'] = 5
+        ret['sim_freq'] = 500
+        ret['control_mode'] = 'arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos'
+        self._max_episode_steps = 60
+        ret['scene_name'] = 'bridge_table_1_v1'
+        ret['camera_cfgs'] = {"add_segmentation": True}
+        ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/bridge_real_eval_1.png')
+        ret['rgb_overlay_cameras'] = ['3rd_view_camera']
+        
+        return ret
+    
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
         
+        self.set_episode_rng(seed)
+        
         obj_init_options = options.pop("obj_init_options", {})
-        episode_id = obj_init_options.get("episode_id", 0)
+        episode_id = obj_init_options.get("episode_id", self._episode_rng.randint(len(self._xy_configs) * len(self._quat_configs)))
         xy_config = self._xy_configs[
             (episode_id % (len(self._xy_configs) * len(self._quat_configs))) // len(self._quat_configs)
         ]
@@ -153,7 +170,15 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
         obj_init_options['init_rot_quats'] = quat_config
         options['obj_init_options'] = obj_init_options
         
-        return super().reset(seed=seed, options=options)
+        return super().reset(seed=self._episode_seed, options=options)
+    
+    def _additional_prepackaged_config_reset(self, options):
+        # use prepackaged robot evaluation configs under visual matching setup
+        options['robot_init_options'] = {
+            'init_xy': [0.147, 0.028],
+            'init_rot_quat': [0, 0, 0, 1],
+        }
+        return False
     
     def _load_model(self):
         self.episode_objs = []

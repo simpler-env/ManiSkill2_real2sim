@@ -26,6 +26,22 @@ To debug an environment, you can modify the "env_reset_options" in the main func
 
 cd {this_repo}/ManiSkill2_real2sim
 
+# Prepackaged Envs
+# Hint: "prepackaged_config @True" means using the default visual matching environment configs;
+#       Press "v" to visualized the real background image overlayed on top of simulation observation; 
+#       Remove "rgb_overlay_mode debug" and press "v" to visualize policy observation under visual matching
+
+MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
+    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
+    --enable-sapien-viewer     prepackaged_config @True     rgb_overlay_mode debug  robot google_robot_static
+# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenTopDrawerCustomInScene-v0", "CloseTopDrawerCustomInScene-v0" to test other envs
+
+MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
+    -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd --enable-sapien-viewer     prepackaged_config @True     rgb_overlay_mode debug  robot widowx
+# replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeBakedTexInScene-v0" to test other Bridge environments
+
+# Envs requiring manual config setup:
+
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd --enable-sapien-viewer \
     robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
@@ -133,44 +149,46 @@ def main():
     print("Reward mode", env.reward_mode)
 
     env_reset_options = {}
-    """
-    Change the following reset options as you want to debug the environment
-    """
-    names_in_env_id_fxn = lambda name_list: any(name in args.env_id for name in name_list)
-    if names_in_env_id_fxn(['GraspSingle']):
-        init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
-        env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
-                        'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}}
-    elif names_in_env_id_fxn(['MoveNear']):
-        # data/real_inpainting/google_move_near_real_eval_1.png
-        init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q
-        env_reset_options={'obj_init_options': {},
-                           'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}}
-        # data/real_inpainting/google_move_near_real_eval_2.png
-        # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.028)) * Pose(q=[0, 0, 0, 1])).q
-        # env_reset_options={'obj_init_options': {},
-        #                    'robot_init_options': {'init_xy': [0.36, 0.22], 'init_rot_quat': init_rot_quat}}
-        
-        env_reset_options['obj_init_options']['episode_id'] = 0
-    elif names_in_env_id_fxn(['Drawer']):
-        init_rot_quat = [0, 0, 0, 1]
-        env_reset_options={'obj_init_options': {'init_xy': [0.0, 0.0]},
-                           'robot_init_options': {'init_xy': [0.851, 0.035], 'init_rot_quat': init_rot_quat}}
-    elif names_in_env_id_fxn(['PutSpoonOnTableCloth', 'PutCarrotOnPlate', 'StackGreenCubeOnYellowCube']):
-        init_rot_quat = Pose(q=[0, 0, 0, 1]).q
-        # env_reset_options={'obj_init_options': {},
-        #                    'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
-                           # 'robot_init_options': {'init_xy': [0.147, 0.028], 'init_height': 0.860, 'init_rot_quat': init_rot_quat}}
-        # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q
-        if env.robot_uid == 'widowx':
+    if (not hasattr(env, 'prepackaged_config')) or (not env.prepackaged_config):
+        """
+        Change the following reset options as you want to debug the environment
+        """
+        names_in_env_id_fxn = lambda name_list: any(name in args.env_id for name in name_list)
+        if names_in_env_id_fxn(['GraspSingle']):
+            init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
+            env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
+                            'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}}
+        elif names_in_env_id_fxn(['MoveNear']):
+            # data/real_inpainting/google_move_near_real_eval_1.png
+            init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q
             env_reset_options={'obj_init_options': {},
-                            'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
-        elif env.robot_uid == 'widowx_camera_setup2':
-            env_reset_options={'obj_init_options': {},
-                            'robot_init_options': {'init_xy': [0.147, 0.070], 'init_rot_quat': init_rot_quat}}
-        env_reset_options['obj_init_options']['episode_id'] = 0
+                            'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}}
+            # data/real_inpainting/google_move_near_real_eval_2.png
+            # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.028)) * Pose(q=[0, 0, 0, 1])).q
+            # env_reset_options={'obj_init_options': {},
+            #                    'robot_init_options': {'init_xy': [0.36, 0.22], 'init_rot_quat': init_rot_quat}}
+            
+            env_reset_options['obj_init_options']['episode_id'] = 0
+        elif names_in_env_id_fxn(['Drawer']):
+            init_rot_quat = [0, 0, 0, 1]
+            env_reset_options={'obj_init_options': {'init_xy': [0.0, 0.0]},
+                            'robot_init_options': {'init_xy': [0.851, 0.035], 'init_rot_quat': init_rot_quat}}
+        elif names_in_env_id_fxn(['PutSpoonOnTableCloth', 'PutCarrotOnPlate', 'StackGreenCubeOnYellowCube']):
+            init_rot_quat = Pose(q=[0, 0, 0, 1]).q
+            # env_reset_options={'obj_init_options': {},
+            #                    'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
+                            # 'robot_init_options': {'init_xy': [0.147, 0.028], 'init_height': 0.860, 'init_rot_quat': init_rot_quat}}
+            # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q
+            if env.robot_uid == 'widowx':
+                env_reset_options={'obj_init_options': {},
+                                'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
+            elif env.robot_uid == 'widowx_camera_setup2':
+                env_reset_options={'obj_init_options': {},
+                                'robot_init_options': {'init_xy': [0.147, 0.070], 'init_rot_quat': init_rot_quat}}
+            env_reset_options['obj_init_options']['episode_id'] = 0
     
     obs, _ = env.reset(options=env_reset_options)
+    print("Instruction:", env.get_language_instruction())
     after_reset = True
     
     if 'google_robot' in env.agent.robot.name:
@@ -328,6 +346,7 @@ def main():
             render_wait()
         elif key == "r":  # reset env
             obs, _ = env.reset(options=env_reset_options)
+            print("Instruction:", env.get_language_instruction())
             gripper_action = get_reset_gripper_action()
             after_reset = True
             continue

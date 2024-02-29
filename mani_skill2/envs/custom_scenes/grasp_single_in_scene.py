@@ -6,6 +6,7 @@ import sapien.core as sapien
 from transforms3d.euler import euler2quat
 from transforms3d.quaternions import axangle2quat, qmult
 
+from mani_skill2 import ASSET_DIR
 from mani_skill2.utils.common import random_choice
 from mani_skill2.utils.registration import register_env
 from mani_skill2.utils.sapien_utils import vectorize_pose
@@ -23,6 +24,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         slightly_darker_lighting: bool = False,
         slightly_brighter_lighting: bool = False,
         darker_lighting: bool = False,
+        prepackaged_config: bool = False,
         **kwargs,
     ):
         if isinstance(distractor_model_ids, str):
@@ -52,8 +54,26 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.obj_height_after_settle = None
         self.episode_stats = None
         
+        self.prepackaged_config = prepackaged_config
+        if self.prepackaged_config:
+            # use prepackaged evaluation configs (visual matching)
+            kwargs.update(self._setup_prepackaged_env_init_config())
+        
         super().__init__(**kwargs)
 
+    def _setup_prepackaged_env_init_config(self):
+        ret = {}
+        ret['robot'] = 'google_robot_static'
+        ret['control_freq'] = 3
+        ret['sim_freq'] = 513
+        ret['control_mode'] = 'arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner'
+        self._max_episode_steps = 80
+        ret['scene_name'] = 'google_pick_coke_can_1_v4'
+        ret['camera_cfgs'] = {"add_segmentation": True}
+        ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/google_coke_can_real_eval_1.png')
+        ret['rgb_overlay_cameras'] = ['overhead_camera']
+        
+        return ret
         
     def _load_actors(self):
         self._load_arena_helper()        
@@ -90,6 +110,10 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
                 reconfigure = True
                 self._set_distractor_models(distractor_model_ids, distractor_model_scales)
                 
+        if self.prepackaged_config:
+            _reconfigure = self._additional_prepackaged_config_reset(options)
+            reconfigure = reconfigure or _reconfigure
+        
         options["reconfigure"] = reconfigure
         
         self.consecutive_grasp = 0
@@ -99,6 +123,21 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self._initialize_episode_stats()
         
         return super().reset(seed=self._episode_seed, options=options)
+    
+    def _additional_prepackaged_config_reset(self, options):
+        # use prepackaged robot evaluation configs under visual matching setup
+        options['robot_init_options'] = {
+            'init_xy': [0.35, 0.20],
+            'init_rot_quat': [0, 0, 0, 1],
+        }
+        new_urdf_version = self._episode_rng.choice([
+            "", "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
+        )
+        if new_urdf_version != self.urdf_version:
+            self.urdf_version = new_urdf_version
+            self._configure_agent()
+            return True
+        return False
     
     def _initialize_episode_stats(self):
         self.episode_stats =  OrderedDict(
@@ -196,7 +235,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         # The object will fall from a certain initial height
         obj_init_xy = self.obj_init_options.get("init_xy", None)
         if obj_init_xy is None:
-            obj_init_xy = np.array([-0.2, 0.2]) + self._episode_rng.uniform(-0.05, 0.05, [2])
+            obj_init_xy = self._episode_rng.uniform([-0.35, -0.02], [-0.12, 0.42], [2])
         obj_init_z = self.obj_init_options.get("init_z", self.scene_table_height)
         obj_init_z = obj_init_z + 0.5 # let object fall onto the table
         obj_init_rot_quat = self.obj_init_options.get("init_rot_quat", [1, 0, 0, 0])

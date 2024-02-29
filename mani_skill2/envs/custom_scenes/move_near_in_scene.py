@@ -6,6 +6,7 @@ import sapien.core as sapien
 from transforms3d.euler import euler2quat
 from transforms3d.quaternions import quat2mat
 
+from mani_skill2 import ASSET_DIR
 from mani_skill2.utils.common import random_choice
 from mani_skill2.utils.registration import register_env
 from mani_skill2.utils.sapien_utils import vectorize_pose
@@ -23,6 +24,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         slightly_darker_lighting: bool = False,
         slightly_brighter_lighting: bool = False,
         ambient_only_lighting: bool = False,
+        prepackaged_config: bool = False,
         **kwargs,
     ):
         self.episode_objs = [None] * 3
@@ -47,8 +49,27 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         self.slightly_brighter_lighting = slightly_brighter_lighting
         self.ambient_only_lighting = ambient_only_lighting
         
+        self.prepackaged_config = prepackaged_config
+        if self.prepackaged_config:
+            # use prepackaged evaluation configs (visual matching)
+            kwargs.update(self._setup_prepackaged_env_init_config())
+            
         super().__init__(**kwargs)
 
+    def _setup_prepackaged_env_init_config(self):
+        ret = {}
+        ret['robot'] = 'google_robot_static'
+        ret['control_freq'] = 3
+        ret['sim_freq'] = 513
+        ret['control_mode'] = 'arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner'
+        self._max_episode_steps = 80
+        ret['scene_name'] = 'google_pick_coke_can_1_v4'
+        ret['camera_cfgs'] = {"add_segmentation": True}
+        ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/google_move_near_real_eval_1.png')
+        ret['rgb_overlay_cameras'] = ['overhead_camera']
+        
+        return ret
+        
     def _get_default_scene_config(self):
         scene_config = super()._get_default_scene_config()
         scene_config.contact_offset = 0.005 # important to avoid "false-positive" collisions with other objects
@@ -119,12 +140,31 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         reconfigure = options.get("reconfigure", False)
         _reconfigure = self._set_model(model_ids, model_scales)
         reconfigure = _reconfigure or reconfigure
+        
+        if self.prepackaged_config:
+            _reconfigure = self._additional_prepackaged_config_reset(options)
+            reconfigure = reconfigure or _reconfigure
                 
         options["reconfigure"] = reconfigure
         
         self._initialize_episode_stats()
         
         return super().reset(seed=self._episode_seed, options=options)
+    
+    def _additional_prepackaged_config_reset(self, options):
+        # use prepackaged robot evaluation configs under visual matching setup
+        options['robot_init_options'] = {
+            'init_xy': [0.35, 0.21],
+            'init_rot_quat': (sapien.Pose(q=euler2quat(0, 0, -0.09)) * sapien.Pose(q=[0, 0, 0, 1])).q,
+        }
+        new_urdf_version = self._episode_rng.choice([
+            "", "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
+        )
+        if new_urdf_version != self.urdf_version:
+            self.urdf_version = new_urdf_version
+            self._configure_agent()
+            return True
+        return False
     
     def _initialize_episode_stats(self):
         self.episode_stats = OrderedDict(
@@ -391,8 +431,11 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
         if options is None:
             options = dict()
         
+        self.set_episode_rng(seed)
+        
         obj_init_options = options.pop("obj_init_options", {})
-        episode_id = obj_init_options.get("episode_id", 0)
+        _num_episodes = len(self.triplets) * len(self._source_obj_ids) * len(self._xy_config_per_triplet)
+        episode_id = obj_init_options.get("episode_id", self._episode_rng.randint(_num_episodes))
         triplet = self.triplets[episode_id // (len(self._source_obj_ids) * len(self._xy_config_per_triplet))]
         source_obj_id = self._source_obj_ids[episode_id % len(self._source_obj_ids)]
         target_obj_id = self._target_obj_ids[episode_id % len(self._target_obj_ids)]
@@ -414,7 +457,7 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
         obj_init_options['init_rot_quats'] = quat_config_triplet
         options['obj_init_options'] = obj_init_options
         
-        return super().reset(seed=seed, options=options)
+        return super().reset(seed=self._episode_seed, options=options)
     
     def _load_model(self):
         self.episode_objs = []
