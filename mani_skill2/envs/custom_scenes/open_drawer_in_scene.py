@@ -148,7 +148,15 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         options["reconfigure"] = reconfigure
         
         self._initialize_episode_stats()
-        return super().reset(seed=self._episode_seed, options=options)
+        
+        obs, info = super().reset(seed=self._episode_seed, options=options)
+        info.update({
+            'drawer_pose_wrt_robot_base': self.agent.robot.pose.inv() * self.obj.pose,
+            'cabinet_pose_wrt_robot_base': self.agent.robot.pose.inv() * self.art_obj.pose,
+            'station_name': self.station_name,
+            'light_mode': self.light_mode,
+        })
+        return obs, info
     
     def _additional_prepackaged_config_reset(self, options):
         # use prepackaged evaluation configs under visual matching setup

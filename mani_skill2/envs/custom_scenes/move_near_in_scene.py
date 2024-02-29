@@ -149,7 +149,16 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         
         self._initialize_episode_stats()
         
-        return super().reset(seed=self._episode_seed, options=options)
+        obs, info = super().reset(seed=self._episode_seed, options=options)
+        info.update({
+            'episode_model_ids': self.episode_model_ids,
+            'episode_model_scales': self.episode_model_scales,
+            'episode_source_obj_name': self.episode_source_obj.name,
+            'episode_target_obj_name': self.episode_target_obj.name,
+            'episode_source_obj_init_pose_wrt_robot_base': self.agent.robot.pose.inv() * self.episode_source_obj.pose,
+            'episode_target_obj_init_pose_wrt_robot_base': self.agent.robot.pose.inv() * self.episode_target_obj.pose,
+        })
+        return obs, info
     
     def _additional_prepackaged_config_reset(self, options):
         # use prepackaged robot evaluation configs under visual matching setup
@@ -457,7 +466,11 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
         obj_init_options['init_rot_quats'] = quat_config_triplet
         options['obj_init_options'] = obj_init_options
         
-        return super().reset(seed=self._episode_seed, options=options)
+        obs, info = super().reset(seed=self._episode_seed, options=options)
+        info.update({
+            'episode_id': episode_id,
+        })
+        return obs, info
     
     def _load_model(self):
         self.episode_objs = []

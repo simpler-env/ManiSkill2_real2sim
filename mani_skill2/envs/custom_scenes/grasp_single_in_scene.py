@@ -122,7 +122,15 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         # episode-level info
         self._initialize_episode_stats()
         
-        return super().reset(seed=self._episode_seed, options=options)
+        obs, info = super().reset(seed=self._episode_seed, options=options)
+        info.update({
+            "model_id": self.model_id,
+            "model_scale": self.model_scale,
+            "distractor_model_ids": self.selected_distractor_model_ids,
+            "distractor_model_scales": self.selected_distractor_model_scales,
+            "obj_init_pose_wrt_robot_base": self.agent.robot.pose.inv() * self.obj.pose,
+        })
+        return obs, info
     
     def _additional_prepackaged_config_reset(self, options):
         # use prepackaged robot evaluation configs under visual matching setup

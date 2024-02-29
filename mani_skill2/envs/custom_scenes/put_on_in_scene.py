@@ -170,7 +170,11 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
         obj_init_options['init_rot_quats'] = quat_config
         options['obj_init_options'] = obj_init_options
         
-        return super().reset(seed=self._episode_seed, options=options)
+        obs, info = super().reset(seed=self._episode_seed, options=options)
+        info.update({
+            "episode_id": episode_id,
+        })
+        return obs, info
     
     def _additional_prepackaged_config_reset(self, options):
         # use prepackaged robot evaluation configs under visual matching setup
