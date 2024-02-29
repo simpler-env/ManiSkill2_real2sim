@@ -171,7 +171,7 @@ class GoogleRobotStaticBase(GoogleRobot):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "arm_pd_ee_delta_pose_base_gripper_pd_joint_pos"
+            control_mode = "arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner"
         super().__init__(
             scene,
             control_freq,
@@ -231,7 +231,7 @@ class GoogleRobotMobileBase(GoogleRobot):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "base_pd_joint_vel_arm_pd_ee_delta_pose_base_gripper_pd_joint_pos"
+            control_mode = "base_pd_joint_vel_arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner"
         super().__init__(
             scene,
             control_freq,

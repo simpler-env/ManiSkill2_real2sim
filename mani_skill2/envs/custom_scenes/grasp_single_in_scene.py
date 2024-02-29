@@ -457,9 +457,19 @@ class GraspSingleCustomInSceneEnv(GraspSingleInSceneEnv, CustomOtherObjectsInSce
 
 class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, upright: bool = False, laid_vertically: bool = False, lr_switch: bool = False, **kwargs):
-        self.obj_upright = upright
-        self.obj_laid_vertically = laid_vertically
-        self.obj_lr_switch = lr_switch
+        if upright:
+            self.orientation = "upright"
+        elif laid_vertically:
+            self.orientation = "laid_vertically"
+        elif lr_switch:
+            self.orientation = "lr_switch"
+        else:
+            self.orientation = None
+        self.orientations_dict = {
+            "upright": euler2quat(np.pi/2, 0, 0),
+            "laid_vertically": euler2quat(0, 0, np.pi/2),
+            "lr_switch": euler2quat(0, 0, np.pi),
+        }
         super().__init__(**kwargs)
         
     def reset(self, seed=None, options=None):
@@ -473,20 +483,20 @@ class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
             obj_init_options = dict()
         obj_init_options = obj_init_options.copy() # avoid modifying the original options
         
+        orientation = None
         if obj_init_options.get('init_rot_quat', None) is None:
-            orientations = [euler2quat(np.pi/2, 0, 0), euler2quat(0, 0, np.pi/2), euler2quat(0, 0, np.pi)]
-            if self.obj_upright:
-                obj_init_options['init_rot_quat'] = orientations[0]
-            elif self.obj_laid_vertically:
-                obj_init_options['init_rot_quat'] = orientations[1]
-            elif self.obj_lr_switch:
-                obj_init_options['init_rot_quat'] = orientations[2]
+            orientation = self.orientation
+            if orientation is not None:
+                obj_init_options['init_rot_quat'] = self.orientations_dict[orientation]
             else:
-                obj_init_options['init_rot_quat'] = orientations[self._episode_rng.choice(3)]
+                orientation = self._episode_rng.choice(list(self.orientations_dict.keys()))
+                obj_init_options['init_rot_quat'] = self.orientations_dict[orientation]
             
         options['obj_init_options'] = obj_init_options
             
-        return super().reset(seed=self._episode_seed, options=options)
+        obs, info = super().reset(seed=self._episode_seed, options=options)
+        info.update({"orientation": orientation})
+        return obs, info
 
     
 @register_env("GraspSingleCokeCanInScene-v0", max_episode_steps=200)

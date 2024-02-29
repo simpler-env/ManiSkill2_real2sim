@@ -42,7 +42,7 @@ class WidowX(BaseAgent):
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
         if control_mode is None:  # if user did not specify a control_mode
-            control_mode = "arm_pd_ee_delta_pose_base_gripper_pd_joint_pos"
+            control_mode = "arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos"
         super().__init__(
             scene,
             control_freq,

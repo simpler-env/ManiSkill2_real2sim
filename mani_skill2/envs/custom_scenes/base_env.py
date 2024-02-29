@@ -107,6 +107,7 @@ class CustomSceneEnv(BaseEnv):
             self.rgb_overlay_img = None
         if not isinstance(rgb_overlay_cameras, list):
             rgb_overlay_cameras = [rgb_overlay_cameras]
+        self.rgb_overlay_path = rgb_overlay_path 
         self.rgb_overlay_cameras = rgb_overlay_cameras # perform "greenscreen" on the specified camera(s) observations
         self.rgb_overlay_mode = rgb_overlay_mode # 'background' or 'object' or 'debug' or combinations of them
         assert ('background' in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode), 'Invalid rgb_overlay_mode'
@@ -213,7 +214,19 @@ class CustomSceneEnv(BaseEnv):
     
     def reset(self, seed=None, options=None):
         self.robot_init_options = options.get("robot_init_options", {})
-        return super().reset(seed=seed, options=options)
+        obs, info = super().reset(seed=seed, options=options)
+        info.update({
+            'scene_name': self.scene_name,
+            'scene_offset': self.scene_offset,
+            'scene_pose': self.scene_pose,
+            'scene_table_height': self.scene_table_height,
+            'urdf_version': self.urdf_version,
+            'rgb_overlay_path': self.rgb_overlay_path,
+            'rgb_overlay_cameras': self.rgb_overlay_cameras,
+            'rgb_overlay_mode': self.rgb_overlay_mode,
+            'disable_bad_material': self.disable_bad_material,
+        })
+        return obs, info
     
     def _configure_agent(self):
         agent_cls: Type[BaseAgent] = self.SUPPORTED_ROBOTS[self.robot_uid]
