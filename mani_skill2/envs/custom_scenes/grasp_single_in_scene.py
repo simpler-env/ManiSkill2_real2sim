@@ -20,6 +20,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
     def __init__(
         self,
         require_lifting_obj_for_success: bool = True,
+        success_from_episode_stats: bool = True,
         distractor_model_ids: Optional[List[str]] = None,
         slightly_darker_lighting: bool = False,
         slightly_brighter_lighting: bool = False,
@@ -49,6 +50,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.darker_lighting = darker_lighting
         
         self.require_lifting_obj_for_success = require_lifting_obj_for_success
+        self.success_from_episode_stats = success_from_episode_stats
         self.consecutive_grasp = 0
         self.lifted_obj = False
         self.obj_height_after_settle = None
@@ -396,6 +398,10 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         self.episode_stats["n_lift_significant"] += int(lifted_object_significantly)
         self.episode_stats["consec_grasp"] = self.episode_stats["consec_grasp"] or consecutive_grasp
         self.episode_stats["grasped"] = self.episode_stats["grasped"] or is_grasped
+        if self.success_from_episode_stats:
+            # During evaluation, if policy puts down coke can in the end but has lifted it significantly before, it is still a success
+            # However, if you want to perform RL training on this environment, make sure to turn off this option
+            success = success or (self.episode_stats['n_lift_significant'] >= 5)
         
         return dict(
             is_grasped=is_grasped,

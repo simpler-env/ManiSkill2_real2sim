@@ -18,3 +18,4 @@ imageio
 imageio[ffmpeg]
 trimesh
 rtree
+ruckig
