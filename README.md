@@ -22,7 +22,7 @@ env1 = gym.make('GraspSingleOpenedCokeCanInScene-v0', obs_mode='rgbd', prepackag
 obs1, reset_info_1 = env1.reset()
 instruction1 = env1.get_language_instruction()
 image1 = obs1['image']['overhead_camera']['rgb']
-obs1_alt, reset_info_1_alt = env1.reset(options={'obj_init_options': {'init_xy': [-0.35, -0.02]}})
+obs1_alt, reset_info_1_alt = env1.reset(options={'obj_init_options': {'init_xy': [-0.35, -0.02], 'orientation': 'laid_vertically'}}) 
 instruction1_alt = env1.get_language_instruction()
 image1_alt = obs1_alt['image']['overhead_camera']['rgb']
 

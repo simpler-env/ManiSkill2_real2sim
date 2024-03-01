@@ -490,9 +490,20 @@ class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
         
         orientation = None
         if obj_init_options.get('init_rot_quat', None) is None:
-            orientation = self.orientation
+            if obj_init_options.get('orientation', None) is not None:
+                orientation = obj_init_options['orientation']
+            else:
+                orientation = self.orientation
             if orientation is not None:
-                obj_init_options['init_rot_quat'] = self.orientations_dict[orientation]
+                try:
+                    obj_init_options['init_rot_quat'] = self.orientations_dict[orientation]
+                except KeyError as e:
+                    if 'standing' in orientation:
+                        obj_init_options['init_rot_quat'] = self.orientations_dict['upright']
+                    elif 'horizontal' in orientation:
+                        obj_init_options['init_rot_quat'] = self.orientations_dict['lr_switch']
+                    else:
+                        raise e
             else:
                 orientation = self._episode_rng.choice(list(self.orientations_dict.keys()))
                 obj_init_options['init_rot_quat'] = self.orientations_dict[orientation]
