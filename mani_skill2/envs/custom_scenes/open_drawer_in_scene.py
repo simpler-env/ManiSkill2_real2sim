@@ -42,7 +42,6 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         ret['control_freq'] = 3
         ret['sim_freq'] = 513
         ret['control_mode'] = 'arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner'
-        self._max_episode_steps = 110
         ret['scene_name'] = 'dummy_drawer'
         ret['camera_cfgs'] = {"add_segmentation": True}
         ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/open_drawer_a0.png') # dummy path; to be replaced later
@@ -196,22 +195,22 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
     def get_language_instruction(self):
         return f"open {self.drawer_id} drawer"
 
-@register_env("OpenDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("OpenDrawerCustomInScene-v0", max_episode_steps=113)
 class OpenDrawerCustomInSceneEnv(OpenDrawerInSceneEnv, CustomOtherObjectsInSceneEnv):
     drawer_ids = ["top", "middle", "bottom"]
 
 
-@register_env("OpenTopDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("OpenTopDrawerCustomInScene-v0", max_episode_steps=113)
 class OpenTopDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
     drawer_ids = ["top"]
 
 
-@register_env("OpenMiddleDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("OpenMiddleDrawerCustomInScene-v0", max_episode_steps=113)
 class OpenMiddleDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
     drawer_ids = ["middle"]
 
 
-@register_env("OpenBottomDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("OpenBottomDrawerCustomInScene-v0", max_episode_steps=113)
 class OpenBottomDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
     drawer_ids = ["bottom"]
 
@@ -231,21 +230,21 @@ class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
     def get_language_instruction(self):
         return f"close {self.drawer_id} drawer"
 
-@register_env("CloseDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("CloseDrawerCustomInScene-v0", max_episode_steps=113)
 class CloseDrawerCustomInSceneEnv(CloseDrawerInSceneEnv, CustomOtherObjectsInSceneEnv):
     drawer_ids = ["top", "middle", "bottom"]
 
 
-@register_env("CloseTopDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("CloseTopDrawerCustomInScene-v0", max_episode_steps=113)
 class CloseTopDrawerCustomInSceneEnv(CloseDrawerCustomInSceneEnv):
     drawer_ids = ["top"]
 
 
-@register_env("CloseMiddleDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("CloseMiddleDrawerCustomInScene-v0", max_episode_steps=113)
 class CloseMiddleDrawerCustomInSceneEnv(CloseDrawerCustomInSceneEnv):
     drawer_ids = ["middle"]
 
 
-@register_env("CloseBottomDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("CloseBottomDrawerCustomInScene-v0", max_episode_steps=113)
 class CloseBottomDrawerCustomInSceneEnv(CloseDrawerCustomInSceneEnv):
     drawer_ids = ["bottom"]

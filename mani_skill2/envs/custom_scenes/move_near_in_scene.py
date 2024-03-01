@@ -62,7 +62,6 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         ret['control_freq'] = 3
         ret['sim_freq'] = 513
         ret['control_mode'] = 'arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner'
-        self._max_episode_steps = 80
         ret['scene_name'] = 'google_pick_coke_can_1_v4'
         ret['camera_cfgs'] = {"add_segmentation": True}
         ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/google_move_near_real_eval_1.png')
@@ -391,7 +390,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
     
     
     
-@register_env("MoveNearGoogleInScene-v0", max_episode_steps=200)
+@register_env("MoveNearGoogleInScene-v0", max_episode_steps=80)
 class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv):
     def __init__(
         self,
@@ -497,7 +496,7 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
             self.episode_objs.append(obj)
 
 
-@register_env("MoveNearGoogleBakedTexInScene-v0", max_episode_steps=200)
+@register_env("MoveNearGoogleBakedTexInScene-v0", max_episode_steps=80)
 class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v0.json"
     
@@ -536,7 +535,7 @@ class MoveNearGoogleBakedTexInSceneEnv(MoveNearGoogleInSceneEnv):
         }
 
 
-@register_env("MoveNearGoogleBakedTexInScene-v1", max_episode_steps=200)
+@register_env("MoveNearGoogleBakedTexInScene-v1", max_episode_steps=80)
 class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
     DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v1.json"
 
@@ -603,7 +602,7 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
                     rs.set_material(mtl)
 
 
-@register_env("MoveNearAltGoogleCameraInScene-v0", max_episode_steps=200)
+@register_env("MoveNearAltGoogleCameraInScene-v0", max_episode_steps=80)
 class MoveNearAltGoogleCameraInSceneEnv(MoveNearGoogleInSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:
@@ -628,7 +627,7 @@ class MoveNearAltGoogleCameraInSceneEnv(MoveNearGoogleInSceneEnv):
     
 
 
-@register_env("MoveNearAltGoogleCamera2InScene-v0", max_episode_steps=200)
+@register_env("MoveNearAltGoogleCamera2InScene-v0", max_episode_steps=80)
 class MoveNearAltGoogleCamera2InSceneEnv(MoveNearGoogleInSceneEnv):
     def reset(self, seed=None, options=None):
         if options is None:

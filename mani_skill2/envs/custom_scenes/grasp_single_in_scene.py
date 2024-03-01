@@ -67,7 +67,6 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
         ret['control_freq'] = 3
         ret['sim_freq'] = 513
         ret['control_mode'] = 'arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner'
-        self._max_episode_steps = 80
         ret['scene_name'] = 'google_pick_coke_can_1_v4'
         ret['camera_cfgs'] = {"add_segmentation": True}
         ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/google_coke_can_real_eval_1.png')
@@ -412,7 +411,7 @@ class GraspSingleInSceneEnv(CustomSceneEnv):
 # Custom Assets
 # ---------------------------------------------------------------------------- #
 
-@register_env("GraspSingleCustomInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleCustomInScene-v0", max_episode_steps=80)
 class GraspSingleCustomInSceneEnv(GraspSingleInSceneEnv, CustomOtherObjectsInSceneEnv):
     
     def _load_model(self):
@@ -499,7 +498,7 @@ class GraspSingleCustomOrientationInSceneEnv(GraspSingleCustomInSceneEnv):
         return obs, info
 
     
-@register_env("GraspSingleCokeCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleCokeCanInScene-v0", max_episode_steps=80)
 class GraspSingleCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -507,7 +506,7 @@ class GraspSingleCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
 
         
-@register_env("GraspSingleOpenedCokeCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedCokeCanInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     """
     Opened cans are assumed to be empty, and therefore are (1) open, (2) have much lower density than unopened cans (50 vs 1000)
@@ -522,7 +521,7 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
         super().__init__(**kwargs)
         
         
-@register_env("GraspSingleDummy-v0", max_episode_steps=200)
+@register_env("GraspSingleDummy-v0", max_episode_steps=80)
 class GraspSingleDummyEnv(GraspSingleOpenedCokeCanInSceneEnv):
     # A dummy environment where the robot is set to a faraway position such that it is free from collisions with the scene
     def reset(self, seed=None, options=None):
@@ -536,7 +535,7 @@ class GraspSingleDummyEnv(GraspSingleOpenedCokeCanInSceneEnv):
         return super().reset(seed=seed, options=options)
         
         
-@register_env("GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
     def reset(self, seed=None, options=None):
         if 'robot_init_options' not in options:
@@ -558,7 +557,7 @@ class GraspSingleOpenedCokeCanAltGoogleCameraInSceneEnv(GraspSingleOpenedCokeCan
     
     
     
-@register_env("GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0", max_episode_steps=80)
 class GraspSingleOpenedCokeCanAltGoogleCamera2InSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
     def reset(self, seed=None, options=None):
         if 'robot_init_options' not in options:
@@ -579,7 +578,7 @@ class GraspSingleOpenedCokeCanAltGoogleCamera2InSceneEnv(GraspSingleOpenedCokeCa
         return super().reset(seed=seed, options=options)
         
         
-@register_env("GraspSingleOpenedCokeCanDistractorInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedCokeCanDistractorInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedCokeCanDistractorInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
     def __init__(self, distractor_config="less", **kwargs):
         if distractor_config == "less":
@@ -600,7 +599,7 @@ class GraspSingleOpenedCokeCanDistractorInSceneEnv(GraspSingleOpenedCokeCanInSce
         return super().reset(seed=seed, options=options)
     
     
-@register_env("GraspSinglePepsiCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSinglePepsiCanInScene-v0", max_episode_steps=80)
 class GraspSinglePepsiCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -608,7 +607,7 @@ class GraspSinglePepsiCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleOpenedPepsiCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedPepsiCanInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedPepsiCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -616,7 +615,7 @@ class GraspSingleOpenedPepsiCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingle7upCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingle7upCanInScene-v0", max_episode_steps=80)
 class GraspSingle7upCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -624,7 +623,7 @@ class GraspSingle7upCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleOpened7upCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpened7upCanInScene-v0", max_episode_steps=80)
 class GraspSingleOpened7upCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -632,7 +631,7 @@ class GraspSingleOpened7upCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
     
 
-@register_env("GraspSingleSpriteCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleSpriteCanInScene-v0", max_episode_steps=80)
 class GraspSingleSpriteCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -640,7 +639,7 @@ class GraspSingleSpriteCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleOpenedSpriteCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedSpriteCanInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedSpriteCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -648,7 +647,7 @@ class GraspSingleOpenedSpriteCanInSceneEnv(GraspSingleCustomOrientationInSceneEn
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleFantaCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleFantaCanInScene-v0", max_episode_steps=80)
 class GraspSingleFantaCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -656,7 +655,7 @@ class GraspSingleFantaCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleOpenedFantaCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedFantaCanInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedFantaCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -664,7 +663,7 @@ class GraspSingleOpenedFantaCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleRedBullCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleRedBullCanInScene-v0", max_episode_steps=80)
 class GraspSingleRedBullCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -672,7 +671,7 @@ class GraspSingleRedBullCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleOpenedRedBullCanInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOpenedRedBullCanInScene-v0", max_episode_steps=80)
 class GraspSingleOpenedRedBullCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -680,7 +679,7 @@ class GraspSingleOpenedRedBullCanInSceneEnv(GraspSingleCustomOrientationInSceneE
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleBluePlasticBottleInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleBluePlasticBottleInScene-v0", max_episode_steps=80)
 class GraspSingleBluePlasticBottleInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -688,7 +687,7 @@ class GraspSingleBluePlasticBottleInSceneEnv(GraspSingleCustomOrientationInScene
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleAppleInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleAppleInScene-v0", max_episode_steps=80)
 class GraspSingleAppleInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -696,7 +695,7 @@ class GraspSingleAppleInSceneEnv(GraspSingleCustomInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleOrangeInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleOrangeInScene-v0", max_episode_steps=80)
 class GraspSingleOrangeInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -704,7 +703,7 @@ class GraspSingleOrangeInSceneEnv(GraspSingleCustomInSceneEnv):
         super().__init__(**kwargs)
         
 
-@register_env("GraspSingleSpongeInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleSpongeInScene-v0", max_episode_steps=80)
 class GraspSingleSpongeInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)
@@ -712,7 +711,7 @@ class GraspSingleSpongeInSceneEnv(GraspSingleCustomInSceneEnv):
         super().__init__(**kwargs)
 
 
-@register_env("GraspSingleBridgeSpoonInScene-v0", max_episode_steps=200)
+@register_env("GraspSingleBridgeSpoonInScene-v0", max_episode_steps=80)
 class GraspSingleBridgeSpoonInSceneEnv(GraspSingleCustomInSceneEnv):
     def __init__(self, **kwargs):
         kwargs.pop('model_ids', None)

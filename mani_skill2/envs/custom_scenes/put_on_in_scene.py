@@ -140,7 +140,6 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
         ret['control_freq'] = 5
         ret['sim_freq'] = 500
         ret['control_mode'] = 'arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos'
-        self._max_episode_steps = 60
         ret['scene_name'] = 'bridge_table_1_v1'
         ret['camera_cfgs'] = {"add_segmentation": True}
         ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/bridge_real_eval_1.png')
@@ -207,7 +206,7 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
             
             
             
-@register_env("PutSpoonOnTableClothInScene-v0", max_episode_steps=200)
+@register_env("PutSpoonOnTableClothInScene-v0", max_episode_steps=60)
 class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
@@ -249,7 +248,7 @@ class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
 
     
     
-@register_env("PutCarrotOnPlateInScene-v0", max_episode_steps=200)
+@register_env("PutCarrotOnPlateInScene-v0", max_episode_steps=60)
 class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
@@ -286,7 +285,7 @@ class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
     
     
 
-@register_env("StackGreenCubeOnYellowCubeInScene-v0", max_episode_steps=200)
+@register_env("StackGreenCubeOnYellowCubeInScene-v0", max_episode_steps=60)
 class StackGreenCubeOnYellowCubeInScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
@@ -322,7 +321,7 @@ class StackGreenCubeOnYellowCubeInScene(PutOnBridgeInSceneEnv):
         return "stack the green block on the yellow block"
     
     
-@register_env("StackGreenCubeOnYellowCubeBakedTexInScene-v0", max_episode_steps=200)
+@register_env("StackGreenCubeOnYellowCubeBakedTexInScene-v0", max_episode_steps=60)
 class StackGreenCubeOnYellowCubeBakedTexInScene(StackGreenCubeOnYellowCubeInScene):
     DEFAULT_MODEL_JSON = "info_bridge_custom_baked_tex_v0.json"
     
