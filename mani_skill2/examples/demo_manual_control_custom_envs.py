@@ -17,7 +17,7 @@ If --enable-sapien-viewer, press "0" to switch to sapien viewer;
     Press "g" to grab object; "g" + "x"/"y"/"z" to move object along x/y/z axis;
     
 If rgb_overlay_path is given, Press "v" to visualize the "greenscreened" image overlayed on top of simulation observation;
-    this visualization can be used to debug e.g., the alignment of real and simulation proxy tables
+    this visualization can be used to debug e.g., the alignment of the real table and the simulation proxy table
 
 To debug an environment, you can modify the "env_reset_options" in the main function to change the initial state of the environment.
 
@@ -39,7 +39,8 @@ MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs
     -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd --enable-sapien-viewer     prepackaged_config @True     robot widowx
 # replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeBakedTexInScene-v0" to test other Bridge environments
 
-# Envs requiring manual config setup:
+# Envs constructed through manual config setup
+# "rgb_overlay_mode debug" means to visualize 0.5*real image + 0.5*sim image, helpful for examining the alignment of the real table and the simulation proxy table
 
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd --enable-sapien-viewer \
