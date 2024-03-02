@@ -559,11 +559,11 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
     def _setup_obj_configs(self):
         # Note: the cans are "opened" here to match the real evaluation; we'll remove "open" when getting language instruction
         self.triplets = [
-            ("blue_plastic_bottle", "opened_pepsi_can_v2", "orange"),
-            ("opened_7up_can_v2", "apple_v2", "sponge_v2"),
-            ("opened_coke_can_v2", "opened_redbull_can_v2", "apple_v2"),
-            ("sponge_v2", "blue_plastic_bottle", "opened_7up_can_v2"),
-            ("orange", "opened_pepsi_can_v2", "opened_redbull_can_v2"),
+            ("blue_plastic_bottle", "baked_opened_pepsi_can_v2", "orange"),
+            ("baked_opened_7up_can_v2", "baked_apple_v2", "baked_sponge_v2"),
+            ("baked_opened_coke_can_v2", "baked_opened_redbull_can_v2", "baked_apple_v2"),
+            ("baked_sponge_v2", "blue_plastic_bottle", "baked_opened_7up_can_v2"),
+            ("orange", "baked_opened_pepsi_can_v2", "baked_opened_redbull_can_v2"),
         ]
         self._source_obj_ids, self._target_obj_ids = [], []
         for i in range(3):
@@ -577,16 +577,16 @@ class MoveNearGoogleBakedTexInSceneEnvV1(MoveNearGoogleInSceneEnv):
         ]
         self.obj_init_quat_dict = {
             "blue_plastic_bottle": euler2quat(np.pi/2, 0, np.pi/2),
-            "opened_pepsi_can_v2": euler2quat(np.pi/2, 0, 0),
+            "baked_opened_pepsi_can_v2": euler2quat(np.pi/2, 0, 0),
             "orange": euler2quat(0, 0, np.pi/2),
-            "opened_7up_can_v2": euler2quat(np.pi/2, 0, 0),
-            "apple_v2": [1.0, 0.0, 0.0, 0.0],
-            "sponge_v2": euler2quat(0, 0, np.pi/2),
-            "opened_coke_can_v2": euler2quat(np.pi/2, 0, 0),
-            "opened_redbull_can_v2": euler2quat(np.pi/2, 0, 0),
+            "baked_opened_7up_can_v2": euler2quat(np.pi/2, 0, 0),
+            "baked_apple_v2": [1.0, 0.0, 0.0, 0.0],
+            "baked_sponge_v2": euler2quat(0, 0, np.pi/2),
+            "baked_opened_coke_can_v2": euler2quat(np.pi/2, 0, 0),
+            "baked_opened_redbull_can_v2": euler2quat(np.pi/2, 0, 0),
         }
         self.special_density_dict = {
-            "apple_v2": 200, 
+            "baked_apple_v2": 200, 
             "orange": 200
         }
 

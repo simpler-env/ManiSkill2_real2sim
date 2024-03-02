@@ -35,7 +35,7 @@
     ],
     "density": 50
   },
-  "opened_pepsi_can_v2": {
+  "baked_opened_pepsi_can_v2": {
     "bbox": {
       "min": [
         -0.033,
@@ -107,7 +107,7 @@
     ],
     "density": 50
   },
-  "opened_coke_can_v2": {
+  "baked_opened_coke_can_v2": {
     "bbox": {
       "min": [
         -0.033,
@@ -197,7 +197,7 @@
     ],
     "density": 50
   },
-  "opened_7up_can_v2": {
+  "baked_opened_7up_can_v2": {
     "bbox": {
       "min": [
         -0.033,
@@ -287,7 +287,7 @@
     ],
     "density": 50
   },
-  "opened_redbull_can_v2": {
+  "baked_opened_redbull_can_v2": {
     "bbox": {
       "min": [
         -0.02925,
@@ -341,7 +341,7 @@
     ],
     "density": 50
   },
-  "blue_plastic_bottle_v2": {
+  "baked_blue_plastic_bottle_v2": {
     "bbox": {
       "min": [
         -0.03005,
@@ -395,7 +395,7 @@
     ],
     "density": 800
   },
-  "apple_v2": {
+  "baked_apple_v2": {
     "bbox": {
       "min": [
         -0.04,
@@ -449,7 +449,7 @@
     ],
     "density": 800
   },
-  "orange_v2": {
+  "baked_orange_v2": {
     "bbox": {
       "min": [
         -0.035,
@@ -503,7 +503,7 @@
     ],
     "density": 150
   },
-  "sponge_v2": {
+  "baked_sponge_v2": {
     "bbox": {
       "min": [
         -0.035,
