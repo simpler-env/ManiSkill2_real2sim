@@ -28,29 +28,33 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self.station_name = station_name
         self.episode_stats = None
         self.drawer_id = None
-        
+
         self.prepackaged_config = prepackaged_config
         if self.prepackaged_config:
             # use prepackaged evaluation configs (visual matching)
             kwargs.update(self._setup_prepackaged_env_init_config())
-            
+
         super().__init__(**kwargs)
-        
+
     def _setup_prepackaged_env_init_config(self):
         ret = {}
-        ret['robot'] = 'google_robot_static'
-        ret['control_freq'] = 3
-        ret['sim_freq'] = 513
-        ret['control_mode'] = 'arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner'
-        ret['scene_name'] = 'dummy_drawer'
-        ret['camera_cfgs'] = {"add_segmentation": True}
-        ret['rgb_overlay_path'] = str(ASSET_DIR / 'real_inpainting/open_drawer_a0.png') # dummy path; to be replaced later
-        ret['rgb_overlay_cameras'] = ['overhead_camera']
-        ret['shader_dir'] = 'rt'
-        self.station_name = 'mk_station_recolor'
-        self.light_mode = 'simple' 
-        ret['disable_bad_material'] = True
-        
+        ret["robot"] = "google_robot_static"
+        ret["control_freq"] = 3
+        ret["sim_freq"] = 513
+        ret[
+            "control_mode"
+        ] = "arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner"
+        ret["scene_name"] = "dummy_drawer"
+        ret["camera_cfgs"] = {"add_segmentation": True}
+        ret["rgb_overlay_path"] = str(
+            ASSET_DIR / "real_inpainting/open_drawer_a0.png"
+        )  # dummy path; to be replaced later
+        ret["rgb_overlay_cameras"] = ["overhead_camera"]
+        ret["shader_dir"] = "rt"
+        self.station_name = "mk_station_recolor"
+        self.light_mode = "simple"
+        ret["disable_bad_material"] = True
+
         return ret
 
     # def _get_default_scene_config(self):
@@ -87,8 +91,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self._scene.set_ambient_light([1.0, 1.0, 1.0])
         angle = 75
         self._scene.add_directional_light(
-            [-np.cos(np.deg2rad(angle)), 0, -np.sin(np.deg2rad(angle))],
-            [1.0, 1.0, 1.0],
+            [-np.cos(np.deg2rad(angle)), 0, -np.sin(np.deg2rad(angle))], [1.0, 1.0, 1.0]
         )
 
     def _setup_lighting_legacy(self):
@@ -134,66 +137,93 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         )
         joint_names = [j.name for j in self.art_obj.get_active_joints()]
         self.joint_idx = joint_names.index(f"{self.drawer_id}_drawer_joint")
-       
+
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
         options = options.copy()
-        
+
         reconfigure = options.get("reconfigure", False)
         self.set_episode_rng(seed)
         self.drawer_id = self._episode_rng.choice(self.drawer_ids)
-        
+
         if self.prepackaged_config:
             _reconfigure = self._additional_prepackaged_config_reset(options)
             reconfigure = reconfigure or _reconfigure
-        
+
         options["reconfigure"] = reconfigure
-        
+
         self._initialize_episode_stats()
-        
+
         obs, info = super().reset(seed=self._episode_seed, options=options)
-        info.update({
-            'drawer_pose_wrt_robot_base': self.agent.robot.pose.inv() * self.obj.pose,
-            'cabinet_pose_wrt_robot_base': self.agent.robot.pose.inv() * self.art_obj.pose,
-            'station_name': self.station_name,
-            'light_mode': self.light_mode,
-        })
+        info.update(
+            {
+                "drawer_pose_wrt_robot_base": self.agent.robot.pose.inv()
+                * self.obj.pose,
+                "cabinet_pose_wrt_robot_base": self.agent.robot.pose.inv()
+                * self.art_obj.pose,
+                "station_name": self.station_name,
+                "light_mode": self.light_mode,
+            }
+        )
         return obs, info
-    
+
     def _additional_prepackaged_config_reset(self, options):
         # use prepackaged evaluation configs under visual matching setup
-        overlay_ids = ['a0', 'a1', 'a2', 'b0', 'b1', 'b2', 'c0', 'c1', 'c2']
-        rgb_overlay_paths = [str(ASSET_DIR / f'real_inpainting/open_drawer_{i}.png') for i in overlay_ids]
+        overlay_ids = ["a0", "a1", "a2", "b0", "b1", "b2", "c0", "c1", "c2"]
+        rgb_overlay_paths = [
+            str(ASSET_DIR / f"real_inpainting/open_drawer_{i}.png") for i in overlay_ids
+        ]
         robot_init_xs = [0.644, 0.765, 0.889, 0.652, 0.752, 0.851, 0.665, 0.765, 0.865]
-        robot_init_ys = [-0.179, -0.182, -0.203, 0.009, 0.009, 0.035, 0.224, 0.222, 0.222]
+        robot_init_ys = [
+            -0.179,
+            -0.182,
+            -0.203,
+            0.009,
+            0.009,
+            0.035,
+            0.224,
+            0.222,
+            0.222,
+        ]
         robot_init_rotzs = [-0.03, -0.02, -0.06, 0, 0, 0, 0, -0.025, -0.025]
         idx_chosen = self._episode_rng.choice(len(overlay_ids))
-            
-        options['robot_init_options'] = {
-            'init_xy': [robot_init_xs[idx_chosen], robot_init_ys[idx_chosen]],
-            'init_rot_quat': (sapien.Pose(q=euler2quat(0, 0, robot_init_rotzs[idx_chosen])) * sapien.Pose(q=[0, 0, 0, 1])).q,
+
+        options["robot_init_options"] = {
+            "init_xy": [robot_init_xs[idx_chosen], robot_init_ys[idx_chosen]],
+            "init_rot_quat": (
+                sapien.Pose(q=euler2quat(0, 0, robot_init_rotzs[idx_chosen]))
+                * sapien.Pose(q=[0, 0, 0, 1])
+            ).q,
         }
-        self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_paths[idx_chosen]), cv2.COLOR_BGR2RGB) / 255
-        new_urdf_version = self._episode_rng.choice([
-            "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
+        self.rgb_overlay_img = (
+            cv2.cvtColor(cv2.imread(rgb_overlay_paths[idx_chosen]), cv2.COLOR_BGR2RGB)
+            / 255
+        )
+        new_urdf_version = self._episode_rng.choice(
+            [
+                "recolor_tabletop_visual_matching_1",
+                "recolor_tabletop_visual_matching_2",
+                "recolor_cabinet_visual_matching_1",
+            ]
         )
         if new_urdf_version != self.urdf_version:
             self.urdf_version = new_urdf_version
             self._configure_agent()
             return True
         return False
-    
+
     def _initialize_episode_stats(self):
         self.episode_stats = OrderedDict(qpos=0.0)
-    
+
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]
-        self.episode_stats['qpos'] = '{:.3f}'.format(qpos)
+        self.episode_stats["qpos"] = "{:.3f}".format(qpos)
         return dict(success=qpos >= 0.15, qpos=qpos, episode_stats=self.episode_stats)
 
     def get_language_instruction(self):
         return f"open {self.drawer_id} drawer"
+
 
 @register_env("OpenDrawerCustomInScene-v0", max_episode_steps=113)
 class OpenDrawerCustomInSceneEnv(OpenDrawerInSceneEnv, CustomOtherObjectsInSceneEnv):
@@ -224,11 +254,12 @@ class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
 
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]
-        self.episode_stats['qpos'] = '{:.3f}'.format(qpos)
+        self.episode_stats["qpos"] = "{:.3f}".format(qpos)
         return dict(success=qpos <= 0.05, qpos=qpos, episode_stats=self.episode_stats)
 
     def get_language_instruction(self):
         return f"close {self.drawer_id} drawer"
+
 
 @register_env("CloseDrawerCustomInScene-v0", max_episode_steps=113)
 class CloseDrawerCustomInSceneEnv(CloseDrawerInSceneEnv, CustomOtherObjectsInSceneEnv):

@@ -90,7 +90,6 @@ MS1_ENV_IDS = [
 ]
 
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, required=True)
@@ -120,26 +119,27 @@ def main():
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
 
-    if 'robot' in args.env_kwargs:
-        if 'google_robot' in args.env_kwargs['robot']:
+    if "robot" in args.env_kwargs:
+        if "google_robot" in args.env_kwargs["robot"]:
             pose = look_at([1.0, 1.0, 2.0], [0.0, 0.0, 0.7])
-            args.env_kwargs['render_camera_cfgs'] = {
+            args.env_kwargs["render_camera_cfgs"] = {
                 "render_camera": dict(p=pose.p, q=pose.q)
             }
-        elif 'widowx' in args.env_kwargs['robot']:
+        elif "widowx" in args.env_kwargs["robot"]:
             pose = look_at([1.0, 1.0, 2.0], [0.0, 0.0, 0.7])
-            args.env_kwargs['render_camera_cfgs'] = {
+            args.env_kwargs["render_camera_cfgs"] = {
                 "render_camera": dict(p=pose.p, q=pose.q)
             }
-    
+
     from transforms3d.euler import euler2quat
+
     env: BaseEnv = gym.make(
         args.env_id,
         obs_mode=args.obs_mode,
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
         render_mode=args.render_mode,
-        camera_cfgs={'add_segmentation': args.add_segmentation},
+        camera_cfgs={"add_segmentation": args.add_segmentation},
         **args.env_kwargs
     )
 
@@ -149,55 +149,98 @@ def main():
     print("Reward mode", env.reward_mode)
 
     env_reset_options = {}
-    if (not hasattr(env, 'prepackaged_config')) or (not env.prepackaged_config):
+    if (not hasattr(env, "prepackaged_config")) or (not env.prepackaged_config):
         """
         Change the following reset options as you want to debug the environment
         """
-        names_in_env_id_fxn = lambda name_list: any(name in args.env_id for name in name_list)
-        if names_in_env_id_fxn(['GraspSingle']):
+        names_in_env_id_fxn = lambda name_list: any(
+            name in args.env_id for name in name_list
+        )
+        if names_in_env_id_fxn(["GraspSingle"]):
             init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
-            env_reset_options={'obj_init_options': {'init_xy': [-0.12, 0.31]}, 
-                            'robot_init_options': {'init_xy': [0.35, 0.20], 'init_rot_quat': init_rot_quat}}
-        elif names_in_env_id_fxn(['MoveNear']):
+            env_reset_options = {
+                "obj_init_options": {"init_xy": [-0.12, 0.31]},
+                "robot_init_options": {
+                    "init_xy": [0.35, 0.20],
+                    "init_rot_quat": init_rot_quat,
+                },
+            }
+        elif names_in_env_id_fxn(["MoveNear"]):
             # data/real_inpainting/google_move_near_real_eval_1.png
             init_rot_quat = (Pose(q=euler2quat(0, 0, -0.09)) * Pose(q=[0, 0, 0, 1])).q
-            env_reset_options={'obj_init_options': {},
-                            'robot_init_options': {'init_xy': [0.35, 0.21], 'init_rot_quat': init_rot_quat}}
+            env_reset_options = {
+                "obj_init_options": {},
+                "robot_init_options": {
+                    "init_xy": [0.35, 0.21],
+                    "init_rot_quat": init_rot_quat,
+                },
+            }
             # data/real_inpainting/google_move_near_real_eval_2.png
             # init_rot_quat = (Pose(q=euler2quat(0, 0, -0.028)) * Pose(q=[0, 0, 0, 1])).q
             # env_reset_options={'obj_init_options': {},
             #                    'robot_init_options': {'init_xy': [0.36, 0.22], 'init_rot_quat': init_rot_quat}}
-            
-            env_reset_options['obj_init_options']['episode_id'] = 0
-        elif names_in_env_id_fxn(['Drawer']):
+
+            env_reset_options["obj_init_options"]["episode_id"] = 0
+        elif names_in_env_id_fxn(["Drawer"]):
             init_rot_quat = [0, 0, 0, 1]
-            env_reset_options={'obj_init_options': {'init_xy': [0.0, 0.0]},
-                            'robot_init_options': {'init_xy': [0.851, 0.035], 'init_rot_quat': init_rot_quat}}
-        elif names_in_env_id_fxn(['PutSpoonOnTableCloth', 'PutCarrotOnPlate', 'StackGreenCubeOnYellowCube']):
+            env_reset_options = {
+                "obj_init_options": {"init_xy": [0.0, 0.0]},
+                "robot_init_options": {
+                    "init_xy": [0.851, 0.035],
+                    "init_rot_quat": init_rot_quat,
+                },
+            }
+        elif names_in_env_id_fxn(
+            ["PutSpoonOnTableCloth", "PutCarrotOnPlate", "StackGreenCubeOnYellowCube"]
+        ):
             init_rot_quat = Pose(q=[0, 0, 0, 1]).q
             # env_reset_options={'obj_init_options': {},
             #                    'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
-                            # 'robot_init_options': {'init_xy': [0.147, 0.028], 'init_height': 0.860, 'init_rot_quat': init_rot_quat}}
+            # 'robot_init_options': {'init_xy': [0.147, 0.028], 'init_height': 0.860, 'init_rot_quat': init_rot_quat}}
             # init_rot_quat = (Pose(q=euler2quat(0, 0, 0.03)) * Pose(q=[0, 0, 0, 1])).q
-            if env.robot_uid == 'widowx':
-                env_reset_options={'obj_init_options': {},
-                                'robot_init_options': {'init_xy': [0.147, 0.028], 'init_rot_quat': init_rot_quat}}
-            elif env.robot_uid == 'widowx_camera_setup2':
-                env_reset_options={'obj_init_options': {},
-                                'robot_init_options': {'init_xy': [0.147, 0.070], 'init_rot_quat': init_rot_quat}}
-            env_reset_options['obj_init_options']['episode_id'] = 0
-    
+            if env.robot_uid == "widowx":
+                env_reset_options = {
+                    "obj_init_options": {},
+                    "robot_init_options": {
+                        "init_xy": [0.147, 0.028],
+                        "init_rot_quat": init_rot_quat,
+                    },
+                }
+            elif env.robot_uid == "widowx_camera_setup2":
+                env_reset_options = {
+                    "obj_init_options": {},
+                    "robot_init_options": {
+                        "init_xy": [0.147, 0.070],
+                        "init_rot_quat": init_rot_quat,
+                    },
+                }
+            env_reset_options["obj_init_options"]["episode_id"] = 0
+
     obs, info = env.reset(options=env_reset_options)
     print("Reset info:", info)
     print("Instruction:", env.get_language_instruction())
     after_reset = True
-    
-    if 'google_robot' in env.agent.robot.name:
-        print("overhead camera pose", env.unwrapped._cameras['overhead_camera'].camera.pose)
-        print("overhead camera pose wrt robot base", env.agent.robot.pose.inv() * env.unwrapped._cameras['overhead_camera'].camera.pose)
-    elif 'wx250s' in env.agent.robot.name:
-        print("3rd view camera pose", env.unwrapped._cameras['3rd_view_camera'].camera.pose)
-        print("3rd view camera pose wrt robot base", env.agent.robot.pose.inv() * env.unwrapped._cameras['3rd_view_camera'].camera.pose)
+
+    if "google_robot" in env.agent.robot.name:
+        print(
+            "overhead camera pose",
+            env.unwrapped._cameras["overhead_camera"].camera.pose,
+        )
+        print(
+            "overhead camera pose wrt robot base",
+            env.agent.robot.pose.inv()
+            * env.unwrapped._cameras["overhead_camera"].camera.pose,
+        )
+    elif "wx250s" in env.agent.robot.name:
+        print(
+            "3rd view camera pose",
+            env.unwrapped._cameras["3rd_view_camera"].camera.pose,
+        )
+        print(
+            "3rd view camera pose wrt robot base",
+            env.agent.robot.pose.inv()
+            * env.unwrapped._cameras["3rd_view_camera"].camera.pose,
+        )
     print("robot pose", env.agent.robot.pose)
     # env.obj.get_collision_shapes()[0].get_physical_material().static_friction / dynamic_friction / restitution # object material properties
 
@@ -219,10 +262,13 @@ def main():
     has_base = "base" in env.agent.controller.configs
     num_arms = sum("arm" in x for x in env.agent.controller.configs)
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
-    is_google_robot = 'google_robot' in env.agent.robot.name
-    is_widowx = 'wx250s' in env.agent.robot.name
-    is_gripper_delta_target_control = env.agent.controller.controllers['gripper'].config.use_target and env.agent.controller.controllers['gripper'].config.use_delta
-    
+    is_google_robot = "google_robot" in env.agent.robot.name
+    is_widowx = "wx250s" in env.agent.robot.name
+    is_gripper_delta_target_control = (
+        env.agent.controller.controllers["gripper"].config.use_target
+        and env.agent.controller.controllers["gripper"].config.use_delta
+    )
+
     def get_reset_gripper_action():
         # open gripper at initialization
         if not is_google_robot:
@@ -230,15 +276,19 @@ def main():
         else:
             # for google robot, open-and-close actions are reversed
             return -1
-        
+
     gripper_action = get_reset_gripper_action()
-    
-    EE_ACTION = 0.1 if not (is_google_robot or is_widowx) else 0.03 # google robot and widowx use unnormalized action space
-    EE_ROT_ACTION = 1.0 if not (is_google_robot or is_widowx) else 0.1 # google robot and widowx use unnormalized action space
-    
+
+    EE_ACTION = (
+        0.1 if not (is_google_robot or is_widowx) else 0.03
+    )  # google robot and widowx use unnormalized action space
+    EE_ROT_ACTION = (
+        1.0 if not (is_google_robot or is_widowx) else 0.1
+    )  # google robot and widowx use unnormalized action space
+
     # print("obj pose", env.obj.pose, "tcp pose", env.tcp.pose)
     print("qpos", env.agent.robot.get_qpos())
-    
+
     while True:
         # -------------------------------------------------------------------------- #
         # Visualization
@@ -398,15 +448,15 @@ def main():
         else:
             action_dict = dict(base=base_action, arm=ee_action)
             if has_gripper:
-                action_dict['gripper'] = gripper_action
+                action_dict["gripper"] = gripper_action
             action = env.agent.controller.from_action_dict(action_dict)
 
         print("action", action)
         obs, reward, terminated, truncated, info = env.step(action)
-        
+
         if is_gripper_delta_target_control:
             gripper_action = 0
-            
+
         # print("obj pose", env.obj.pose, "tcp pose", env.tcp.pose)
         print("tcp pose wrt robot base", env.agent.robot.pose.inv() * env.tcp.pose)
         print("qpos", env.agent.robot.get_qpos())

@@ -13,7 +13,7 @@ from mani_skill2.utils.sapien_utils import (
 
 class WidowX(BaseAgent):
     _config: defaults.WidowXDefaultConfig
-    
+
     """
         WidowX250 6DoF robot
         links:
@@ -33,11 +33,11 @@ class WidowX(BaseAgent):
             [ 0.015      0.037    ]
             [ 0.015      0.037    ]]
     """
-    
+
     @classmethod
     def get_default_config(cls):
         return defaults.WidowXDefaultConfig()
-    
+
     def __init__(
         self, scene, control_freq, control_mode=None, fix_root_link=True, config=None
     ):
@@ -50,32 +50,44 @@ class WidowX(BaseAgent):
             fix_root_link=fix_root_link,
             config=config,
         )
-        
+
     def _after_init(self):
         super()._after_init()
 
-        self.base_link = [x for x in self.robot.get_links() if x.name == 'base_link'][0]
-        
-        self.finger_right_joint = get_entity_by_name(self.robot.get_joints(), "right_finger")
-        self.finger_left_joint = get_entity_by_name(self.robot.get_joints(), "left_finger")
-        
-        self.finger_right_link = get_entity_by_name(self.robot.get_links(), "right_finger_link")
-        self.finger_left_link = get_entity_by_name(self.robot.get_links(), "left_finger_link")
+        self.base_link = [x for x in self.robot.get_links() if x.name == "base_link"][0]
+
+        self.finger_right_joint = get_entity_by_name(
+            self.robot.get_joints(), "right_finger"
+        )
+        self.finger_left_joint = get_entity_by_name(
+            self.robot.get_joints(), "left_finger"
+        )
+
+        self.finger_right_link = get_entity_by_name(
+            self.robot.get_links(), "right_finger_link"
+        )
+        self.finger_left_link = get_entity_by_name(
+            self.robot.get_links(), "left_finger_link"
+        )
 
     def get_gripper_closedness(self):
         finger_qpos = self.robot.get_qpos()[-2:]
         finger_qlim = self.robot.get_qlimits()[-2:]
-        closedness_left = (finger_qlim[0,1] - finger_qpos[0]) / (finger_qlim[0,1] - finger_qlim[0,0])
-        closedness_right = (finger_qlim[1,1] - finger_qpos[1]) / (finger_qlim[1,1] - finger_qlim[1,0])
+        closedness_left = (finger_qlim[0, 1] - finger_qpos[0]) / (
+            finger_qlim[0, 1] - finger_qlim[0, 0]
+        )
+        closedness_right = (finger_qlim[1, 1] - finger_qpos[1]) / (
+            finger_qlim[1, 1] - finger_qlim[1, 0]
+        )
         return np.maximum(np.mean([closedness_left, closedness_right]), 0.0)
-        
+
     def get_fingers_info(self):
         finger_right_pos = self.finger_right_link.get_global_pose().p
         finger_left_pos = self.finger_left_link.get_global_pose().p
-        
+
         finger_right_vel = self.finger_right_link.get_velocity()
         finger_left_vel = self.finger_left_link.get_velocity()
-        
+
         return {
             "finger_right_pos": finger_right_pos,
             "finger_left_pos": finger_left_pos,
@@ -87,25 +99,29 @@ class WidowX(BaseAgent):
         assert isinstance(actor, sapien.ActorBase), type(actor)
         contacts = self.scene.get_contacts()
 
-        limpulse_finger = get_pairwise_contact_impulse(contacts, self.finger_left_link, actor)
-        rimpulse_finger = get_pairwise_contact_impulse(contacts, self.finger_right_link, actor)
+        limpulse_finger = get_pairwise_contact_impulse(
+            contacts, self.finger_left_link, actor
+        )
+        rimpulse_finger = get_pairwise_contact_impulse(
+            contacts, self.finger_right_link, actor
+        )
 
         # direction to open the gripper
         ldirection_finger = self.finger_left_link.pose.to_transformation_matrix()[:3, 1]
-        rdirection_finger = self.finger_right_link.pose.to_transformation_matrix()[:3, 1]
+        rdirection_finger = self.finger_right_link.pose.to_transformation_matrix()[
+            :3, 1
+        ]
 
         # angle between impulse and open direction
         langle = compute_angle_between(ldirection_finger, limpulse_finger)
         rangle = compute_angle_between(-rdirection_finger, rimpulse_finger)
 
-        lflag = (
-            (np.linalg.norm(limpulse_finger) >= min_impulse)
-            and np.rad2deg(langle) <= max_angle
-        )
-        rflag = (
-            (np.linalg.norm(rimpulse_finger) >= min_impulse) 
-            and np.rad2deg(rangle) <= max_angle
-        )
+        lflag = (np.linalg.norm(limpulse_finger) >= min_impulse) and np.rad2deg(
+            langle
+        ) <= max_angle
+        rflag = (np.linalg.norm(rimpulse_finger) >= min_impulse) and np.rad2deg(
+            rangle
+        ) <= max_angle
 
         return all([lflag, rflag])
 
@@ -113,14 +129,18 @@ class WidowX(BaseAgent):
         assert isinstance(actor, sapien.ActorBase), type(actor)
         contacts = self.scene.get_contacts()
 
-        limpulse_finger = get_pairwise_contact_impulse(contacts, self.finger_left_link, actor)
-        rimpulse_finger = get_pairwise_contact_impulse(contacts, self.finger_right_link, actor)
+        limpulse_finger = get_pairwise_contact_impulse(
+            contacts, self.finger_left_link, actor
+        )
+        rimpulse_finger = get_pairwise_contact_impulse(
+            contacts, self.finger_right_link, actor
+        )
 
         return (
             np.linalg.norm(limpulse_finger) >= min_impulse,
             np.linalg.norm(rimpulse_finger) >= min_impulse,
         )
-        
+
     @staticmethod
     def build_grasp_pose(approaching, closing, center):
         """
@@ -134,16 +154,16 @@ class WidowX(BaseAgent):
         T = np.eye(4)
         T[:3, :3] = np.stack([approaching, closing, ortho], axis=1)
         T[:3, 3] = center
-        return Pose.from_transformation_matrix(T) 
-    
+        return Pose.from_transformation_matrix(T)
+
     @property
     def base_pose(self):
         return self.base_link.get_pose()
-    
-    
+
+
 class WidowXCameraSetup2(WidowX):
     _config: defaults.WidowXCameraSetup2Config
-    
+
     @classmethod
     def get_default_config(cls):
         return defaults.WidowXCameraSetup2Config()

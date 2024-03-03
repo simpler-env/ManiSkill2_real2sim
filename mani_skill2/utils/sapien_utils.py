@@ -331,7 +331,7 @@ def hex2rgba(h, correction=True):
     r, g, b = tuple(int(h[i : i + 2], 16) / 255 for i in (0, 2, 4))
     rgba = np.array([r, g, b, 1])
     if correction:  # reverse gamma correction in sapien
-        rgba = rgba**2.2
+        rgba = rgba ** 2.2
     return rgba
 
 

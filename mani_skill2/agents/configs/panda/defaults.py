@@ -34,10 +34,7 @@ class PandaDefaultConfig:
         self.arm_damping = 1e2
         self.arm_force_limit = 100
 
-        self.gripper_joint_names = [
-            "panda_finger_joint1",
-            "panda_finger_joint2",
-        ]
+        self.gripper_joint_names = ["panda_finger_joint1", "panda_finger_joint2"]
         self.gripper_stiffness = 1e3
         self.gripper_damping = 1e2
         self.gripper_force_limit = 100

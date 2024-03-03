@@ -26,7 +26,9 @@ class StereoDepthCameraConfig(CameraConfig):
             return self.intrinsic
         else:
             fy = (self.height / 2) / np.tan(self.fov / 2)
-            return np.array([[fy, 0, self.width / 2], [0, fy, self.height / 2], [0, 0, 1]])
+            return np.array(
+                [[fy, 0, self.width / 2], [0, fy, self.height / 2], [0, 0, 1]]
+            )
 
     @classmethod
     def fromCameraConfig(cls, cfg: CameraConfig):
@@ -128,10 +130,7 @@ class StereoDepthCamera(Camera):
                 )
             elif name == "Position":
                 obs_spaces[name] = spaces.Box(
-                    low=-np.inf,
-                    high=np.inf,
-                    shape=(height, width, 4),
-                    dtype=np.float32,
+                    low=-np.inf, high=np.inf, shape=(height, width, 4), dtype=np.float32
                 )
             elif name == "Segmentation":
                 obs_spaces[name] = spaces.Box(

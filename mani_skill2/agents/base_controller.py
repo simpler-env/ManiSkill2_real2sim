@@ -8,7 +8,12 @@ from gymnasium import spaces
 
 from mani_skill2.utils.common import clip_and_scale_action, normalize_action_space
 
-from .utils import flatten_action_spaces, get_active_joint_indices, get_active_joints, parameterize_path
+from .utils import (
+    flatten_action_spaces,
+    get_active_joint_indices,
+    get_active_joints,
+    parameterize_path,
+)
 
 
 class BaseController:
@@ -127,12 +132,14 @@ class BaseController:
         return clip_and_scale_action(
             action, self._action_space.low, self._action_space.high
         )
-        
+
     # -------------------------------------------------------------------------- #
     # Planning utils
     # -------------------------------------------------------------------------- #
-    def plan_joint_path(self, start_qpos, target_qpos, vlim, alim, jerklim, init_v = 0.0):
-        planner_result = parameterize_path(start_qpos, target_qpos, init_v, vlim, alim, jerklim)
+    def plan_joint_path(self, start_qpos, target_qpos, vlim, alim, jerklim, init_v=0.0):
+        planner_result = parameterize_path(
+            start_qpos, target_qpos, init_v, vlim, alim, jerklim
+        )
         duration = planner_result.duration
         dt = 1 / self._sim_freq
         times = np.clip(np.arange(self._sim_steps + 1) * dt, 0, duration)

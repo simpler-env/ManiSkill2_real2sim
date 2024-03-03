@@ -33,7 +33,10 @@ class PDJointPosController(BaseController):
 
         for i, joint in enumerate(self.joints):
             joint.set_drive_property(
-                stiffness[i], damping[i], force_limit=force_limit[i], mode=self.config.drive_mode
+                stiffness[i],
+                damping[i],
+                force_limit=force_limit[i],
+                mode=self.config.drive_mode,
             )
             joint.set_friction(friction[i])
 
@@ -50,7 +53,7 @@ class PDJointPosController(BaseController):
         self._last_drive_qpos_targets = targets
         for i, joint in enumerate(self.joints):
             joint.set_drive_target(targets[i])
-            
+
     def set_drive_velocity_targets(self, targets):
         for i, joint in enumerate(self.joints):
             joint.set_drive_velocity_target(targets[i])
@@ -92,7 +95,7 @@ class PDJointPosController(BaseController):
             self._setup_qpos_interpolation()
         else:
             self.set_drive_targets(self._target_qpos)
-            
+
     def _setup_qpos_interpolation(self):
         if self.config.interpolate_by_planner:
             if self.config.interpolate_planner_init_no_vel:
@@ -101,23 +104,30 @@ class PDJointPosController(BaseController):
             else:
                 # use the currently sensed joint velocity as the initial condition for joint trajectory planning
                 init_qvel = np.clip(
-                    self.articulation.get_qvel()[self.joint_indices], 
-                    -self.config.interpolate_planner_vlim, 
-                    self.config.interpolate_planner_vlim
+                    self.articulation.get_qvel()[self.joint_indices],
+                    -self.config.interpolate_planner_vlim,
+                    self.config.interpolate_planner_vlim,
                 )
             if self.config.use_target or self._interpolation_path is None:
-                init_qpos = self.qpos # plan from the current sensed joint position (self.qpos) to the target joint position (self._target_qpos)
+                init_qpos = (
+                    self.qpos
+                )  # plan from the current sensed joint position (self.qpos) to the target joint position (self._target_qpos)
             else:
                 # plan from the "terminal intermediate waypoint" of the last control step's planned path to the target joint position (self._target_qpos)
-                len_last_path = min(self._sim_steps, len(self._interpolation_path) - 1) # self._interpolation_path includes the start joint position, so we decrease by 1
+                len_last_path = min(
+                    self._sim_steps, len(self._interpolation_path) - 1
+                )  # self._interpolation_path includes the start joint position, so we decrease by 1
                 init_qpos = self._interpolation_path[len_last_path]
                 if not self.config.interpolate_planner_init_no_vel:
                     init_qvel = self._interpolation_path_vel[len_last_path]
-            
+
             self._interpolation_path, vel_path = self.plan_joint_path(
-                init_qpos, self._target_qpos, 
-                self.config.interpolate_planner_vlim, self.config.interpolate_planner_alim, self.config.interpolate_planner_jerklim,
-                init_v = init_qvel
+                init_qpos,
+                self._target_qpos,
+                self.config.interpolate_planner_vlim,
+                self.config.interpolate_planner_alim,
+                self.config.interpolate_planner_jerklim,
+                init_v=init_qvel,
             )
             # print(self.qpos, self._start_qpos, self._target_qpos, self._interpolation_path[0], self._interpolation_path[min(self._sim_steps, len(self._interpolation_path) - 1)])
             if not self.config.interpolate_planner_init_no_vel:
@@ -134,17 +144,21 @@ class PDJointPosController(BaseController):
 
     def before_simulation_step(self):
         self._step += 1
-        
+
         # Compute the next target
         if self.config.interpolate:
             interp_path_idx = min(self._step, len(self._interpolation_path) - 1)
             targets = self._interpolation_path[interp_path_idx]
             self.set_drive_targets(targets)
-            if self.config.interpolate_by_planner and self.config.interpolate_planner_exec_set_target_vel:
+            if (
+                self.config.interpolate_by_planner
+                and self.config.interpolate_planner_exec_set_target_vel
+            ):
                 # set the target joint velocity
                 if self._interpolation_path_vel is not None:
-                    self.set_drive_velocity_targets(self._interpolation_path_vel[interp_path_idx])
-                                
+                    self.set_drive_velocity_targets(
+                        self._interpolation_path_vel[interp_path_idx]
+                    )
 
     def get_state(self) -> dict:
         if self.config.use_target:
@@ -167,13 +181,13 @@ class PDJointPosControllerConfig(ControllerConfig):
     drive_mode: str = "force"
     use_delta: bool = False
     use_target: bool = False
-    delta_target_from_last_drive_target: bool = False 
+    delta_target_from_last_drive_target: bool = False
     clip_target: bool = False
     clip_target_thres: float = 0.01
     interpolate: bool = False
-    interpolate_by_planner: bool = False # whether to use joint trajectory planning to interpolate between the current joint position and the target joint position
-    interpolate_planner_init_no_vel: bool = False # whether to use zero joint velocity as the initial condition for joint trajectory planning
-    interpolate_planner_exec_set_target_vel: bool = False # whether to set the target joint velocity during the execution of the planned joint trajectory
+    interpolate_by_planner: bool = False  # whether to use joint trajectory planning to interpolate between the current joint position and the target joint position
+    interpolate_planner_init_no_vel: bool = False  # whether to use zero joint velocity as the initial condition for joint trajectory planning
+    interpolate_planner_exec_set_target_vel: bool = False  # whether to set the target joint velocity during the execution of the planned joint trajectory
     interpolate_planner_vlim: float = 1.5
     interpolate_planner_alim: float = 2.0
     interpolate_planner_jerklim: float = 50.0
@@ -194,22 +208,17 @@ class PDJointPosMimicControllerConfig(PDJointPosControllerConfig):
     controller_cls = PDJointPosMimicController
 
 
-
-
-
-
-
 class PIDJointPosController(PDJointPosController):
     config: "PIDJointPosControllerConfig"
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._integral = np.zeros_like(self.qpos)
-    
+
     def reset(self):
         super().reset()
         self._integral = np.zeros_like(self.qpos)
-        
+
     def set_drive_targets(self, targets):
         self._last_drive_qpos_targets = targets
         # target = target + err * k_i / k_p
@@ -220,12 +229,16 @@ class PIDJointPosController(PDJointPosController):
         print(self._integral, self._integral * integral / stiffness, targets)
         for i, joint in enumerate(self.joints):
             joint.set_drive_target(targets[i])
-            
+
     def set_drive_velocity_targets(self, targets):
-        raise NotImplementedError("PIDJointPosController does not support velocity control")
-    
+        raise NotImplementedError(
+            "PIDJointPosController does not support velocity control"
+        )
+
     def before_simulation_step(self):
-        self._integral = self._integral + (self._last_drive_qpos_targets - self.qpos) * (1.0 / self._sim_freq)
+        self._integral = self._integral + (
+            self._last_drive_qpos_targets - self.qpos
+        ) * (1.0 / self._sim_freq)
         super().before_simulation_step()
 
 
@@ -234,12 +247,14 @@ class PIDJointPosControllerConfig(PDJointPosControllerConfig):
     integral: Union[float, Sequence[float]] = 100.0
     controller_cls = PIDJointPosController
 
+
 class PIDJointPosMimicController(PIDJointPosController):
     def _get_joint_limits(self):
         joint_limits = super()._get_joint_limits()
         diff = joint_limits[0:-1] - joint_limits[1:]
         assert np.allclose(diff, 0), "Mimic joints should have the same limit"
         return joint_limits[0:1]
-    
+
+
 class PIDJointPosMimicControllerConfig(PIDJointPosControllerConfig):
     controller_cls = PIDJointPosMimicController

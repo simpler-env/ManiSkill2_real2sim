@@ -233,9 +233,7 @@ def download(
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "uid",
-        type=str,
-        help="Asset UID. Use 'all' to download all assets.",
+        "uid", type=str, help="Asset UID. Use 'all' to download all assets."
     )
     parser.add_argument("--quiet", action="store_true", help="Disable verbose output.")
     parser.add_argument(

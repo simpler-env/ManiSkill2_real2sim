@@ -138,7 +138,7 @@ class BaseEnv(gym.Env):
         self._control_freq = control_freq
         if sim_freq % control_freq != 0:
             logger.warning(
-                f"sim_freq({sim_freq}) is not divisible by control_freq({control_freq}).",
+                f"sim_freq({sim_freq}) is not divisible by control_freq({control_freq})."
             )
         self._sim_steps_per_control = sim_freq // control_freq
 
@@ -268,10 +268,7 @@ class BaseEnv(gym.Env):
 
     def _get_obs_state_dict(self):
         """Get (GT) state-based observations."""
-        return OrderedDict(
-            agent=self._get_obs_agent(),
-            extra=self._get_obs_extra(),
-        )
+        return OrderedDict(agent=self._get_obs_agent(), extra=self._get_obs_extra())
 
     def _get_obs_agent(self):
         """Get observations from the agent's sensors, e.g., proprioceptive sensors."""
@@ -384,9 +381,7 @@ class BaseEnv(gym.Env):
         else:
             rend_mtl = None
         return self._scene.add_ground(
-            altitude=altitude,
-            render=render,
-            render_material=rend_mtl,
+            altitude=altitude, render=render, render_material=rend_mtl
         )
 
     def _load_actors(self):
@@ -410,10 +405,7 @@ class BaseEnv(gym.Env):
             else:
                 cam_cls = Camera
             self._cameras[uid] = cam_cls(
-                camera_cfg,
-                self._scene,
-                self._renderer_type,
-                articulation=articulation,
+                camera_cfg, self._scene, self._renderer_type, articulation=articulation
             )
 
         # Cameras for rendering only
@@ -475,11 +467,13 @@ class BaseEnv(gym.Env):
         if options is None:
             options = dict()
 
-        # when giving a specific seed, we always set the main RNG based on that seed. This then deterministically changes the **sequence** of RNG 
+        # when giving a specific seed, we always set the main RNG based on that seed. This then deterministically changes the **sequence** of RNG
         # used for each episode after each call to reset with seed=none. By default this sequence of rng starts with the default main seed used which is 2022,
         # which means that when creating an environment and resetting without a seed, it will always have the same sequence of RNG for each episode.
         self.set_main_rng(seed)
-        self.set_episode_rng(seed) # we first set the first episode seed to allow environments to use it to reconfigure the environment with a seed
+        self.set_episode_rng(
+            seed
+        )  # we first set the first episode seed to allow environments to use it to reconfigure the environment with a seed
         self._elapsed_steps = 0
         reconfigure = options.get("reconfigure", False)
         if reconfigure:
@@ -499,14 +493,14 @@ class BaseEnv(gym.Env):
         if seed is None:
             if self._main_seed is not None:
                 return
-            seed = np.random.RandomState().randint(2**32)
+            seed = np.random.RandomState().randint(2 ** 32)
         self._main_seed = seed
         self._main_rng = np.random.RandomState(self._main_seed)
 
     def set_episode_rng(self, seed):
         """Set the random generator for current episode."""
         if seed is None:
-            self._episode_seed = self._main_rng.randint(2**32)
+            self._episode_seed = self._main_rng.randint(2 ** 32)
         else:
             self._episode_seed = seed
         self._episode_rng = np.random.RandomState(self._episode_seed)
@@ -608,7 +602,9 @@ class BaseEnv(gym.Env):
         scene_config.contact_offset = 0.02
         scene_config.enable_pcm = False
         scene_config.solver_iterations = 25
-        scene_config.enable_tgs = True # **This is crucial for preventing mesh penetration for google robot**
+        scene_config.enable_tgs = (
+            True
+        )  # **This is crucial for preventing mesh penetration for google robot**
         # NOTE(fanbo): solver_velocity_iterations=0 is undefined in PhysX
         scene_config.solver_velocity_iterations = 1
         if self._renderer_type == "client":

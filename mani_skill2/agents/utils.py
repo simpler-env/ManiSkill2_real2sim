@@ -21,26 +21,26 @@ def parameterize_path(start_qpos, target_qpos, init_v, vlim, alim, jerklim):
     inp.target_position = target_qpos
     inp.target_velocity = np.zeros(dof)
     inp.target_acceleration = np.zeros(dof)
-    
+
     if isinstance(vlim, float):
         vlim = np.full(dof, vlim)
     if isinstance(alim, float):
         alim = np.full(dof, alim)
     if isinstance(jerklim, float):
         jerklim = np.full(dof, jerklim)
-        
+
     inp.max_velocity = vlim
     inp.max_acceleration = alim
     inp.max_jerk = jerklim
     inp.min_velocity = -vlim
     inp.min_acceleration = -alim
-    
+
     otg = Ruckig(dof)
     trajectory = Trajectory(dof)
     result = otg.calculate(inp, trajectory)
-    
+
     return trajectory
-    
+
 
 def get_joint_indices(articulation: sapien.Articulation, joint_names: Sequence[str]):
     all_joint_names = [x.name for x in articulation.get_joints()]

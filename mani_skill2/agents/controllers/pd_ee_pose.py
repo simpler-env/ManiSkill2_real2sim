@@ -69,7 +69,7 @@ class PDEEPosController(PDJointPosController):
             return result[self.joint_indices]
         else:
             return None
-        
+
     def compute_fk(self, qpos):
         full_qpos = self.articulation.get_qpos()
         for i, idx in enumerate(self.joint_indices):
@@ -114,7 +114,7 @@ class PDEEPosController(PDJointPosController):
         self._target_qpos = self.compute_ik(self._target_pose)
         if self._target_qpos is None:
             self._target_qpos = self._start_qpos
-        
+
         if self.config.interpolate:
             self._setup_qpos_interpolation()
         else:
@@ -206,19 +206,16 @@ class PDEEPoseController(PDEEPosController):
             elif self.config.frame == "ee_align2":
                 cur_ee_pose_at_base = self.compute_fk(self.qpos)
                 target_pose = (
-                    (
-                    sapien.Pose(p=cur_ee_pose_at_base.p) 
-                    * delta_pose 
+                    sapien.Pose(p=cur_ee_pose_at_base.p)
+                    * delta_pose
                     * sapien.Pose(p=cur_ee_pose_at_base.p).inv()
-                    ) 
-                    * prev_ee_pose_at_base
-                )
+                ) * prev_ee_pose_at_base
                 # target_pose = (
                 #     (
-                #     sapien.Pose(p=prev_ee_pose_at_base.p) 
-                #     * delta_pose 
+                #     sapien.Pose(p=prev_ee_pose_at_base.p)
+                #     * delta_pose
                 #     * sapien.Pose(p=prev_ee_pose_at_base.p).inv()
-                #     ) 
+                #     )
                 #     * prev_ee_pose_at_base
                 # )
             else:
