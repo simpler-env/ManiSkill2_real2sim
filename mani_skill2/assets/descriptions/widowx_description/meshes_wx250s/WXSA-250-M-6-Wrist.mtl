@@ -10,4 +10,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /home/xuanlin/Real2Sim/ManiSkill2_real2sim/mani_skill2/assets/descriptions/widowx_description/interbotix_black.png
+map_Kd ../interbotix_black.png
