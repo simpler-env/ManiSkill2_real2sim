@@ -8,6 +8,8 @@ This repository is forked from the [original ManiSkill2 repo](https://github.com
 - **Demo manual control script** (`mani_skill2/examples/demo_manual_control_custom_envs.py`): The script is modified from `mani_skill2/examples/demo_manual_control.py` of the original ManiSkill2 repo to support custom real-to-sim environment creationg and visualization. See the script details for usage.
 
 
+To install, run `pip install -e .`
+
 (Original ManiSkill2 docs: https://haosulab.github.io/ManiSkill2)
 
 Example in interactive python (`cd {Path to ManiSkill2_real2sim}; MS2_ASSET_DIR=./data python`)
