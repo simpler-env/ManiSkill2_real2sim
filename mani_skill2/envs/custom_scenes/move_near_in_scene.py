@@ -281,7 +281,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         assert obj_init_xys.shape == (len(self.episode_objs), 2)
 
         obj_init_z = self.obj_init_options.get("init_z", self.scene_table_height)
-        obj_init_z = obj_init_z + 0.5  # let object fall onto the table
+        obj_init_z = obj_init_z + 0.5 # let object fall onto the table
 
         obj_init_rot_quats = self.obj_init_options.get("init_rot_quats", None)
         if obj_init_rot_quats is not None:
@@ -303,7 +303,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
         self.agent.robot.set_pose(sapien.Pose([-10, 0, 0]))
 
         self._settle(0.5)
-
+        
         # Unlock motion
         for obj in self.episode_objs:
             obj.lock_motion(0, 0, 0, 0, 0, 0)

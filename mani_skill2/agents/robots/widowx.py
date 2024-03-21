@@ -167,3 +167,11 @@ class WidowXCameraSetup2(WidowX):
     @classmethod
     def get_default_config(cls):
         return defaults.WidowXCameraSetup2Config()
+
+
+class WidowXSinkCameraSetup(WidowX):
+    _config: defaults.WidowXSinkCameraSetupConfig
+
+    @classmethod
+    def get_default_config(cls):
+        return defaults.WidowXSinkCameraSetupConfig()

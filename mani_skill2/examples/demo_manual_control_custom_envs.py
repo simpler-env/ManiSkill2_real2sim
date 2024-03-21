@@ -37,7 +37,9 @@ MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs
 
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
     -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd --enable-sapien-viewer     prepackaged_config @True     robot widowx
-# replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeBakedTexInScene-v0" to test other Bridge environments
+# replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeBakedTexInScene-v0", 
+#         "PutEggplantInBasketScene-v0" to test other Bridge environments
+
 
 # Envs constructed through manual config setup
 # "rgb_overlay_mode debug" means to visualize 0.5*real image + 0.5*sim image, helpful for examining the alignment of the real table and the simulation proxy table
@@ -63,10 +65,13 @@ MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera
     
 MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
-    -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 \
+    -c arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx sim_freq @500 control_freq @5 \
     scene_name bridge_table_1_v1  rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/bridge_real_eval_1.png rgb_overlay_cameras 3rd_view_camera
 # replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeInScene-v0" to test other Bridge environments
     
+MS2_ASSET_DIR=./data python mani_skill2/examples/demo_manual_control_custom_envs.py -e PutEggplantInBasketScene-v0 --enable-sapien-viewer \
+    -c arm_pd_ee_target_delta_pose_align2_gripper_pd_joint_pos -o rgbd robot widowx_sink_camera_setup sim_freq @500 control_freq @5 \
+    scene_name bridge_table_1_v2  rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/bridge_sink.png rgb_overlay_cameras 3rd_view_camera
 
 """
 
@@ -74,12 +79,11 @@ import argparse
 
 import gymnasium as gym
 import numpy as np
+from transforms3d.quaternions import qmult
 
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.utils.visualization.cv2_utils import OpenCVViewer
-from mani_skill2.utils.wrappers import RecordEpisode
-from mani_skill2.utils.sapien_utils import look_at
-from mani_skill2.sensors.camera import CameraConfig, parse_camera_cfgs
+from mani_skill2.utils.sapien_utils import look_at, normalize_vector
 from sapien.core import Pose
 
 MS1_ENV_IDS = [
@@ -191,7 +195,7 @@ def main():
                 },
             }
         elif names_in_env_id_fxn(
-            ["PutSpoonOnTableCloth", "PutCarrotOnPlate", "StackGreenCubeOnYellowCube"]
+            ["PutSpoonOnTableCloth", "PutCarrotOnPlate", "StackGreenCubeOnYellowCube", "PutEggplantInBasket"]
         ):
             init_rot_quat = Pose(q=[0, 0, 0, 1]).q
             # env_reset_options={'obj_init_options': {},
@@ -211,6 +215,14 @@ def main():
                     "obj_init_options": {},
                     "robot_init_options": {
                         "init_xy": [0.147, 0.070],
+                        "init_rot_quat": init_rot_quat,
+                    },
+                }
+            elif env.robot_uid == "widowx_sink_camera_setup":
+                env_reset_options = {
+                    "obj_init_options": {},
+                    "robot_init_options": {
+                        "init_xy": [0.127, 0.060],
                         "init_rot_quat": init_rot_quat,
                     },
                 }
@@ -280,7 +292,7 @@ def main():
     gripper_action = get_reset_gripper_action()
 
     EE_ACTION = (
-        0.1 if not (is_google_robot or is_widowx) else 0.03
+        0.1 if not (is_google_robot or is_widowx) else 0.02
     )  # google robot and widowx use unnormalized action space
     EE_ROT_ACTION = (
         1.0 if not (is_google_robot or is_widowx) else 0.1

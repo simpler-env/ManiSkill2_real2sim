@@ -1,19 +1,20 @@
 from collections import OrderedDict
 from typing import List
+
 import numpy as np
 import sapien.core as sapien
 from transforms3d.euler import euler2quat
 from transforms3d.quaternions import quat2mat
 
-from mani_skill2 import ASSET_DIR
 from mani_skill2.utils.common import random_choice
 from mani_skill2.utils.registration import register_env
+from mani_skill2 import ASSET_DIR
 
 from .base_env import CustomBridgeObjectsInSceneEnv
 from .move_near_in_scene import MoveNearInSceneEnv
 
-
 class PutOnInSceneEnv(MoveNearInSceneEnv):
+    
     def reset(self, *args, **kwargs):
         self.consecutive_grasp = 0
         return super().reset(*args, **kwargs)
@@ -39,7 +40,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
 
         return super()._set_model(model_ids, model_scales)
 
-    def evaluate(self, success_require_src_completely_on_target=True, **kwargs):
+    def evaluate(self, success_require_src_completely_on_target=True, z_flag_required_offset=0.02, **kwargs):
         source_obj_pose = self.source_obj_pose
         target_obj_pose = self.target_obj_pose
 
@@ -86,7 +87,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
         )
         z_flag = (offset[2] > 0) and (
             offset[2] - tgt_obj_half_length_bbox[2] - src_obj_half_length_bbox[2]
-            <= 0.02
+            <= z_flag_required_offset
         )
         src_on_target = xy_flag and z_flag
 
@@ -368,4 +369,119 @@ class StackGreenCubeOnYellowCubeBakedTexInScene(StackGreenCubeOnYellowCubeInScen
         target_obj_name = "baked_yellow_cube_3cm"
         super().__init__(
             source_obj_name=source_obj_name, target_obj_name=target_obj_name, **kwargs
+        )
+
+
+@register_env("PutEggplantInBasketScene-v0", max_episode_steps=200)
+class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        source_obj_name = "eggplant"
+        target_obj_name = "dummy_sink_target_plane"  # invisible
+
+        target_xy = np.array([-0.125, 0.025])
+        xy_center = [-0.105, 0.206]
+
+        half_span_x = 0.01
+        half_span_y = 0.015
+        num_x = 2
+        num_y = 4
+
+        grid_pos = []
+        for x in np.linspace(-half_span_x, half_span_x, num_x):
+            for y in np.linspace(-half_span_y, half_span_y, num_y):
+                grid_pos.append(np.array([x + xy_center[0], y + xy_center[1]]))
+
+        xy_configs = [np.stack([pos, target_xy], axis=0) for pos in grid_pos]
+
+        quat_configs = [
+            np.array([
+                euler2quat(0, 0, 0, 'sxyz'),
+                [1, 0, 0, 0]
+            ]),
+            np.array([
+                euler2quat(0, 0, 1 * np.pi / 12, 'sxyz'),
+                [1, 0, 0, 0]
+            ]),
+            np.array([
+                euler2quat(0, 0, -1 * np.pi / 12, 'sxyz'),
+                [1, 0, 0, 0]
+            ]),
+        ]
+
+        super().__init__(
+            source_obj_name=source_obj_name,
+            target_obj_name=target_obj_name,
+            xy_configs=xy_configs,
+            quat_configs=quat_configs,
+            **kwargs,
+        )
+
+    def get_language_instruction(self):
+        return "Put eggplant into yellow basket."
+
+    def _load_model(self):
+        super()._load_model()
+        self.sink_id = 'sink'
+        self.sink = self._build_actor_helper(
+            self.sink_id,
+            self._scene,
+            density=self.model_db[self.sink_id].get("density", 1000),
+            physical_material=self._scene.create_physical_material(
+                static_friction=self.obj_static_friction, dynamic_friction=self.obj_dynamic_friction, restitution=0.0
+            ),
+            root_dir=self.asset_root,
+        )
+        self.sink.name = self.sink_id
+
+    def _initialize_actors(self):
+        # Move the robot far away to avoid collision
+        self.agent.robot.set_pose(sapien.Pose([-10, 0, 0]))
+
+        self.sink.set_pose(sapien.Pose(
+            [-0.16, 0.13, 0.88],
+            [1, 0, 0, 0]
+        ))
+        self.sink.lock_motion()
+
+        super()._initialize_actors()
+
+    def evaluate(self, *args, **kwargs):
+        return super().evaluate(success_require_src_completely_on_target=False, 
+                                z_flag_required_offset=0.04,
+                                *args, **kwargs)
+
+    def _setup_prepackaged_env_init_config(self):
+        ret = super()._setup_prepackaged_env_init_config()
+        ret["robot"] = "widowx_sink_camera_setup"
+        ret["scene_name"] = "bridge_table_1_v2"
+        ret["rgb_overlay_path"] = str(
+            ASSET_DIR / "real_inpainting/bridge_sink.png"
+        )
+        return ret
+
+    def _additional_prepackaged_config_reset(self, options):
+        # use prepackaged robot evaluation configs under visual matching setup
+        options["robot_init_options"] = {
+            "init_xy": [0.127, 0.06],
+            "init_rot_quat": [0, 0, 0, 1],
+        }
+        return False # in env reset options, no need to reconfigure the environment
+
+    def _setup_lighting(self):
+        if self.bg_name is not None:
+            return
+
+        shadow = self.enable_shadow
+
+        self._scene.set_ambient_light([0.3, 0.3, 0.3])
+        self._scene.add_directional_light(
+            [0, 0, -1],
+            [0.3, 0.3, 0.3],
+            position=[0, 0, 1],
+            shadow=shadow,
+            scale=5,
+            shadow_map_size=2048,
         )
