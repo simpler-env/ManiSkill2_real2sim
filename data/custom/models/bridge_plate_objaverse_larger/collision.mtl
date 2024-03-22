@@ -10,4 +10,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd /home/xuanlin/Real2Sim/ManiSkill2_real2sim/data/custom/models/bridge_plate_objaverse/plate_texture.png
+map_Kd ../bridge_plate_objaverse/plate_texture.png
