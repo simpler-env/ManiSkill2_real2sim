@@ -294,12 +294,12 @@
         <mesh filename="meshes_wx250s/WXSA-250-M-9-Gripper-Bar.obj" scale="0.001 0.001 0.001"/>
       </geometry>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin rpy="0 0 1.5707963267948966" xyz="-0.063 0 0"/>
       <geometry>
         <mesh filename="meshes_wx250s/WXSA-250-M-9-Gripper-Bar.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision> -->
+    </collision>
     <inertial>
       <origin rpy="0 0 1.5707963267948966" xyz="0.0096870000 0.0000008177 0.0049620000"/>
       <mass value="0.034199"/>
