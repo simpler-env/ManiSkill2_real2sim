@@ -372,7 +372,7 @@ class StackGreenCubeOnYellowCubeBakedTexInScene(StackGreenCubeOnYellowCubeInScen
         )
 
 
-@register_env("PutEggplantInBasketScene-v0", max_episode_steps=200)
+@register_env("PutEggplantInBasketScene-v0", max_episode_steps=120)
 class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
     def __init__(
         self,
