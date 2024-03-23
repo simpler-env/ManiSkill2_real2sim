@@ -14,7 +14,7 @@ from mani_skill2.agents.robots.googlerobot import (
     GoogleRobotStaticBase, GoogleRobotStaticBaseManualTunedIntrinsic,
     GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
 )
-from mani_skill2.agents.robots.widowx import WidowX, WidowXCameraSetup2, WidowXSinkCameraSetup
+from mani_skill2.agents.robots.widowx import WidowX, WidowXBridgeDatasetCameraSetup, WidowXSinkCameraSetup
 from mani_skill2.agents.robots.panda import Panda
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.sensors.camera import CameraConfig
@@ -32,7 +32,7 @@ class CustomSceneEnv(BaseEnv):
                         "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
                         "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
                         "widowx": WidowX,
-                        "widowx_camera_setup2": WidowXCameraSetup2,
+                        "widowx_bridge_dataset_camera_setup": WidowXBridgeDatasetCameraSetup,
                         "widowx_sink_camera_setup": WidowXSinkCameraSetup,
                         "panda": Panda}
     agent: Union[GoogleRobotStaticBase, WidowX, Panda]
@@ -268,17 +268,15 @@ class CustomSceneEnv(BaseEnv):
             robot_init_height = 0.06205 + 0.017 # base height + ground offset in default scene
             robot_init_rot_quat = [0, 0, 0, 1]
         elif 'widowx' in self.robot_uid:
-            if self.robot_uid == 'widowx':
+            if self.robot_uid in ['widowx', 'widowx_bridge_dataset_camera_setup']:
                 qpos = np.array([-0.01840777,  0.0398835,   0.22242722,  -0.00460194,  1.36524296,  0.00153398, 0.037, 0.037])
-            elif self.robot_uid == 'widowx_camera_setup2':
-                qpos = np.array([-0.0184078, 0.07292216, 0.29707832, -0.00474127, 1.24072885, 0.00202769, 0.037, 0.037])
             elif self.robot_uid == 'widowx_sink_camera_setup':
                 qpos = np.array([-0.2600599, -0.12875618, 0.04461369, -0.00652761, 1.7033415, -0.26983038, 0.037,
                                  0.037])
             else:
                 raise NotImplementedError(self.robot_uid)
             
-            if self.robot_uid == 'widowx' or self.robot_uid == 'widowx_camera_setup2':
+            if self.robot_uid in ['widowx', 'widowx_bridge_dataset_camera_setup']:
                 robot_init_height = 0.870
             elif self.robot_uid == 'widowx_sink_camera_setup':
                 robot_init_height = 0.85
@@ -305,10 +303,8 @@ class CustomSceneEnv(BaseEnv):
                 init_y = self._episode_rng.uniform(0.0, 0.2)
             elif 'widowx' in self.robot_uid:
                 init_x = 0.147
-                if self.robot_uid == 'widowx':
+                if self.robot_uid in ['widowx', 'widowx_bridge_dataset_camera_setup']:
                     init_y = 0.028
-                elif self.robot_uid == 'widowx_camera_setup2':
-                    init_y = 0.070
                 elif self.robot_uid == 'widowx_sink_camera_setup':
                     init_y = 0.070
             else:
