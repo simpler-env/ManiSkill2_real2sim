@@ -46,6 +46,7 @@ class CustomSceneEnv(BaseEnv):
             rgb_overlay_path: Optional[str] = None, 
             rgb_overlay_cameras: list = [], 
             rgb_overlay_mode: str = 'background',
+            rgb_always_overlay_objects: List[str] = [],
             disable_bad_material: bool = False,
             asset_root: Optional[str] = None,
             scene_root: Optional[str] = None,
@@ -111,6 +112,7 @@ class CustomSceneEnv(BaseEnv):
         self.rgb_overlay_path = rgb_overlay_path 
         self.rgb_overlay_cameras = rgb_overlay_cameras # perform "greenscreen" on the specified camera(s) observations
         self.rgb_overlay_mode = rgb_overlay_mode # 'background' or 'object' or 'debug' or combinations of them
+        self.rgb_always_overlay_objects = rgb_always_overlay_objects # always overlay / greenscreen these objects regardless of the rgb_overlay_mode
         assert ('background' in self.rgb_overlay_mode) or ('debug' in self.rgb_overlay_mode), 'Invalid rgb_overlay_mode'
 
         self.arena = None
@@ -346,8 +348,7 @@ class CustomSceneEnv(BaseEnv):
         # "greenscreen" process
         if self._obs_mode == "image" and self.rgb_overlay_img is not None:
             # get the actor ids of objects to manipulate; note that objects here are not articulated
-            target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '',
-                                                                                         'arena', 'sink', 'dummy_sink_target_plane']]
+            target_object_actor_ids = [x.id for x in self.get_actors() if x.name not in ['ground', 'goal_site', '', 'arena'] + self.rgb_always_overlay_objects]
             target_object_actor_ids = np.array(target_object_actor_ids, dtype=np.int32)
 
             # get the robot link ids (links are subclass of actors)
@@ -358,6 +359,8 @@ class CustomSceneEnv(BaseEnv):
             other_link_ids = []
             for art_obj in self._scene.get_all_articulations():
                 if art_obj is self.agent.robot:
+                    continue
+                if art_obj.name in self.rgb_always_overlay_objects:
                     continue
                 for link in art_obj.get_links():
                     other_link_ids.append(link.id)

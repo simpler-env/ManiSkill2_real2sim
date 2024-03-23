@@ -124,6 +124,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         loader = self._scene.create_urdf_loader()
         loader.fix_root_link = True
         self.art_obj = loader.load(filename)
+        self.art_obj.name = 'cabinet'
         # TODO: This pose can be tuned for different rendering approachs.
         self.art_obj.set_pose(sapien.Pose([-0.295, 0, 0.017], [1, 0, 0, 0]))
         for joint in self.art_obj.get_active_joints():

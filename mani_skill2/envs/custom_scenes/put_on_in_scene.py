@@ -416,6 +416,7 @@ class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
             target_obj_name=target_obj_name,
             xy_configs=xy_configs,
             quat_configs=quat_configs,
+            rgb_always_overlay_objects=['sink', 'dummy_sink_target_plane'],
             **kwargs,
         )
 
