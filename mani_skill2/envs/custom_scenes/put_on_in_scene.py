@@ -402,11 +402,11 @@ class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
                 [1, 0, 0, 0]
             ]),
             np.array([
-                euler2quat(0, 0, 1 * np.pi / 12, 'sxyz'),
+                euler2quat(0, 0, 1 * np.pi / 4, 'sxyz'),
                 [1, 0, 0, 0]
             ]),
             np.array([
-                euler2quat(0, 0, -1 * np.pi / 12, 'sxyz'),
+                euler2quat(0, 0, -1 * np.pi / 4, 'sxyz'),
                 [1, 0, 0, 0]
             ]),
         ]
@@ -421,7 +421,7 @@ class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
         )
 
     def get_language_instruction(self):
-        return "Put eggplant into yellow basket."
+        return "put eggplant into yellow basket"
 
     def _load_model(self):
         super()._load_model()
@@ -451,7 +451,7 @@ class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
 
     def evaluate(self, *args, **kwargs):
         return super().evaluate(success_require_src_completely_on_target=False, 
-                                z_flag_required_offset=0.04,
+                                z_flag_required_offset=0.06,
                                 *args, **kwargs)
 
     def _setup_prepackaged_env_init_config(self):
