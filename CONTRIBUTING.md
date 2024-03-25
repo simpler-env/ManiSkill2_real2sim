@@ -23,8 +23,8 @@ Testing is currently semi-automated and a WIP. We currently rely on coverage.py 
 After you make changes, be sure to add any necessary tests to cover any new code in the `tests/` folder and run all the tests with the following command
 
 ```
-coverage run --source=mani_skill2/ -a -m pytest tests # run tests
-coverage html --include=mani_skill2/**/*.py # see the test coverage results
+coverage run --source=mani_skill2_real2sim/ -a -m pytest tests # run tests
+coverage html --include=mani_skill2_real2sim/**/*.py # see the test coverage results
 ```
 
 

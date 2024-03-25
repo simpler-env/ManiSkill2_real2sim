@@ -1,8 +1,8 @@
 from setuptools import find_packages, setup
 
-long_description = """ManiSkill2 is a unified benchmark for learning generalizable robotic manipulation skills powered by [SAPIEN](https://sapien.ucsd.edu/). **It features 20 out-of-box task families with 2000+ diverse object models and 4M+ demonstration frames**. Moreover, it empowers fast visual input learning algorithms so that **a CNN-based policy can collect samples at about 2000 FPS with 1 GPU and 16 processes on a workstation**. The benchmark can be used to study a wide range of algorithms: 2D & 3D vision-based reinforcement learning, imitation learning, sense-plan-act, etc.
+long_description = """ManiSkill2-Real2Sim is a suite of simulation manipulation evaluation environments for real robot setups powered by [SAPIEN](https://sapien.ucsd.edu/).
 
-Please refer our [documentation](https://haosulab.github.io/ManiSkill2) to learn more information."""
+It serves as a stand-alone component of ManiSkill2 (https://haosulab.github.io/ManiSkill2)."""
 
 
 def read_requirements():
@@ -13,24 +13,22 @@ def read_requirements():
 
 
 setup(
-    name="mani_skill2",
+    name="mani_skill2_real2sim",
     version="0.5.3",
-    description="ManiSkill2: A Unified Benchmark for Generalizable Manipulation Skills",
+    description="ManiSkill2-Real2Sim: Simulated Manipulation Evaluation Environments build on ManiSkill2 and SAPIEN.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="ManiSkill2 contributors",
-    url="https://github.com/haosulab/ManiSkill2",
+    author="Xuanlin Li et al.",
+    url="https://github.com/simpler-env/ManiSkill2_real2sim",
     packages=find_packages(
-        include=["mani_skill2*", "warp_maniskill*"],
-        exclude=["warp_maniskill.warp.tests"],
+        include=["mani_skill2_real2sim*"],
     ),
     python_requires=">=3.8",
     setup_requires=["setuptools>=62.3.0"],
     install_requires=read_requirements(),
     # Glob patterns do not automatically match dotfiles
     package_data={
-        "mani_skill2": ["assets/**", "envs/mpm/shader/**", "envs/mpm/RopeInit.pkl"],
-        "warp_maniskill.warp": ["native/*", "native/nanovdb/*"],
+        "mani_skill2_real2sim": ["assets/**"],
     },
     exclude_package_data={"": ["*.convex.stl"]},
     extras_require={
