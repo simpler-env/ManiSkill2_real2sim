@@ -80,10 +80,11 @@ class CustomSceneEnv(BaseEnv):
 
         if not model_json.exists():
             raise FileNotFoundError(
-                f"{model_json} is not found."
-                "If the missing dataset is provided by the original ManiSkill2 repo, "
-                "Please download the corresponding assets:"
-                "`python -m mani_skill2_real2sim.utils.download_asset ${ENV_ID}`."
+                f"{model_json} is not found. "
+                "If you installed this repo through 'pip install .', or if you stored the assets outside of ManiSkill2_real2sim/data, "
+                "you need to set the following environment variable: export MS2_REAL2SIM_ASSET_DIR={path_to_your_ManiSkill2_real2sim_assets} . "
+                "(for example, you can download this directory https://github.com/simpler-env/ManiSkill2_real2sim/tree/main/data and set the env variable to the downloaded directory). "
+                "Additionally, for assets in the original ManiSkill2 repo, you can copy the assets into the directory that corresponds to MS2_REAL2SIM_ASSET_DIR."
             )
         self.model_db: Dict[str, Dict] = load_json(model_json)
 
@@ -100,6 +101,8 @@ class CustomSceneEnv(BaseEnv):
             if not os.path.exists(rgb_overlay_path):
                 raise FileNotFoundError(
                     f"rgb_overlay_path {rgb_overlay_path} is not found."
+                    "If you installed this repo through 'pip install .' , "
+                    "you can download this directory https://github.com/simpler-env/ManiSkill2_real2sim/tree/main/data to get the real-world image overlay assets. "
                 )
             self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
         else:
@@ -428,6 +431,10 @@ class CustomOtherObjectsInSceneEnv(CustomSceneEnv):
             if not model_dir.exists():
                 raise FileNotFoundError(
                     f"{model_dir} is not found."
+                    "If you installed this repo through 'pip install .', or if you stored the assets outside of ManiSkill2_real2sim/data, "
+                    "you need to set the following environment variable: export MS2_REAL2SIM_ASSET_DIR={path_to_your_ManiSkill2_real2sim_assets} . "
+                    "(for example, you can download this directory https://github.com/simpler-env/ManiSkill2_real2sim/tree/main/data and set the env variable to the downloaded directory). "
+                    "Additionally, for assets in the original ManiSkill2 repo, you can copy the assets into the directory that corresponds to MS2_REAL2SIM_ASSET_DIR."
                 )
 
             collision_file = model_dir / "collision.obj"

@@ -447,11 +447,11 @@ class BaseEnv(gym.Env):
 
         if not path.exists():
             raise FileNotFoundError(
-                f"The visual background asset is not found: {path}."
-                "If the background asset is provided in the original ManiSkill2 repo,"
-                "please download the background asset by `python -m mani_skill2_real2sim.utils.download_asset {}`".format(
-                    self.bg_name
-                )
+                f"The visual background asset is not found: {path}. "
+                "If you installed this repo through 'pip install .', or if you stored the assets outside of ManiSkill2_real2sim/data, "
+                "you need to set the following environment variable: export MS2_REAL2SIM_ASSET_DIR={path_to_your_ManiSkill2_real2sim_assets} . "
+                "(for example, you can download this directory https://github.com/simpler-env/ManiSkill2_real2sim/tree/main/data and set the env variable to the downloaded directory). "
+                "Additionally, for assets in the original ManiSkill2 repo, you can copy the assets into the directory that corresponds to MS2_REAL2SIM_ASSET_DIR."
             )
 
         builder = self._scene.create_actor_builder()
