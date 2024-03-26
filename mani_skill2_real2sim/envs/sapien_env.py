@@ -448,8 +448,7 @@ class BaseEnv(gym.Env):
         if not path.exists():
             raise FileNotFoundError(
                 f"The visual background asset is not found: {path}."
-                "Please make sure the environment variable is set: export MS2_ASSET_DIR={path_to_ManiSkill2_real2sim}/data ."
-                "If you have already set the environment variable, then if the background asset is provided in the original ManiSkill2 repo,"
+                "If the background asset is provided in the original ManiSkill2 repo,"
                 "please download the background asset by `python -m mani_skill2_real2sim.utils.download_asset {}`".format(
                     self.bg_name
                 )

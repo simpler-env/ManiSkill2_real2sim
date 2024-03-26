@@ -81,8 +81,7 @@ class CustomSceneEnv(BaseEnv):
         if not model_json.exists():
             raise FileNotFoundError(
                 f"{model_json} is not found."
-                "Please make sure the environment variable is set: export MS2_ASSET_DIR={path_to_ManiSkill2_real2sim}/data ."
-                "If you have already set the environment variable, and if the missing dataset is provided by the original ManiSkill2 repo, "
+                "If the missing dataset is provided by the original ManiSkill2 repo, "
                 "Please download the corresponding assets:"
                 "`python -m mani_skill2_real2sim.utils.download_asset ${ENV_ID}`."
             )
@@ -101,8 +100,6 @@ class CustomSceneEnv(BaseEnv):
             if not os.path.exists(rgb_overlay_path):
                 raise FileNotFoundError(
                     f"rgb_overlay_path {rgb_overlay_path} is not found."
-                    "If you created the environment with 'prepackaged_config=True',"
-                    "Please make sure the environment variable is set: export MS2_ASSET_DIR={path_to_ManiSkill2_real2sim}/data ."
                 )
             self.rgb_overlay_img = cv2.cvtColor(cv2.imread(rgb_overlay_path), cv2.COLOR_BGR2RGB) / 255 # (H, W, 3); float32
         else:

@@ -9,7 +9,16 @@ from .utils.logging_utils import logger
 PACKAGE_DIR = Path(__file__).parent.resolve()
 PACKAGE_ASSET_DIR = PACKAGE_DIR / "assets"
 # Non-package data
-ASSET_DIR = Path(os.getenv("MS2_ASSET_DIR", "data"))
+if os.getenv("MS2_REAL2SIM_ASSET_DIR") is not None:
+    ASSET_DIR = Path(os.getenv("MS2_REAL2SIM_ASSET_DIR"))
+elif os.path.exists(PACKAGE_DIR.parent.resolve() / "data"):
+    # ManiSkill2_real2sim comes with a data directory, will try to find assets there
+    ASSET_DIR = PACKAGE_DIR.parent.resolve() / "data"
+elif os.getenv("MS2_ASSET_DIR") is not None:
+    # if the original ManiSkill2 is co-installed, find the assets there
+    ASSET_DIR = Path(os.getenv("MS2_ASSET_DIR"))
+else:
+    ASSET_DIR = Path("data")
 
 
 def format_path(p: str):
