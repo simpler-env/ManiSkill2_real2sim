@@ -17,15 +17,17 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
 
     def __init__(
         self,
-        light_mode=None,
-        camera_mode=None,
-        station_name="mk_station",
+        light_mode: Optional[str] = None,
+        camera_mode: Optional[str] = None,
+        station_name: float = "mk_station",
+        cabinet_joint_friction: float = 0.05,
         prepackaged_config: bool = False,
         **kwargs,
     ):
         self.light_mode = light_mode
         self.camera_mode = camera_mode
         self.station_name = station_name
+        self.cabinet_joint_friction = cabinet_joint_friction
         self.episode_stats = None
         self.drawer_id = None
 
@@ -130,7 +132,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         for joint in self.art_obj.get_active_joints():
             # friction seems more important
             # joint.set_friction(0.1)
-            joint.set_friction(0.05)
+            joint.set_friction(self.cabinet_joint_friction)
             joint.set_drive_property(stiffness=0, damping=1)
 
         self.obj = get_entity_by_name(
