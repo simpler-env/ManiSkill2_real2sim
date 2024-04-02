@@ -225,14 +225,44 @@ class GoogleRobotStaticBase(GoogleRobot):
         assert active_joints[0].name == "joint_torso"
 
 
+class GoogleRobotStaticBaseHalfFingerFriction(GoogleRobotStaticBase):
+    _config: defaults.GoogleRobotStaticBaseHalfFingerFrictionConfig
+
+    @classmethod
+    def get_default_config(cls):
+        return defaults.GoogleRobotStaticBaseHalfFingerFrictionConfig()
+    
+class GoogleRobotStaticBaseQuarterFingerFriction(GoogleRobotStaticBase):
+    _config: defaults.GoogleRobotStaticBaseQuarterFingerFrictionConfig
+
+    @classmethod
+    def get_default_config(cls):
+        return defaults.GoogleRobotStaticBaseQuarterFingerFrictionConfig()
+    
+class GoogleRobotStaticBaseOneEighthFingerFriction(GoogleRobotStaticBase):
+    _config: defaults.GoogleRobotStaticBaseOneEighthFingerFrictionConfig
+
+    @classmethod
+    def get_default_config(cls):
+        return defaults.GoogleRobotStaticBaseOneEighthFingerFrictionConfig()
+    
+class GoogleRobotStaticBaseTwiceFingerFriction(GoogleRobotStaticBase):
+    _config: defaults.GoogleRobotStaticBaseTwiceFingerFrictionConfig
+
+    @classmethod
+    def get_default_config(cls):
+        return defaults.GoogleRobotStaticBaseTwiceFingerFrictionConfig()
+
+
+
 class GoogleRobotStaticBaseManualTunedIntrinsic(GoogleRobotStaticBase):
     _config: defaults.GoogleRobotStaticBaseManualTunedIntrinsicConfig
 
     @classmethod
     def get_default_config(cls):
         return defaults.GoogleRobotStaticBaseManualTunedIntrinsicConfig()
-
-
+    
+    
 class GoogleRobotStaticBaseWorseControl1(GoogleRobotStaticBase):
     _config: defaults.GoogleRobotStaticBaseWorseControl1Config
 

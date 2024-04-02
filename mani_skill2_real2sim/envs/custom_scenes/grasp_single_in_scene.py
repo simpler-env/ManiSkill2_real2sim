@@ -537,6 +537,18 @@ class GraspSingleOpenedCokeCanInSceneEnv(GraspSingleCustomOrientationInSceneEnv)
             kwargs['model_ids'] = ["opened_coke_can"]
         super().__init__(**kwargs)
         
+
+@register_env("GraspSingleAltDensityOpenedCokeCanInScene-v0", max_episode_steps=80)
+class GraspSingleAltDensityOpenedCokeCanInSceneEnv(GraspSingleOpenedCokeCanInSceneEnv):
+    def __init__(self, baked=False, density=100, **kwargs):
+        # Original density is 50, corresponding to 20g mass for an empty opened coke can
+        if baked:
+            model_db_override = {"baked_opened_coke_can": {"density" : density}}
+        else:
+            model_db_override = {"opened_coke_can": {"density" : density}}
+        super().__init__(model_db_override=model_db_override, baked=baked, **kwargs)
+    
+    
         
 @register_env("GraspSingleDummy-v0", max_episode_steps=80)
 class GraspSingleDummyEnv(GraspSingleOpenedCokeCanInSceneEnv):

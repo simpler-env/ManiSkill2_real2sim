@@ -11,8 +11,9 @@ from mani_skill2_real2sim import ASSET_DIR, format_path
 from mani_skill2_real2sim.utils.io_utils import load_json
 from mani_skill2_real2sim.agents.base_agent import BaseAgent
 from mani_skill2_real2sim.agents.robots.googlerobot import (
-    GoogleRobotStaticBase, GoogleRobotStaticBaseManualTunedIntrinsic,
+    GoogleRobotStaticBase,
     GoogleRobotStaticBaseWorseControl1, GoogleRobotStaticBaseWorseControl2, GoogleRobotStaticBaseWorseControl3,
+    GoogleRobotStaticBaseHalfFingerFriction, GoogleRobotStaticBaseQuarterFingerFriction, GoogleRobotStaticBaseOneEighthFingerFriction, GoogleRobotStaticBaseTwiceFingerFriction
 )
 from mani_skill2_real2sim.agents.robots.widowx import WidowX, WidowXBridgeDatasetCameraSetup, WidowXSinkCameraSetup
 from mani_skill2_real2sim.agents.robots.panda import Panda
@@ -27,14 +28,19 @@ from mani_skill2_real2sim.utils.sapien_utils import (
 
 class CustomSceneEnv(BaseEnv):
     SUPPORTED_ROBOTS = {"google_robot_static": GoogleRobotStaticBase, 
-                        "google_robot_static_manual_tuned_intrinsic": GoogleRobotStaticBaseManualTunedIntrinsic, 
-                        "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
-                        "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
-                        "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
                         "widowx": WidowX,
                         "widowx_bridge_dataset_camera_setup": WidowXBridgeDatasetCameraSetup,
                         "widowx_sink_camera_setup": WidowXSinkCameraSetup,
-                        "panda": Panda}
+                        "panda": Panda,
+                        # configs for ablation studies
+                        "google_robot_static_worse_control1": GoogleRobotStaticBaseWorseControl1,
+                        "google_robot_static_worse_control2": GoogleRobotStaticBaseWorseControl2,
+                        "google_robot_static_worse_control3": GoogleRobotStaticBaseWorseControl3,
+                        "google_robot_static_half_finger_friction": GoogleRobotStaticBaseHalfFingerFriction,
+                        "google_robot_static_quarter_finger_friction": GoogleRobotStaticBaseQuarterFingerFriction,
+                        "google_robot_static_one_eighth_finger_friction": GoogleRobotStaticBaseOneEighthFingerFriction,
+                        "google_robot_static_twice_finger_friction": GoogleRobotStaticBaseTwiceFingerFriction,
+    }
     agent: Union[GoogleRobotStaticBase, WidowX, Panda]
     DEFAULT_ASSET_ROOT: str
     DEFAULT_SCENE_ROOT: str
@@ -56,6 +62,7 @@ class CustomSceneEnv(BaseEnv):
             scene_table_height: float = 0.87,
             model_json: Optional[str] = None,
             model_ids: List[str] = (),
+            model_db_override: Dict[str, Dict] = {},
             urdf_version: str = "",
             **kwargs
         ):
@@ -87,6 +94,7 @@ class CustomSceneEnv(BaseEnv):
                 "Additionally, for assets in the original ManiSkill2 repo, you can copy the assets into the directory that corresponds to MS2_REAL2SIM_ASSET_DIR."
             )
         self.model_db: Dict[str, Dict] = load_json(model_json)
+        self.model_db.update(model_db_override)
 
         if isinstance(model_ids, str):
             model_ids = [model_ids]

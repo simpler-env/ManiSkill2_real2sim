@@ -6,7 +6,7 @@ from mani_skill2_real2sim.sensors.camera import CameraConfig
 
 
 class GoogleRobotDefaultConfig:
-    def __init__(self, mobile_base=False, base_arm_drive_mode="force") -> None:
+    def __init__(self, mobile_base=False, finger_friction=2.0, base_arm_drive_mode="force") -> None:
         if mobile_base:
             self.urdf_path = "{PACKAGE_ASSET_DIR}/descriptions/googlerobot_description/google_robot_meta_sim_fix_fingertip.urdf"
         else:
@@ -18,10 +18,10 @@ class GoogleRobotDefaultConfig:
         self.urdf_config = dict(
             _materials=dict(
                 finger_mat=dict(
-                    static_friction=2.0, dynamic_friction=2.0, restitution=0.0
+                    static_friction=finger_friction, dynamic_friction=finger_friction, restitution=0.0
                 ),
                 finger_tip_mat=dict(
-                    static_friction=2.0, dynamic_friction=2.0, restitution=0.0
+                    static_friction=finger_friction, dynamic_friction=finger_friction, restitution=0.0
                 ),
                 finger_nail_mat=dict(
                     static_friction=0.1, dynamic_friction=0.1, restitution=0.0
@@ -364,8 +364,28 @@ class GoogleRobotManualTunedIntrinsicConfig(GoogleRobotDefaultConfig):
 
 
 class GoogleRobotStaticBaseConfig(GoogleRobotDefaultConfig):
-    def __init__(self) -> None:
-        super().__init__(mobile_base=False)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(mobile_base=False, **kwargs)
+        
+        
+class GoogleRobotStaticBaseHalfFingerFrictionConfig(GoogleRobotStaticBaseConfig):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(finger_friction=1.0, **kwargs)
+        
+
+class GoogleRobotStaticBaseQuarterFingerFrictionConfig(GoogleRobotStaticBaseConfig):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(finger_friction=0.5, **kwargs)
+        
+        
+class GoogleRobotStaticBaseOneEighthFingerFrictionConfig(GoogleRobotStaticBaseConfig):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(finger_friction=0.25, **kwargs)
+        
+        
+class GoogleRobotStaticBaseTwiceFingerFrictionConfig(GoogleRobotStaticBaseConfig):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(finger_friction=4.0, **kwargs)
 
 
 class GoogleRobotStaticBaseManualTunedIntrinsicConfig(

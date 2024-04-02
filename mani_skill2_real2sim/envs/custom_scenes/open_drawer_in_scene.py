@@ -203,6 +203,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         )
         new_urdf_version = self._episode_rng.choice(
             [
+                "",
                 "recolor_tabletop_visual_matching_1",
                 "recolor_tabletop_visual_matching_2",
                 "recolor_cabinet_visual_matching_1",
