@@ -40,6 +40,9 @@ python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PutCa
 # replace "PutCarrotOnPlateInScene-v0" with "PutSpoonOnTableClothInScene-v0", "StackGreenCubeOnYellowCubeBakedTexInScene-v0", 
 #         "PutEggplantInBasketScene-v0" to test other Bridge environments
 
+python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PlaceInClosedDrawerCustomInScene-v0 \
+    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
+    --enable-sapien-viewer     prepackaged_config @True     robot google_robot_static
 
 # Envs constructed through manual config setup
 # "rgb_overlay_mode debug" means to visualize 0.5*real image + 0.5*sim image, helpful for examining the alignment of the real table and the simulation proxy table
