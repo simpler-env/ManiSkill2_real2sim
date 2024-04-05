@@ -187,7 +187,7 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
         # The object will fall from a certain initial height
         obj_init_xy = self.obj_init_options.get("init_xy", None)
         if obj_init_xy is None:
-            obj_init_xy = self._episode_rng.uniform([-0.2, -0.1], [-0.05, 0.1], [2])
+            obj_init_xy = self._episode_rng.uniform([-0.10, -0.00], [-0.05, 0.1], [2])
         obj_init_z = self.obj_init_options.get("init_z", self.scene_table_height)
         obj_init_z = obj_init_z + 0.5  # let object fall onto the table
         obj_init_rot_quat = self.obj_init_options.get("init_rot_quat", [1, 0, 0, 0])
@@ -375,6 +375,7 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
 class PlaceIntoClosedDrawerCustomInSceneEnv(
     PlaceObjectInClosedDrawerInSceneEnv, CustomOtherObjectsInSceneEnv
 ):
+    DEFAULT_MODEL_JSON = "info_pick_custom_baked_tex_v1.json"
     drawer_ids = ["top", "middle", "bottom"]
 
 
