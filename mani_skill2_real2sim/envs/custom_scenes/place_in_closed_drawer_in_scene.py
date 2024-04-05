@@ -368,7 +368,8 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
             return f"open {self.drawer_id} drawer"
         else:
             # TODO: use correct model name
-            return f"place {self.model_id} into {self.drawer_id} drawer"
+            model_name = self._get_instruction_obj_name(self.model_id)
+            return f"place {model_name} into {self.drawer_id} drawer"
 
 
 @register_env("PlaceInClosedDrawerCustomInScene-v0", max_episode_steps=200)
