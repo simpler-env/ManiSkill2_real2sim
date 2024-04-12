@@ -156,6 +156,7 @@ class PlaceObjectInClosedDrawerInSceneEnv(OpenDrawerInSceneEnv):
         self.set_episode_rng(seed)
 
         # set objects
+        self.obj_init_options = options.get("obj_init_options", {})
         model_scale = options.get("model_scale", None)
         model_id = options.get("model_id", None)
         reconfigure = options.get("reconfigure", False)

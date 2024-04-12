@@ -33,8 +33,11 @@ cd {this_repo}/ManiSkill2_real2sim
 python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
     --enable-sapien-viewer     prepackaged_config @True     robot google_robot_static
-# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenDrawerCustomInScene-v0", "CloseDrawerCustomInScene-v0", "PlaceInClosedDrawerCustomInScene-v0" to test other envs
+# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenDrawerCustomInScene-v0", "CloseDrawerCustomInScene-v0" to test other envs
 
+python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PlaceIntoClosedDrawerCustomInScene-v0 \
+    -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
+    --enable-sapien-viewer     prepackaged_config @True     robot google_robot_static   model_ids baked_apple_v2
 
 python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PutCarrotOnPlateInScene-v0 --enable-sapien-viewer \
     -c arm_pd_ee_delta_pose_align2_gripper_pd_joint_pos -o rgbd --enable-sapien-viewer     prepackaged_config @True     robot widowx
@@ -64,7 +67,7 @@ python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e OpenD
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name frl_apartment_stage_simple \
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera
     
-python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PlaceInClosedDrawerCustomInScene-v0 \
+python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PlaceIntoClosedDrawerCustomInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name frl_apartment_stage_simple \
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/open_drawer_b0.png rgb_overlay_cameras overhead_camera model_ids baked_apple_v2
