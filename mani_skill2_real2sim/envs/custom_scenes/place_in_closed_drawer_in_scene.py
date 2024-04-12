@@ -17,120 +17,33 @@ from mani_skill2_real2sim.utils.sapien_utils import (
 )
 
 from .base_env import CustomOtherObjectsInSceneEnv, CustomSceneEnv
+from .open_drawer_in_scene import OpenDrawerInSceneEnv
 
 
-class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
-    drawer_ids: List[str]
+class PlaceObjectInClosedDrawerInSceneEnv(OpenDrawerInSceneEnv):
 
     def __init__(
         self,
-        light_mode: Optional[str] = None,
-        camera_mode: Optional[str] = None,
-        station_name: float = "mk_station",
-        cabinet_joint_friction: float = 0.05,
-        prepackaged_config: bool = False,
+        force_advance_subtask_time_steps: int = 100,
         **kwargs,
     ):
-        self.light_mode = light_mode
-        self.camera_mode = camera_mode
-        self.station_name = station_name
-        self.cabinet_joint_friction = cabinet_joint_friction
-        self.episode_stats = None
-        self.drawer_id = None
-
         self.model_id = None
         self.model_scale = None
         self.model_bbox_size = None
         self.obj = None
         self.obj_init_options = {}
 
-        self.prepackaged_config = prepackaged_config
-        if self.prepackaged_config:
-            # use prepackaged evaluation configs (visual matching)
-            kwargs.update(self._setup_prepackaged_env_init_config())
+        self.force_advance_subtask_time_steps = force_advance_subtask_time_steps
 
         super().__init__(**kwargs)
 
-    def _setup_prepackaged_env_init_config(self):
-        ret = {}
-        ret["robot"] = "google_robot_static"
-        ret["control_freq"] = 3
-        ret["sim_freq"] = 513
-        ret["control_mode"] = (
-            "arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner"
-        )
-        ret["scene_name"] = "dummy_drawer"
-        ret["camera_cfgs"] = {"add_segmentation": True}
-        ret["rgb_overlay_path"] = str(
-            ASSET_DIR / "real_inpainting/open_drawer_a0.png"
-        )  # dummy path; to be replaced later
-        ret["rgb_overlay_cameras"] = ["overhead_camera"]
-        ret["shader_dir"] = "rt"
-        self.station_name = "mk_station_recolor"
-        self.light_mode = "simple"
-        ret["disable_bad_material"] = True
-
-        return ret
-
-    # def _get_default_scene_config(self):
-    #     scene_config = super()._get_default_scene_config()
-    #     scene_config.enable_pcm = True
-    #     return scene_config
-
-    def _initialize_agent(self):
-        init_qpos = np.array(
-            [
-                -0.2639457174606611,
-                0.0831913360274175,
-                0.5017611504652179,
-                1.156859026208673,
-                0.028583671314766423,
-                1.592598203487462,
-                -1.080652960128774,
-                0,
-                0,
-                -0.00285961,
-                0.7851361,
-            ]
-        )
-        if self.camera_mode == "variant":
-            init_qpos[-2] += -0.025
-            init_qpos[-1] += 0.008
-        self.robot_init_options.setdefault("qpos", init_qpos)
-        super()._initialize_agent()
-
-    def _setup_lighting(self):
-        if self.light_mode != "simple":
-            return self._setup_lighting_legacy()
-
-        self._scene.set_ambient_light([1.0, 1.0, 1.0])
-        angle = 75
-        self._scene.add_directional_light(
-            [-np.cos(np.deg2rad(angle)), 0, -np.sin(np.deg2rad(angle))], [1.0, 1.0, 1.0]
-        )
-
-    def _setup_lighting_legacy(self):
-        # self.enable_shadow = True
-        # super()._setup_lighting()
-
-        direction = [-0.2, 0, -1]
-        if self.light_mode == "vertical":
-            direction = [-0.1, 0, -1]
-
-        color = [1, 1, 1]
-        if self.light_mode == "darker":
-            color = [0.5, 0.5, 0.5]
-        elif self.light_mode == "brighter":
-            color = [2, 2, 2]
-
-        self._scene.set_ambient_light([0.3, 0.3, 0.3])
-        # Only the first of directional lights can have shadow
-        self._scene.add_directional_light(
-            direction, color, shadow=True, scale=5, shadow_map_size=2048
-        )
-        self._scene.add_directional_light([-1, 1, -0.05], [0.5] * 3)
-        self._scene.add_directional_light([-1, -1, -0.05], [0.5] * 3)
-
+    def _get_default_scene_config(self):
+        scene_config = super()._get_default_scene_config()
+        scene_config.contact_offset = (
+            0.005
+        )  # avoid "false-positive" collisions with other objects
+        return scene_config
+    
     def _set_model(self, model_id, model_scale):
         """Set the model id and scale. If not provided, choose one randomly from self.model_ids."""
         reconfigure = False
@@ -179,7 +92,7 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
         self.obj.name = self.model_id
 
     def _load_actors(self):
-        self._load_arena_helper(add_collision=False)
+        super()._load_actors()
         self._load_model()
         self.obj.set_damping(0.1, 0.1)
 
@@ -236,35 +149,11 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
         # Record the object height after it settles
         self.obj_height_after_settle = self.obj.pose.p[2]
 
-    def _load_articulations(self):
-        filename = str(self.asset_root / f"{self.station_name}.urdf")
-        loader = self._scene.create_urdf_loader()
-        loader.fix_root_link = True
-        self.art_obj = loader.load(filename)
-        self.art_obj.name = "cabinet"
-        # TODO: This pose can be tuned for different rendering approachs.
-        self.art_obj.set_pose(sapien.Pose([-0.295, 0, 0.017], [1, 0, 0, 0]))
-        for joint in self.art_obj.get_active_joints():
-            # friction seems more important
-            # joint.set_friction(0.1)
-            joint.set_friction(self.cabinet_joint_friction)
-            joint.set_drive_property(stiffness=0, damping=1)
-
-        self.drawer_link: sapien.Link = get_entity_by_name(
-            self.art_obj.get_links(), f"{self.drawer_id}_drawer"
-        )
-        self.drawer_collision = self.drawer_link.get_collision_shapes()[2]
-        joint_names = [j.name for j in self.art_obj.get_active_joints()]
-        self.joint_idx = joint_names.index(f"{self.drawer_id}_drawer_joint")
-
     def reset(self, seed=None, options=None):
         if options is None:
             options = dict()
         options = options.copy()
-
-        reconfigure = options.get("reconfigure", False)
         self.set_episode_rng(seed)
-        self.drawer_id = self._episode_rng.choice(self.drawer_ids)
 
         # set objects
         model_scale = options.get("model_scale", None)
@@ -272,40 +161,24 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
         reconfigure = options.get("reconfigure", False)
         _reconfigure = self._set_model(model_id, model_scale)
         reconfigure = _reconfigure or reconfigure
-
-        if self.prepackaged_config:
-            _reconfigure = self._additional_prepackaged_config_reset(options)
-            reconfigure = reconfigure or _reconfigure
-
         options["reconfigure"] = reconfigure
 
-        self._initialize_episode_stats()
-
         obs, info = super().reset(seed=self._episode_seed, options=options)
-        info.update(
-            {
-                "drawer_pose_wrt_robot_base": self.agent.robot.pose.inv()
-                * self.drawer_link.pose,
-                "cabinet_pose_wrt_robot_base": self.agent.robot.pose.inv()
-                * self.art_obj.pose,
-                "station_name": self.station_name,
-                "light_mode": self.light_mode,
-            }
+        self.drawer_link: sapien.Link = get_entity_by_name(
+            self.art_obj.get_links(), f"{self.drawer_id}_drawer"
         )
+        self.drawer_collision = self.drawer_link.get_collision_shapes()[2]
+
         return obs, info
 
     def _additional_prepackaged_config_reset(self, options):
         # use prepackaged evaluation configs under visual matching setup
-        # overlay_ids = ["a0", "a1", "a2", "b0", "b1", "b2", "c0", "c1", "c2"]
         overlay_ids = ["a0", "b0", "c0"]
         rgb_overlay_paths = [
             str(ASSET_DIR / f"real_inpainting/open_drawer_{i}.png") for i in overlay_ids
         ]
-        # robot_init_xs = [0.644, 0.765, 0.889, 0.652, 0.752, 0.851, 0.665, 0.765, 0.865]
         robot_init_xs = [0.644, 0.652, 0.665]
-        # robot_init_ys = [-0.179, -0.182, -0.203, 0.009, 0.009, 0.035, 0.224, 0.222, 0.222]  # fmt: skip
         robot_init_ys = [-0.179, 0.009, 0.224]
-        # robot_init_rotzs = [-0.03, -0.02, -0.06, 0, 0, 0, 0, -0.025, -0.025]
         robot_init_rotzs = [-0.03, 0, 0]
         idx_chosen = self._episode_rng.choice(len(overlay_ids))
 
@@ -335,6 +208,7 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
         return False
 
     def _initialize_episode_stats(self):
+        self.cur_subtask_id = 0 # 0: open drawer, 1: place object into drawer
         self.episode_stats = OrderedDict(
             qpos=0.0, is_drawer_open=False, has_contact=0
         )
@@ -343,10 +217,8 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
         # Drawer
         qpos = self.art_obj.get_qpos()[self.joint_idx]
         self.episode_stats["qpos"] = qpos
-        is_drawer_open = qpos > 0.05
-        self.episode_stats["is_drawer_open"] = is_drawer_open
-
-        self.episode_stats["obj_pos"] = self.obj.pose.p
+        is_drawer_open = qpos >= 0.15
+        self.episode_stats["is_drawer_open"] = self.episode_stats["is_drawer_open"] or is_drawer_open
 
         # Check whether the object contacts with the drawer
         contact_infos = get_pairwise_contacts(
@@ -356,23 +228,34 @@ class PlaceObjectInClosedDrawerInSceneEnv(CustomSceneEnv):
             collision_shape1=self.drawer_collision,
         )
         total_impulse = compute_total_impulse(contact_infos)
-        has_contact = np.linalg.norm(total_impulse) > 1e-3
+        has_contact = np.linalg.norm(total_impulse) > 1e-6
         self.episode_stats["has_contact"] += has_contact
 
-        success = is_drawer_open and self.episode_stats["has_contact"] >= 3
+        success = (self.cur_subtask_id == 1) and (qpos >= 0.05) and (self.episode_stats["has_contact"] >= 1)
 
         return dict(success=success, episode_stats=self.episode_stats)
 
-    def get_language_instruction(self):
-        if not self.episode_stats["is_drawer_open"]:
+    def advance_to_next_subtask(self):
+        self.cur_subtask_id = 1
+
+    def step(self, action):
+        if self._elapsed_steps >= self.force_advance_subtask_time_steps:
+            # force advance to the next subtask
+            self.advance_to_next_subtask()
+        return super().step(action)
+    
+    def get_language_instruction(self, **kwargs):
+        if self.cur_subtask_id == 0:
             return f"open {self.drawer_id} drawer"
         else:
-            # TODO: use correct model name
             model_name = self._get_instruction_obj_name(self.model_id)
             return f"place {model_name} into {self.drawer_id} drawer"
+        
+    def is_final_subtask(self):
+        return self.cur_subtask_id == 1
 
 
-@register_env("PlaceInClosedDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("PlaceIntoClosedDrawerCustomInScene-v0", max_episode_steps=200)
 class PlaceIntoClosedDrawerCustomInSceneEnv(
     PlaceObjectInClosedDrawerInSceneEnv, CustomOtherObjectsInSceneEnv
 ):
@@ -380,19 +263,19 @@ class PlaceIntoClosedDrawerCustomInSceneEnv(
     drawer_ids = ["top", "middle", "bottom"]
 
 
-@register_env("PlaceInClosedTopDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("PlaceIntoClosedTopDrawerCustomInScene-v0", max_episode_steps=200)
 class PlaceIntoClosedTopDrawerCustomInSceneEnv(PlaceIntoClosedDrawerCustomInSceneEnv):
     drawer_ids = ["top"]
 
 
-@register_env("PlaceInClosedMiddleDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("PlaceIntoClosedMiddleDrawerCustomInScene-v0", max_episode_steps=200)
 class PlaceIntoClosedMiddleDrawerCustomInSceneEnv(
     PlaceIntoClosedDrawerCustomInSceneEnv
 ):
     drawer_ids = ["middle"]
 
 
-@register_env("PlaceInClosedBottomDrawerCustomInScene-v0", max_episode_steps=200)
+@register_env("PlaceIntoClosedBottomDrawerCustomInScene-v0", max_episode_steps=200)
 class PlaceIntoClosedBottomDrawerCustomInSceneEnv(
     PlaceIntoClosedDrawerCustomInSceneEnv
 ):

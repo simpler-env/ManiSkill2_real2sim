@@ -474,7 +474,7 @@ class MoveNearInSceneEnv(CustomSceneEnv):
     def compute_normalized_dense_reward(self, **kwargs):
         return self.compute_dense_reward(**kwargs) / 1.0
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         src_name = self._get_instruction_obj_name(self.episode_source_obj.name)
         tgt_name = self._get_instruction_obj_name(self.episode_target_obj.name)
         return f"move {src_name} near {tgt_name}"
@@ -529,7 +529,7 @@ class MoveNearGoogleInSceneEnv(MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
 
         self.set_episode_rng(seed)
 
-        obj_init_options = options.pop("obj_init_options", {})
+        obj_init_options = options.get("obj_init_options", {})
         obj_init_options = obj_init_options.copy()
         _num_episodes = (
             len(self.triplets)

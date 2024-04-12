@@ -135,11 +135,11 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
             joint.set_friction(self.cabinet_joint_friction)
             joint.set_drive_property(stiffness=0, damping=1)
 
-        self.obj = get_entity_by_name(
+        self.drawer_obj = get_entity_by_name(
             self.art_obj.get_links(), f"{self.drawer_id}_drawer"
         )
-        joint_names = [j.name for j in self.art_obj.get_active_joints()]
-        self.joint_idx = joint_names.index(f"{self.drawer_id}_drawer_joint")
+        self.joint_names = [j.name for j in self.art_obj.get_active_joints()]
+        self.joint_idx = self.joint_names.index(f"{self.drawer_id}_drawer_joint")
 
     def reset(self, seed=None, options=None):
         if options is None:
@@ -158,11 +158,28 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
 
         self._initialize_episode_stats()
 
-        obs, info = super().reset(seed=self._episode_seed, options=options)
+        obs, info = super().reset(seed=self._episode_seed, options=options) # articulations are loaded here
+        self.joint_idx = self.joint_names.index(f"{self.drawer_id}_drawer_joint")
+
+        # setup cabinet qpos
+        obj_init_options = options.get("obj_init_options", {})
+        obj_init_options = obj_init_options.copy()
+        cabinet_init_qpos = obj_init_options.get("cabinet_init_qpos", None)
+        if cabinet_init_qpos is not None:
+            if isinstance(cabinet_init_qpos, float):
+                # set qpos for target cabinet joint
+                tmp = [0.0] * self.art_obj.dof
+                tmp[self.joint_idx] = cabinet_init_qpos
+                cabinet_init_qpos = tmp
+            self.art_obj.set_qpos(cabinet_init_qpos)
+        else:
+            self.art_obj.set_qpos([0.0] * self.art_obj.dof) # ensure that the drawer is closed
+        obs = self.get_obs()
+
         info.update(
             {
                 "drawer_pose_wrt_robot_base": self.agent.robot.pose.inv()
-                * self.obj.pose,
+                * self.drawer_obj.pose,
                 "cabinet_pose_wrt_robot_base": self.agent.robot.pose.inv()
                 * self.art_obj.pose,
                 "station_name": self.station_name,
@@ -225,7 +242,7 @@ class OpenDrawerInSceneEnv(CustomSceneEnv):
         self.episode_stats["qpos"] = "{:.3f}".format(qpos)
         return dict(success=qpos >= 0.15, qpos=qpos, episode_stats=self.episode_stats)
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         return f"open {self.drawer_id} drawer"
 
 
@@ -250,11 +267,15 @@ class OpenBottomDrawerCustomInSceneEnv(OpenDrawerCustomInSceneEnv):
 
 
 class CloseDrawerInSceneEnv(OpenDrawerInSceneEnv):
-    def _initialize_articulations(self):
-        super()._initialize_articulations()
-        qpos = self.art_obj.get_qpos()
-        qpos[self.joint_idx] = 0.2
-        self.art_obj.set_qpos(qpos)
+
+    def reset(self, seed=None, options=None):
+        if options is None:
+            options = dict()
+        if "obj_init_options" not in options:
+            options["obj_init_options"] = dict()
+        if "cabinet_init_qpos" not in options["obj_init_options"]:
+            options["obj_init_options"]["cabinet_init_qpos"] = 0.2
+        return super().reset(seed=seed, options=options)
 
     def evaluate(self, **kwargs):
         qpos = self.art_obj.get_qpos()[self.joint_idx]

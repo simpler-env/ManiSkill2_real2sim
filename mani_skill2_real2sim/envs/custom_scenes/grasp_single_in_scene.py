@@ -454,7 +454,7 @@ class GraspSingleCustomInSceneEnv(GraspSingleInSceneEnv, CustomOtherObjectsInSce
         bbox_min = self.model_db[self.model_id]["bbox"]["min"]
         return -bbox_min[2] * self.model_scale + 0.05
     
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         obj_name = self._get_instruction_obj_name(self.obj.name)
         task_description = f"pick {obj_name}"
         return task_description
