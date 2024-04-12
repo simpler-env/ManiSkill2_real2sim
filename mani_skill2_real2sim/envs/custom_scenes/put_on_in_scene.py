@@ -140,7 +140,7 @@ class PutOnInSceneEnv(MoveNearInSceneEnv):
             success=success,
         )
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         src_name = self._get_instruction_obj_name(self.episode_source_obj.name)
         tgt_name = self._get_instruction_obj_name(self.episode_target_obj.name)
         return f"put {src_name} on {tgt_name}"
@@ -183,7 +183,7 @@ class PutOnBridgeInSceneEnv(PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv):
 
         self.set_episode_rng(seed)
 
-        obj_init_options = options.pop("obj_init_options", {})
+        obj_init_options = options.get("obj_init_options", {})
         obj_init_options = obj_init_options.copy()
         episode_id = obj_init_options.get(
             "episode_id",
@@ -277,7 +277,7 @@ class PutSpoonOnTableClothInScene(PutOnBridgeInSceneEnv):
         # this environment allows spoons to be partially on the table cloth to be considered successful
         return super().evaluate(success_require_src_completely_on_target, **kwargs)
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         return "put the spoon on the towel"
 
 
@@ -315,7 +315,7 @@ class PutCarrotOnPlateInScene(PutOnBridgeInSceneEnv):
             **kwargs,
         )
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         return "put carrot on plate"
 
 
@@ -356,7 +356,7 @@ class StackGreenCubeOnYellowCubeInScene(PutOnBridgeInSceneEnv):
             **kwargs,
         )
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         return "stack the green block on the yellow block"
 
 
@@ -420,7 +420,7 @@ class PutEggplantInBasketScene(PutOnBridgeInSceneEnv):
             **kwargs,
         )
 
-    def get_language_instruction(self):
+    def get_language_instruction(self, **kwargs):
         return "put eggplant into yellow basket"
 
     def _load_model(self):

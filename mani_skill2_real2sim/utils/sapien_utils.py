@@ -190,10 +190,18 @@ def get_articulation_padded_state(articulation: sapien.Articulation, max_dof: in
 # Contact
 # -------------------------------------------------------------------------- #
 def get_pairwise_contacts(
-    contacts: List[sapien.Contact], actor0: sapien.ActorBase, actor1: sapien.ActorBase
+    contacts: List[sapien.Contact],
+    actor0: sapien.ActorBase,
+    actor1: sapien.ActorBase,
+    collision_shape0: Optional[sapien.CollisionShape] = None,
+    collision_shape1: Optional[sapien.CollisionShape] = None,
 ) -> List[Tuple[sapien.Contact, bool]]:
     pairwise_contacts = []
     for contact in contacts:
+        if collision_shape0 is not None and contact.collision_shape0 != collision_shape0:
+            continue
+        if collision_shape1 is not None and contact.collision_shape1 != collision_shape1:
+            continue
         if contact.actor0 == actor0 and contact.actor1 == actor1:
             pairwise_contacts.append((contact, True))
         elif contact.actor0 == actor1 and contact.actor1 == actor0:
@@ -331,7 +339,7 @@ def hex2rgba(h, correction=True):
     r, g, b = tuple(int(h[i : i + 2], 16) / 255 for i in (0, 2, 4))
     rgba = np.array([r, g, b, 1])
     if correction:  # reverse gamma correction in sapien
-        rgba = rgba ** 2.2
+        rgba = rgba**2.2
     return rgba
 
 

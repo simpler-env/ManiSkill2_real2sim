@@ -419,6 +419,13 @@ class CustomSceneEnv(BaseEnv):
                 cleaned.append(w)
         return ' '.join(cleaned)
     
+    def advance_to_next_subtask(self):
+        raise NotImplementedError("advance_to_next_subtask is not implemented for this environment.")
+
+    def is_final_subtask(self):
+        # whether the current subtask is the final one, only meaningful for long-horizon tasks
+        return True
+    
     
     
 # ---------------------------------------------------------------------------- #
