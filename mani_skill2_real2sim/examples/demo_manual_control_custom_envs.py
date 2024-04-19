@@ -34,6 +34,7 @@ python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e Grasp
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
     --enable-sapien-viewer     prepackaged_config @True     robot google_robot_static
 # replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenDrawerCustomInScene-v0", "CloseDrawerCustomInScene-v0" to test other envs
+# for "MoveNearGoogleBakedTexInScene-v0", we also support "-v1" which uses assets with baked textures on all views of the objects using Zero123++
 
 python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PlaceIntoClosedDrawerCustomInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \

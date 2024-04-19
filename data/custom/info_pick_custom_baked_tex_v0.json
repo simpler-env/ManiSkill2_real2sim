@@ -376,23 +376,5 @@
       1.0
     ],
     "density": 150
-  },
-  "bridge_spoon_generated_modified": {
-    "bbox": {
-      "min": [
-        -0.0173,
-        -0.05,
-        -0.013021
-      ],
-      "max": [
-        0.0173,
-        0.05,
-        0.013021
-      ]
-    },
-    "scales": [
-      1.0
-    ],
-    "density": 1200
   }
 }
