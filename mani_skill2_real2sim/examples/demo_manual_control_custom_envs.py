@@ -33,8 +33,9 @@ cd {this_repo}/ManiSkill2_real2sim
 python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e GraspSingleOpenedCokeCanInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
     --enable-sapien-viewer     prepackaged_config @True     robot google_robot_static
-# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v0", "OpenDrawerCustomInScene-v0", "CloseDrawerCustomInScene-v0" to test other envs
-# for "MoveNearGoogleBakedTexInScene-v0", we also support "-v1" which uses assets with baked textures on all views of the objects using Zero123++
+# replace "GraspSingleOpenedCokeCanInScene-v0" with "MoveNearGoogleBakedTexInScene-v1", "OpenDrawerCustomInScene-v0", "CloseDrawerCustomInScene-v0" to test other envs
+# for "MoveNearGoogleBakedTexInScene-v1", we also support "-v0". "-v0" uses assets with textures baked onto a single view of each object, 
+# whereas "-v1" applies baked textures to all views of objects using Zero123++.
 
 python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e PlaceIntoClosedDrawerCustomInScene-v0 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner -o rgbd \
@@ -58,7 +59,7 @@ python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e MoveN
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera
     
-python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e MoveNearGoogleBakedTexInScene-v0 \
+python mani_skill2_real2sim/examples/demo_manual_control_custom_envs.py -e MoveNearGoogleBakedTexInScene-v1 \
     -c arm_pd_ee_delta_pose_align_interpolate_by_planner_gripper_pd_joint_target_delta_pos_interpolate_by_planner --enable-sapien-viewer \
     -o rgbd robot google_robot_static sim_freq @501 control_freq @3 scene_name google_pick_coke_can_1_v4 \
     rgb_overlay_mode debug rgb_overlay_path data/real_inpainting/google_move_near_real_eval_1.png rgb_overlay_cameras overhead_camera urdf_version recolor_tabletop_visual_matching_2
@@ -172,7 +173,7 @@ def main():
         if names_in_env_id_fxn(["GraspSingle"]):
             init_rot_quat = (Pose(q=[0, 0, 0, 1])).q
             env_reset_options = {
-                "obj_init_options": {"init_xy": [-0.12, 0.31]},
+                "obj_init_options": {"init_xy": [-0.12, 0.2]},
                 "robot_init_options": {
                     "init_xy": [0.35, 0.20],
                     "init_rot_quat": init_rot_quat,
