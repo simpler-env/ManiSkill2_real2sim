@@ -415,6 +415,9 @@ class CustomSceneEnv(BaseEnv):
         rm_list = ['opened', 'light', 'generated', 'modified', 'objaverse', 'bridge', 'baked', 'v2']
         cleaned = []
         for w in s:
+            if w[-2:] == "cm":
+                # object size in object name
+                continue
             if w not in rm_list:
                 cleaned.append(w)
         return ' '.join(cleaned)

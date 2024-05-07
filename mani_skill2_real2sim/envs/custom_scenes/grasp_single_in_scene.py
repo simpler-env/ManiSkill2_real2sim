@@ -601,7 +601,11 @@ class GraspSingleRandomObjectInSceneEnv(GraspSingleCustomOrientationInSceneEnv):
             "apple",
             "orange",
             "sponge",
-            "bridge_spoon_generated_modified"
+            "bridge_spoon_generated_modified",
+            "bridge_carrot_generated_modified",
+            "green_cube_3cm",
+            "yellow_cube_3cm",
+            "eggplant"
         ]
         super().__init__(**kwargs)
 
