@@ -71,24 +71,6 @@
     ],
     "density": 50
   },
-  "baked_opened_coke_can": {
-    "bbox": {
-      "min": [
-        -0.033,
-        -0.0615,
-        -0.033
-      ],
-      "max": [
-        0.033,
-        0.0615,
-        0.033
-      ]
-    },
-    "scales": [
-      1.0
-    ],
-    "density": 50
-  },
   "sprite_can": {
     "bbox": {
       "min": [
